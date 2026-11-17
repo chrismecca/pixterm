@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Chris Mecca
+# SPDX-License-Identifier: MIT
+
+[Unit]
+Description=Copy pixterm diagnostics to the boot partition (development images)
+After=local-fs.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/pixterm-debuglog
+
+[Install]
+WantedBy=multi-user.target

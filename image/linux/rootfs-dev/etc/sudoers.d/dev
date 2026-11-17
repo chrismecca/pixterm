@@ -1,0 +1,4 @@
+# SPDX-FileCopyrightText: 2026 Chris Mecca
+# SPDX-License-Identifier: MIT
+
+dev ALL=(ALL) NOPASSWD: ALL

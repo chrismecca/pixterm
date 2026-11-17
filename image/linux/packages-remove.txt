@@ -1,0 +1,49 @@
+# SPDX-FileCopyrightText: 2026 Chris Mecca
+# SPDX-License-Identifier: MIT
+#
+# Packages purged from the stock Raspberry Pi OS Lite image.
+# pixterm is an appliance: anything not needed to boot, network over
+# Ethernet, run Xorg/mwm/Motif and make outgoing SSH connections goes.
+
+# Provisioning / network stacks (replaced by systemd-networkd)
+cloud-init rpi-cloud-init-mods cloud-guest-utils
+netplan.io netplan-generator python3-netplan libnetplan1
+network-manager network-manager-l10n dhcpcd-base isc-dhcp-client isc-dhcp-common
+dnsmasq-base ppp
+avahi-daemon libnss-mdns
+
+# Radios (Ethernet only in v1; also disabled in config.txt)
+bluez bluez-firmware wpasupplicant wireless-tools iw wireless-regdb rfkill
+firmware-atheros firmware-brcm80211 firmware-libertas firmware-mediatek
+
+# Security frameworks / desktop plumbing we do not use
+apparmor polkitd udisks2
+
+# Periodic jobs and their scheduler
+cron cron-daemon-common logrotate man-db manpages manpages-dev
+fake-hwclock
+
+# Swap (no disk-backed swap; zram is a later optimization)
+rpi-swap systemd-zram-generator
+
+# Kept on purpose: raspberrypi-sys-mods (udev/DRM rules, first-boot resize;
+# depends on raspi-config, which depends on alsa-utils) and raspi-utils
+# (vcgencmd; depends on raspinfo, dtc). customize.sh masks their services instead.
+
+# First-boot user wizard, Pi services and tooling irrelevant to a terminal
+userconf-pi rpi-connect-lite rpi-eeprom rpieepromab rpi-update rpi-usb-gadget
+rpi-loop-utils
+rpi-keyboard-fw-update
+rpicam-apps-core rpicam-apps-lite librpicam-app1 libcamera0.7 libcamera-ipa
+libtensorflow-lite2.20.0 v4l-utils mkvtoolnix
+cifs-utils ntfs-3g exfatprogs flashrom
+python3-gpiozero python3-rpi-lgpio python3-lgpio python3-spidev python3-smbus2
+
+# Developer tools (pixterm is built in the image pipeline, not on device)
+build-essential gcc g++ gcc-14 g++-14 cpp gdb
+pahole
+ssh-import-id pastebinit ack ncdu 7zip p7zip-full mkvtoolnix zip unzip
+paxctld
+
+# Kernels for other boards and kernel headers are chosen per architecture
+# in customize.sh.

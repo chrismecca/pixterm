@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 Chris Mecca
+# SPDX-License-Identifier: MIT
+#
+# Fallback only: pixterm-boot.service writes /run/systemd/network/20-wired.network
+# from the pixterm configuration at every boot, which takes precedence.
+[Match]
+Type=ether
+
+[Network]
+DHCP=ipv4
+LinkLocalAddressing=no
+
+[DHCPv4]
+UseDomains=yes
+ClientIdentifier=mac

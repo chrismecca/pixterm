@@ -1,0 +1,29 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2026 Chris Mecca
+# SPDX-License-Identifier: MIT
+#
+# Development images only: copy diagnostics to the FAT boot partition so they
+# can be read on any computer by removing the SD card. Runs for 5 minutes
+# after boot, then stops writing.
+out=/boot/firmware/pixterm-debug
+mkdir -p "$out"
+dump() {
+	{
+		echo "== $(date -u) uptime: $(cut -d' ' -f1 /proc/uptime)s"
+		echo "== ip addr"; ip -brief addr
+		echo "== ip route"; ip route
+		echo "== networkctl"; networkctl --no-pager 2>&1
+		echo "== failed units"; systemctl --failed --no-legend --no-pager
+		echo "== loginctl"; loginctl list-sessions --no-pager 2>&1
+		echo "== processes"; ps -eo pid,user,stat,args --sort=pid | grep -vE '\[.*\]$'
+		echo "== drm"; ls -l /dev/dri 2>&1
+	} > "$out/status.txt" 2>&1
+	journalctl -b --no-pager > "$out/journal.txt" 2>&1
+	journalctl -b -u pixtermd --no-pager > "$out/pixtermd.txt" 2>&1
+	cp /run/pixterm/Xorg.log "$out/Xorg.log" 2>/dev/null
+	sync
+}
+for i in $(seq 10); do
+	sleep 30
+	dump
+done

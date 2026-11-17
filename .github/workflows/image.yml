@@ -1,0 +1,80 @@
+# SPDX-FileCopyrightText: 2026 Chris Mecca
+# SPDX-License-Identifier: MIT
+#
+# Builds the arm64 release image from the locked package list and keeps
+# it, its checksum and its package list for two weeks.
+name: image
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - app/**
+      - cmake/**
+      - data/**
+      - image/**
+      - include/**
+      - src/**
+      - CMakeLists.txt
+      - CMakePresets.json
+      - .github/workflows/image.yml
+  workflow_dispatch:
+  workflow_call: # from release.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: image-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  arm64:
+    # An arm64 runner builds without qemu.
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 90
+    env:
+      PIXTERM_ARCH: arm64
+      PIXTERM_DEV: "0"
+      PIXTERM_LOCK: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The stock Raspberry Pi OS image and every .deb the build installs.
+      # The archive drops old package versions, so a locked build may
+      # depend on this cache.
+      - name: Restore downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: image/linux/cache
+          key: image-arm64-${{ hashFiles('image/linux/build.sh', 'image/linux/packages.arm64.lock') }}
+          restore-keys: image-arm64-
+
+      - name: Build
+        run: |
+          df -h .
+          image/linux/build.sh
+
+      - name: Compress
+        working-directory: image/linux/out
+        run: |
+          xz -T0 pixterm-*.img
+          ls -l
+          {
+            echo '| File | Bytes |'
+            echo '|------|------:|'
+            for f in *; do echo "| $f | $(stat -c %s "$f") |"; done
+            echo
+            echo "$(wc -l < pixterm-*.img.packages) packages"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep image
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pixterm-arm64
+          path: image/linux/out/
+          compression-level: 0
+          retention-days: 14

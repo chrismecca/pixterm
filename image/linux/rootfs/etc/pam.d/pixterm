@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Chris Mecca
+# SPDX-License-Identifier: MIT
+#
+# PAM stack for the pixtermd service: no authentication (it is a system
+# service), but a proper logind session on seat0 so Xorg can run rootless.
+account  required  pam_unix.so
+session  required  pam_loginuid.so
+session  required  pam_unix.so
+session  required  pam_systemd.so

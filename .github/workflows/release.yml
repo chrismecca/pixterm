@@ -1,0 +1,72 @@
+# SPDX-FileCopyrightText: 2026 Chris Mecca
+# SPDX-License-Identifier: MIT
+#
+# A tag vVERSION makes a draft GitHub release: the image built by
+# image.yml, its package list, checksums and release notes. Publishing the
+# draft is left to a person.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Tag, version and change log agree
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version=$(sed -n 's/^ *VERSION \([0-9][0-9.]*\)$/\1/p' CMakeLists.txt)
+          if [ "$TAG" != "v$version" ]; then
+            echo "tag $TAG does not match version $version in CMakeLists.txt"
+            exit 1
+          fi
+          grep -q "^== $version\$" CHANGELOG.adoc || {
+            echo "CHANGELOG.adoc has no section \"== $version\""
+            exit 1
+          }
+
+  image:
+    needs: check
+    uses: ./.github/workflows/image.yml
+
+  release:
+    needs: image
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: pixterm-arm64
+          path: built
+
+      - name: Release files
+        env:
+          RELEASE_URL: ${{ github.server_url }}/${{ github.repository }}/releases/download/${{ github.ref_name }}
+          RELEASE_SITE: ${{ github.server_url }}/${{ github.repository }}
+        run: image/linux/release.sh built
+
+      - name: Draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          dir=$(echo built/release-*)
+          gh release create "$TAG" --draft --verify-tag \
+            --title "pixterm ${TAG#v}" --notes-file "$dir/RELEASE-NOTES.md" \
+            "$dir"/*.img.xz "$dir"/*.img.sha256 "$dir"/*.img.packages "$dir/SHA256SUMS" \
+            "$dir/pixterm-imager.json" "$dir/pixterm-icon.png"
