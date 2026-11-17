@@ -82,4 +82,6 @@ done
 echo "=== Writing $out"
 cp --sparse=always "$img" "/out/$out"
 (cd /out && sha256sum "$out" > "$out.sha256")
+# The files belong to whoever ran build.sh, not to the container's root.
+chown "$PIXTERM_OWNER" "/out/$out" "/out/$out".*
 ls -lh "/out/$out"

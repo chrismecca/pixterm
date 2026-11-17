@@ -87,7 +87,7 @@ git -C "$root" diff --quiet HEAD 2>/dev/null || BUILD_ID="$BUILD_ID+"
 docker run --rm --privileged -v /dev:/dev \
     -v "$root":/src:ro -v "$here/out":/out -v "$here/cache/debs-$ARCH":/debs \
     -e PIXTERM_DEV="$DEV" -e PIXTERM_ARCH="$ARCH" -e PIXTERM_LOCK="$LOCK" \
-    -e PIXTERM_BUILD_ID="$BUILD_ID" \
+    -e PIXTERM_BUILD_ID="$BUILD_ID" -e PIXTERM_OWNER="$(id -u):$(id -g)" \
     pixterm-builder /src/image/linux/build-in-container.sh "$BASE" "$OUT"
 
 # Every build leaves the versions it installed, the build tools' among
