@@ -1,0 +1,40 @@
+// SPDX-FileCopyrightText: 2026 Chris Mecca
+// SPDX-License-Identifier: MIT
+
+image::doc/img/pixterm.svg[pixterm,540,34]
+
+= pixterm
+
+An X terminal like the NCD terminals of the 1990s.
+
+pixterm turns a Raspberry Pi into an X terminal. Switch it on, pick a
+host from a Motif list, log in and use the host's X11 desktop. Log out
+and the list comes back.
+
+This is not PIXterm, the unrelated program that draws images in a text
+terminal.
+
+== Status
+
+pixterm is being rebuilt in {cpp}23. There is no image to download yet.
+
+== Building the programs
+
+You need Clang 19 or later with libc++, CMake 3.28 or later, and Ninja.
+The programs that draw on the screen also need Motif, Xt, Xrandr and
+OpenSSL.
+
+[source,sh]
+----
+cmake --preset debug
+cmake --build --preset debug
+ctest --preset debug
+----
+
+`tools/ci.sh` runs every check that needs no hardware in a Debian
+container, as GitHub Actions does. link:CONTRIBUTING.adoc[CONTRIBUTING.adoc]
+explains the presets, the checks and the code style.
+
+== License
+
+MIT. See link:LICENSE[LICENSE].

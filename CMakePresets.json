@@ -1,0 +1,110 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 28,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "toolchainFile": "${sourceDir}/cmake/toolchains/clang.cmake",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "debug",
+      "displayName": "Debug",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "BUILD_TESTING": "OFF"
+      }
+    },
+    {
+      "name": "ci",
+      "displayName": "Debug, warnings as errors",
+      "inherits": "debug",
+      "cacheVariables": {
+        "PIXTERM_WARNINGS_AS_ERRORS": "ON"
+      }
+    },
+    {
+      "name": "sanitize",
+      "displayName": "Debug with ASan and UBSan",
+      "inherits": "debug",
+      "cacheVariables": {
+        "PIXTERM_SANITIZE": "ON",
+        "PIXTERM_WARNINGS_AS_ERRORS": "ON"
+      }
+    },
+    {
+      "name": "analysis",
+      "displayName": "clang-tidy",
+      "inherits": "debug",
+      "cacheVariables": {
+        "CMAKE_CXX_CLANG_TIDY": "clang-tidy;--warnings-as-errors=*",
+        "PIXTERM_WARNINGS_AS_ERRORS": "ON"
+      }
+    },
+    {
+      "name": "fuzz",
+      "displayName": "libFuzzer targets",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "PIXTERM_FUZZ": "ON",
+        "PIXTERM_SANITIZE": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "debug", "configurePreset": "debug" },
+    { "name": "release", "configurePreset": "release" },
+    { "name": "ci", "configurePreset": "ci" },
+    { "name": "sanitize", "configurePreset": "sanitize" },
+    { "name": "analysis", "configurePreset": "analysis" },
+    { "name": "fuzz", "configurePreset": "fuzz" }
+  ],
+  "testPresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "output": { "outputOnFailure": true },
+      "execution": { "noTestsAction": "error" }
+    },
+    { "name": "debug", "inherits": "base", "configurePreset": "debug" },
+    { "name": "ci", "inherits": "base", "configurePreset": "ci" },
+    { "name": "sanitize", "inherits": "base", "configurePreset": "sanitize" }
+  ],
+  "workflowPresets": [
+    {
+      "name": "ci",
+      "steps": [
+        { "type": "configure", "name": "ci" },
+        { "type": "build", "name": "ci" },
+        { "type": "test", "name": "ci" }
+      ]
+    },
+    {
+      "name": "sanitize",
+      "steps": [
+        { "type": "configure", "name": "sanitize" },
+        { "type": "build", "name": "sanitize" },
+        { "type": "test", "name": "sanitize" }
+      ]
+    }
+  ]
+}

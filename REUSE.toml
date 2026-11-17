@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Chris Mecca
+# SPDX-License-Identifier: MIT
+
+# Licence and copyright for files that cannot carry a comment.
+version = 1
+
+[[annotations]]
+path = [
+    "CMakePresets.json",
+    "doc/img/**",
+    "README.adoc",
+]
+SPDX-FileCopyrightText = "2026 Chris Mecca"
+SPDX-License-Identifier = "MIT"

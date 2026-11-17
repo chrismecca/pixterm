@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 Chris Mecca
+# SPDX-License-Identifier: MIT
+
+/out/
+/image/linux/cache/
+/image/linux/out/
+/image/linux/dev/
+/compile_commands.json
+/.cache/

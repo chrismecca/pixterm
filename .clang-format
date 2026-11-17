@@ -1,0 +1,32 @@
+# SPDX-FileCopyrightText: 2026 Chris Mecca
+# SPDX-License-Identifier: MIT
+
+BasedOnStyle: LLVM
+Language: Cpp
+Standard: c++20
+
+IndentWidth: 4
+ColumnLimit: 100
+AccessModifierOffset: -4
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakTemplateDeclarations: Yes
+BreakBeforeBinaryOperators: NonAssignment
+FixNamespaceComments: true
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^"'
+    Priority: 1
+  - Regex: '^<pixterm/'
+    Priority: 2
+  - Regex: '^<X11/|^<Xm/'
+    Priority: 4
+  - Regex: '^<[a-z_]+>$'
+    Priority: 5
+  - Regex: '.*'
+    Priority: 3
+InsertNewlineAtEOF: true
+PointerAlignment: Left
+QualifierAlignment: Left
+SpacesBeforeTrailingComments: 1
