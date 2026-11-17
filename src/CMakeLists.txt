@@ -4,3 +4,4 @@
 add_subdirectory(core)
 add_subdirectory(supervisor)
 add_subdirectory(helper)
+add_subdirectory(rexec)
