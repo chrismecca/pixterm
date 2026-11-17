@@ -11,6 +11,8 @@ project(pixterm
 )
 
 set(CMAKE_CXX_EXTENSIONS OFF)
+# pixterm uses no C++ modules: skip the scan, which needs clang-scan-deps.
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 option(PIXTERM_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)

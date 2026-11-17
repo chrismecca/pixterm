@@ -1,0 +1,132 @@
+// SPDX-FileCopyrightText: 2026 Chris Mecca
+// SPDX-License-Identifier: MIT
+
+= pixterm roadmap
+
+0.9 does everything the first version of pixterm did: SSH, XDMCP,
+terminal, direct X, rexec and rsh, VNC, RDP and serial console
+sessions, on a read-only Raspberry Pi image. 1.0 adds the other ways an
+X terminal reached hosts in the 1990s, and the terminal features an NCD
+offered. After 1.0, pixterm takes fixes, not features.
+
+Sizes: S is up to a day, M a few days, L a week or more. The numbers
+are kept from the first plan so that issues can refer to them.
+
+== Decisions
+
+[cols="1,3",options="header"]
+|===
+| Question | Answer
+
+| Devices | A host reaches the terminal's devices only during its own session, and only those its host entry allows. SSH sessions carry them through the session's connection; for other sessions, a packet filter opens a port to that host alone.
+| Screen lock | Unlocks with a code chosen when locking. It sends nothing to the host and keeps no account password.
+| USB drives | Files are copied over SFTP; the host never gets the device.
+| Sound | The PulseAudio protocol through SSH sessions; NAS, the successor of NCDaudio, for XDMCP and direct X hosts.
+| Dropped | Network boot, and settings kept on a central server.
+|===
+
+== Releases and testing
+
+[cols="1,8,1",options="header"]
+|===
+| # | Item | Size
+
+| 6 | Signed releases (minisign or cosign), with the public key in the repository | S
+| 8 | Ask Raspberry Pi to list pixterm in Imager | S
+| 9 | The checklist in `doc/hardware.adoc` on the Pi 3B+, 4B, 400 and 5 | M
+| 10 | Hundreds of automatic power cuts, some during saves | M
+| 11 | A 72-hour session, watching memory and open files | S
+| 18 | Test that a release image, booted in QEMU, accepts no connections unless a setting allows them | M
+|===
+
+== Gaps users would meet
+
+[cols="1,8,1",options="header"]
+|===
+| # | Item | Size
+
+| 12 | A text screen that explains why X failed to start, with a way to reset | M
+| 13 | No monitor at boot, or a monitor plugged in later | S
+| 14 | A larger interface on 4K screens | M
+| 15 | Screen blanking at the chooser, with a setting | S
+| 16 | The chosen display mode on XDMCP displays | S
+| 24 | Wi-Fi: scan and join WPA2 and WPA3-Personal networks from Configure > Network | L
+|===
+
+== Connections
+
+[cols="1,8,1",options="header"]
+|===
+| # | Item | Size
+
+| 28 | drawterm for Plan 9 and 9front CPU servers | S
+| 29 | RDP certificates kept on the settings partition, not trusted until restart | S
+| 31 | TN3270E for IBM mainframes through x3270, with a 3270 key map | M
+| 32 | TN5250E for IBM i through tn5250 | S
+| 33 | LAT for VAX and Alpha OpenVMS and DECservers through latd | M
+| 34 | Kermit and ZMODEM file transfer on serial consoles | M
+|===
+
+== The X server
+
+[cols="1,8,1",options="header"]
+|===
+| # | Item | Size
+
+| 35 | Indirect GLX for IRIX and Solaris OpenGL programs | S
+| 36 | 8-bit PseudoColor displays, per host, for programs that need a colour map | M
+| 37 | More fonts: DEC terminal fonts and IBM 3270 fonts | S
+|===
+
+== The terminal
+
+[cols="1,8,1",options="header"]
+|===
+| # | Item | Size
+
+| 38 | Local mwm during sessions, per host, for hosts that send programs but no window manager | M
+| 39 | A hot-key console during a session: Configure, another host, lock, disconnect | M
+| 40 | Several hosts at once on one display (needs items 38 and 39) | L
+| 41 | Screen lock during a session | M
+| 42 | Hardware security keys for SSH login: FIDO2 and PIV smart cards | M
+| 43 | Kerberos (GSSAPI) SSH login | M
+| 44 | Wake-on-LAN for a host before connecting | S
+|===
+
+== Devices that hosts use
+
+[cols="1,8,1",options="header"]
+|===
+| # | Item | Size
+
+| 49 | A packet filter, loaded by the helper, that drops every inbound connection a running session does not need | M
+| 45 | Sound | L
+| 46 | Printing to a USB printer on the terminal | M
+| 47 | Serial ports on the terminal that hosts can use | M
+| 48 | USB drives: copy files between a drive and the host, from the hot-key console | M
+|===
+
+== Documents
+
+[cols="1,8,1",options="header"]
+|===
+| # | Item | Size
+
+| 20 | A user guide: first steps, each Configure panel, recovery, and faults by symptom | M
+| 21 | Screenshots in the README | S
+| 23 | Host guides checked by other people: Solaris and CDE, HP-UX, AIX, Linux with LightDM or GDM | M
+|===
+
+== Also wanted for 1.0
+
+* IPv6 host addresses, tested from end to end
+* Sun and DEC keyboards, with the DEC LK201 editing keys for OpenVMS
+* Diagnostics saved to a USB drive for bug reports
+* Time zone and NTP server settings (the Pi has no clock battery)
+* Issue templates for bug reports and host reports
+* A table of host systems and protocols known to work
+
+== Not planned
+
+Images for x86 thin clients or NetBSD; updates to a second system
+partition; Inferno, SPICE and X2Go.

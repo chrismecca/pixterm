@@ -19,6 +19,7 @@ terminal.
 * Setting up hosts: link:doc/hosts/[doc/hosts/]
 * Upgrading: link:doc/upgrading.adoc[doc/upgrading.adoc]
 * Changes: link:CHANGELOG.adoc[CHANGELOG.adoc]
+* Plans for 1.0: link:ROADMAP.adoc[ROADMAP.adoc]
 
 == What it connects to
 
