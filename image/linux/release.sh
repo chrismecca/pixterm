@@ -27,7 +27,7 @@ set -eu
 
 here=$(cd "$(dirname "$0")" && pwd)
 root=$(cd "$here/../.." && pwd)
-src=${1:-$here/out}
+src=$(cd "${1:-$here/out}" && pwd)
 VERSION=$(sed -n 's/^ *VERSION \([0-9][0-9.]*\)$/\1/p' "$root/CMakeLists.txt")
 dist=$src/release-$VERSION
 
