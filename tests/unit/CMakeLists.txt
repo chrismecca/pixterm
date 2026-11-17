@@ -15,6 +15,9 @@ pixterm_add_tests(helper SOURCES helper_test.cpp LIBRARIES pixterm_helper)
 pixterm_add_tests(rexec SOURCES rexec_test.cpp LIBRARIES pixterm_rexec)
 pixterm_add_tests(display_modes SOURCES display_modes_test.cpp LIBRARIES pixterm::core)
 pixterm_add_tests(askpass SOURCES askpass_test.cpp LIBRARIES pixterm_askpass)
+pixterm_add_tests(host_form SOURCES host_form_test.cpp LIBRARIES pixterm_chooser)
+pixterm_add_tests(chooser SOURCES chooser_test.cpp LIBRARIES pixterm_chooser)
+pixterm_add_tests(discovery SOURCES discovery_test.cpp LIBRARIES pixterm_chooser)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     pixterm_add_tests(linux_system SOURCES linux_system_test.cpp

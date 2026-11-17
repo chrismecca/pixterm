@@ -10,5 +10,6 @@ endif()
 
 if(PIXTERM_X11)
     add_subdirectory(pixterm-askpass)
+    add_subdirectory(pixterm-ui)
     add_subdirectory(pixterm-xsetup)
 endif()
