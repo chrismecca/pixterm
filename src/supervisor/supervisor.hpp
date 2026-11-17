@@ -133,10 +133,10 @@ private:
 /// The session for a host's protocol.
 [[nodiscard]] std::unique_ptr<Session> make_session(Supervisor& supervisor, const Host& host);
 
-class Supervisor {
+class Supervisor final : public Events {
 public:
     Supervisor(System& system, Environment environment);
-    ~Supervisor();
+    ~Supervisor() override;
     Supervisor(const Supervisor&) = delete;
     Supervisor& operator=(const Supervisor&) = delete;
     Supervisor(Supervisor&&) = delete;
@@ -147,11 +147,11 @@ public:
     /// Starts the display. Called once.
     void start();
     /// The X server accepts connections.
-    void x_ready();
+    void x_ready() override;
     /// A program in a slot exited; output is the end of what it wrote.
-    void child_exited(Slot slot, ExitStatus status, std::string_view output);
+    void child_exited(Slot slot, ExitStatus status, std::string_view output) override;
     /// The chooser sent a line.
-    void chooser_line(std::string_view line);
+    void chooser_line(std::string_view line) override;
     /// Called after anything happens, and at next_deadline: acts on
     /// whatever is due.
     void tick();

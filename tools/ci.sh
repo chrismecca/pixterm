@@ -18,8 +18,19 @@ fuzz_seconds=${FUZZ_SECONDS:-30}
 fail=0
 
 docker build -q -t pixterm-ci tools/ci >/dev/null
+# run_tests: the unit tests, showing only the summary when they pass.
 in_container() {
-	docker run --rm -v "$root":/src -w /src pixterm-ci sh -ec "$1"
+	docker run --rm -v "$root":/src -w /src pixterm-ci sh -ec "
+		run_tests() {
+			if ctest --test-dir /tmp/build --output-on-failure --no-tests=error -j\"\$(nproc)\" \
+				>/tmp/ctest.log 2>&1; then
+				tail -n 3 /tmp/ctest.log
+			else
+				cat /tmp/ctest.log
+				return 1
+			fi
+		}
+		$1"
 }
 
 run_step() {
@@ -47,15 +58,13 @@ for step in $steps; do
 		run_step "build with warnings as errors, and unit tests" \
 			'cmake --preset ci -B /tmp/build >/dev/null &&
 			 cmake --build /tmp/build &&
-			 ctest --test-dir /tmp/build --output-on-failure --no-tests=error -j"$(nproc)" |
-			 tail -n 3'
+			 run_tests'
 		;;
 	sanitize)
 		run_step "unit tests with ASan and UBSan" \
 			'cmake --preset sanitize -B /tmp/build >/dev/null &&
 			 cmake --build /tmp/build &&
-			 ctest --test-dir /tmp/build --output-on-failure --no-tests=error -j"$(nproc)" |
-			 tail -n 3'
+			 run_tests'
 		;;
 	analysis)
 		run_step "clang-tidy" \

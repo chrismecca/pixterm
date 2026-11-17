@@ -98,6 +98,24 @@ struct Job {
 using JobDone = std::function<void(ExitStatus status, std::string_view output)>;
 using HelperDone = std::function<void(const helper::Reply& reply)>;
 
+/// What the system reports back. The supervisor implements this.
+class Events {
+public:
+    Events() = default;
+    virtual ~Events() = default;
+    Events(const Events&) = delete;
+    Events& operator=(const Events&) = delete;
+    Events(Events&&) = delete;
+    Events& operator=(Events&&) = delete;
+
+    /// The X server accepts connections.
+    virtual void x_ready() = 0;
+    /// A program in a slot exited; output is the end of what it wrote.
+    virtual void child_exited(Slot slot, ExitStatus status, std::string_view output) = 0;
+    /// The chooser sent a line.
+    virtual void chooser_line(std::string_view line) = 0;
+};
+
 class System {
 public:
     System() = default;
@@ -113,17 +131,16 @@ public:
 
     /// Starts the X server with a fresh authorization cookie and the
     /// keyboard of settings, adding extra_args to its usual arguments.
-    /// When it accepts connections, the system calls
-    /// Supervisor::x_ready.
+    /// When it accepts connections, the system calls Events::x_ready.
     [[nodiscard]] virtual bool start_xorg(const Settings& settings,
                                           const std::vector<std::string>& extra_args) = 0;
 
     /// Starts a program in a slot, in its own process group. When it
-    /// exits, the system calls Supervisor::child_exited with the end of
+    /// exits, the system calls Events::child_exited with the end of
     /// what it wrote.
     [[nodiscard]] virtual bool start(Slot slot, Program program) = 0;
     /// Starts the chooser in its slot with its end of the control
-    /// socket. Its lines arrive through Supervisor::chooser_line.
+    /// socket. Its lines arrive through Events::chooser_line.
     [[nodiscard]] virtual bool start_chooser(Program program) = 0;
     [[nodiscard]] virtual bool running(Slot slot) const = 0;
     virtual void signal(Slot slot, int signal) = 0;

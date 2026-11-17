@@ -4,11 +4,14 @@
 # Checks that find bugs or unsafe code. Style checks that fight the C
 # libraries pixterm uses (POSIX, Xlib, Motif) are turned off, and so is
 # misc-no-recursion: the parsers recurse, with a fixed depth limit.
+# concurrency-mt-unsafe is off because every pixterm program is single
+# threaded.
 Checks: >
   bugprone-*,
   cert-*,
   clang-analyzer-*,
   concurrency-*,
+  -concurrency-mt-unsafe,
   cppcoreguidelines-*,
   misc-*,
   modernize-*,
@@ -44,6 +47,8 @@ WarningsAsErrors: ''
 HeaderFilterRegex: '(include/pixterm|src|app|tests)/'
 FormatStyle: file
 CheckOptions:
+  - key: bugprone-unused-return-value.AllowCastToVoid
+    value: true
   - key: readability-identifier-naming.ClassCase
     value: CamelCase
   - key: readability-identifier-naming.StructCase

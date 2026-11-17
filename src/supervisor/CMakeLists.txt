@@ -19,3 +19,18 @@ add_library(pixterm_supervisor STATIC
 )
 target_include_directories(pixterm_supervisor PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(pixterm_supervisor PUBLIC pixterm::core PRIVATE pixterm::options)
+
+# The System pixtermd runs on.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    add_library(pixterm_supervisor_linux STATIC
+        linux/event_loop.cpp
+        linux/linux_system.cpp
+        linux/probes.cpp
+        linux/spawn.cpp
+    )
+    add_library(pixterm::supervisor_linux ALIAS pixterm_supervisor_linux)
+    find_package(OpenSSL 3 REQUIRED COMPONENTS Crypto)
+    target_link_libraries(pixterm_supervisor_linux
+        PUBLIC pixterm_supervisor
+        PRIVATE pixterm::options OpenSSL::Crypto)
+endif()
