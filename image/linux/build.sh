@@ -90,9 +90,11 @@ docker run --rm --privileged -v /dev:/dev \
     -e PIXTERM_BUILD_ID="$BUILD_ID" \
     pixterm-builder /src/image/linux/build-in-container.sh "$BASE" "$OUT"
 
-# The first build of an architecture records its package versions, the
-# build tools' among them; PIXTERM_LOCK=add records the added ones.
+# Every build leaves the versions it installed, the build tools' among
+# them, in out/. The first build of an architecture records them as its
+# lock, and PIXTERM_LOCK=add records the added ones. To move every
+# package to its newest version, build with PIXTERM_LOCK=0 and copy the
+# new lock over the old one.
 if [ ! -f "$here/packages.$ARCH.lock" ] || [ "$LOCK" = add ]; then
 	cp "$here/out/$OUT.lock" "$here/packages.$ARCH.lock"
 fi
-rm -f "$here/out/$OUT.lock"

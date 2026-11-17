@@ -60,6 +60,7 @@ PIXTERM_DEV=0 image/linux/build.sh         # release image
 PIXTERM_ARCH=armhf image/linux/build.sh    # 32-bit image
 PIXTERM_LOCK=1 image/linux/build.sh        # exact package versions from packages.<arch>.lock
 PIXTERM_LOCK=add image/linux/build.sh      # keep those versions, add new packages to the lock
+PIXTERM_LOCK=0 image/linux/build.sh        # newest versions; the lock it would write is in out/
 sudo image/linux/flash.sh /dev/diskN       # write to an SD card (macOS)
 ----
 
