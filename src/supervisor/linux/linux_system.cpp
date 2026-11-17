@@ -4,11 +4,11 @@
 #include "linux_system.hpp"
 
 #include "probes.hpp"
-#include "spawn.hpp"
 
 #include <pixterm/netstat.hpp>
 #include <pixterm/pin.hpp>
 #include <pixterm/settings_store.hpp>
+#include <pixterm/spawn.hpp>
 
 #include <fcntl.h>
 #include <openssl/rand.h>

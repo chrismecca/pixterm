@@ -26,7 +26,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
         linux/event_loop.cpp
         linux/linux_system.cpp
         linux/probes.cpp
-        linux/spawn.cpp
     )
     add_library(pixterm::supervisor_linux ALIAS pixterm_supervisor_linux)
     find_package(OpenSSL 3 REQUIRED COMPONENTS Crypto)

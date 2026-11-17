@@ -14,7 +14,7 @@
 #include <system_error>
 #include <vector>
 
-namespace pixterm::supervisor {
+namespace pixterm {
 
 /// Use pixtermd's own descriptor rather than a new one.
 inline constexpr int inherit_fd = -2;
@@ -32,13 +32,19 @@ struct SpawnOptions {
     bool new_session = true;
 };
 
-/// Starts a program. Every descriptor pixtermd opens is close-on-exec,
+/// Starts a program. Every descriptor pixterm opens is close-on-exec,
 /// so the program gets only those named here.
 [[nodiscard]] std::expected<pid_t, std::error_code> spawn(const SpawnOptions& options);
+
+/// Runs a program to its end, with nothing on its standard streams.
+///
+/// @return Its exit status, or -1 if it could not run or was killed.
+[[nodiscard]] int run_and_wait(const std::vector<std::string>& argv,
+                               const std::vector<std::string>& env);
 
 /// Runs task in a child process in a session of its own, writing what
 /// it returns, and a newline, to out.
 [[nodiscard]] std::expected<pid_t, std::error_code>
 fork_task(const std::function<std::string()>& task, int out);
 
-} // namespace pixterm::supervisor
+} // namespace pixterm

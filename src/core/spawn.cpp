@@ -1,19 +1,20 @@
 // SPDX-FileCopyrightText: 2026 Chris Mecca
 // SPDX-License-Identifier: MIT
 
-#include "spawn.hpp"
-
 #include <pixterm/fd.hpp>
+#include <pixterm/spawn.hpp>
 
 #include <fcntl.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #include <array>
+#include <cerrno>
 #include <csignal>
 #include <cstring>
 #include <print>
 
-namespace pixterm::supervisor {
+namespace pixterm {
 
 namespace {
 
@@ -70,8 +71,26 @@ std::expected<pid_t, std::error_code> spawn(const SpawnOptions& options) {
     if (options.pass_fd >= 0)
         ::fcntl(options.pass_fd, F_SETFD, 0);
     ::execve(argv[0], argv.data(), envp.data());
-    std::println(stderr, "pixtermd: cannot run {}: {}", args.front(), std::strerror(errno));
+    std::println(stderr, "cannot run {}: {}", args.front(), std::strerror(errno));
     ::_exit(127);
+}
+
+int run_and_wait(const std::vector<std::string>& argv, const std::vector<std::string>& env) {
+    const auto pid = spawn({.argv = argv,
+                            .env = env,
+                            .in = -1,
+                            .out = -1,
+                            .err = inherit_fd,
+                            .pass_fd = -1,
+                            .new_session = true});
+    if (!pid)
+        return -1;
+    int status = 0;
+    while (::waitpid(*pid, &status, 0) < 0) {
+        if (errno != EINTR)
+            return -1;
+    }
+    return WIFEXITED(status) ? WEXITSTATUS(status) : -1;
 }
 
 std::expected<pid_t, std::error_code> fork_task(const std::function<std::string()>& task, int out) {
@@ -87,4 +106,4 @@ std::expected<pid_t, std::error_code> fork_task(const std::function<std::string(
     ::_exit(0);
 }
 
-} // namespace pixterm::supervisor
+} // namespace pixterm

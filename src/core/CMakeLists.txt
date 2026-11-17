@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 # The code every pixterm program shares: settings, their checks and
-# the wire formats. It needs only POSIX and OpenSSL's libcrypto, so its
-# tests also run on macOS.
+# the wire formats, and starting programs. It needs only POSIX and
+# OpenSSL's libcrypto, so its tests also run on macOS.
 add_library(pixterm_core STATIC
     fd.cpp
     helper_protocol.cpp
@@ -13,6 +13,7 @@ add_library(pixterm_core STATIC
     pin.cpp
     settings.cpp
     settings_store.cpp
+    spawn.cpp
     validate.cpp
     xdmcp.cpp
 )
@@ -31,6 +32,7 @@ target_sources(pixterm_core
             ${PROJECT_SOURCE_DIR}/include/pixterm/pin.hpp
             ${PROJECT_SOURCE_DIR}/include/pixterm/settings.hpp
             ${PROJECT_SOURCE_DIR}/include/pixterm/settings_store.hpp
+            ${PROJECT_SOURCE_DIR}/include/pixterm/spawn.hpp
             ${PROJECT_SOURCE_DIR}/include/pixterm/validate.hpp
             ${PROJECT_SOURCE_DIR}/include/pixterm/xdmcp.hpp
 )

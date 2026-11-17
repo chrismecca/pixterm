@@ -11,6 +11,7 @@ pixterm_add_tests(wire SOURCES wire_test.cpp LIBRARIES pixterm::core)
 pixterm_add_tests(netstat SOURCES netstat_test.cpp LIBRARIES pixterm::core)
 pixterm_add_tests(supervisor SOURCES supervisor_test.cpp LIBRARIES pixterm_supervisor)
 pixterm_add_tests(sessions SOURCES sessions_test.cpp LIBRARIES pixterm_supervisor)
+pixterm_add_tests(helper SOURCES helper_test.cpp LIBRARIES pixterm_helper)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     pixterm_add_tests(linux_system SOURCES linux_system_test.cpp
