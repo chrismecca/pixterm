@@ -1,0 +1,51 @@
+// SPDX-FileCopyrightText: 2026 Chris Mecca
+// SPDX-License-Identifier: MIT
+
+= Hardware
+
+The programs run on Linux with X11 and Motif. Only the
+image recipe (`+image/linux/+`) and the Xorg configuration
+(`+data/xorg/10-pixterm.conf+`) depend on the board.
+
+== Boards
+
+[cols="1,1,1,1",options="header"]
+|===
+| Board | Image | Status | Notes
+
+| Raspberry Pi 3 B | arm64 | Works | 1080p; 100 Mbit Ethernet over USB
+| Raspberry Pi 3 B | armhf | Works | 32-bit image
+| Raspberry Pi 3 B+ | arm64 | Not tested | Same display hardware as the 3 B
+| Raspberry Pi 4 B | arm64 | Not tested | Gigabit Ethernet, two HDMI ports
+| Raspberry Pi 400 | arm64 | Not tested | Pi 4 inside a keyboard; Ethernet only
+| Raspberry Pi 5 and 500 | arm64 | Not tested | New display hardware: test the colour fix first
+| x86 thin clients |  | No image yet | Dell Wyse 5070, HP t630 and t640, Fujitsu Futro
+| Raspberry Pi Zero 2 W |  | Not planned | Wi-Fi only and 512 MB of memory
+|===
+
+== Known board faults
+
+* *Raspberry Pi 3 (vc4)*: Xorg's atomic colour management sets a colour
+matrix that turns HDMI black, and the matrix stays set after Xorg
+exits. `+10-pixterm.conf+` sets `+UseGammaLUT+` to false. Test every new
+board for this first.
+
+== Test checklist
+
+Run every step on a board before listing it as working.
+
+. Cold boot to the chooser, timed. The target is under 30 seconds.
+. An SSH session (`+xsession+`); logging out returns to the chooser.
+. An XDMCP session from Find Hosts; logging out returns to the chooser.
+. Ctrl+Alt+Backspace during each kind of session.
+. Pull the Ethernet cable during a session. The chooser should return,
+with an error, within about ten seconds.
+. Change the display mode, and let it revert after 15 seconds, on at
+least two monitors.
+. Apply a static network address, then DHCP again.
+. Export to and import from a FAT USB drive.
+. Set an administrator PIN, then clear it with `+pixterm-reset+` on the
+boot partition.
+. Cut the power 20 times: at the chooser, during a session and while a
+change is being saved. The settings must survive every time.
+. Record memory use (`+free -m+`) after boot and after an hour's session.

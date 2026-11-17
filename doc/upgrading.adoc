@@ -1,0 +1,49 @@
+// SPDX-FileCopyrightText: 2026 Chris Mecca
+// SPDX-License-Identifier: MIT
+
+= Upgrading pixterm
+
+A new version of pixterm comes as a new SD card image. Writing it
+replaces everything on the card, settings included, so save the
+settings first and load them again afterwards.
+
+== Which version you have
+
+The chooser shows the version under the host list. Configure > System
+shows it too, with the build: the commit it was made from, a plus sign if it
+was built from changed files, and "development" for development images.
+
+== Steps
+
+. Insert a USB drive formatted as FAT or exFAT.
+. Open Configure > System and choose Export to USB. The drive now has
+`+pixterm-config.json+` (hosts and settings), `+pixterm-known_hosts+`
+(the host keys the terminal has accepted) and, if the terminal has
+an SSH key, `+pixterm-terminal-key.pub+`.
+. Switch the terminal off and take out the SD card.
+. Check the new image against `+SHA256SUMS+` from the release, then
+write it to the card with Raspberry Pi Imager or `+dd+`.
+. Start the terminal from the new card, insert the USB drive, and
+choose Configure > System > Import from USB.
+
+The import brings back the hosts, the display, network and keyboard
+settings, the administrator PIN and the accepted host keys.
+
+== The terminal's SSH key
+
+The export holds only the public half of the terminal's key: the
+private half never leaves the terminal, so a lost USB drive cannot log
+anyone in. After an upgrade the terminal has no key. For hosts set to
+log in with it:
+
+. Create a new key with Configure > Hosts > Terminal Key.
+. On each of those hosts, replace the old public key in
+`+~/.ssh/authorized_keys+` (OpenVMS: `+[.SSH]AUTHORIZED_KEYS.+` in the
+login directory) with the new one.
+
+== If something goes wrong
+
+* If the new version does not start, write the old image back and
+import the same USB drive.
+* To start again from the factory settings, create an empty file named
+`+pixterm-reset+` on the card's boot partition.

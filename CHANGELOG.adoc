@@ -1,0 +1,24 @@
+// SPDX-FileCopyrightText: 2026 Chris Mecca
+// SPDX-License-Identifier: MIT
+
+= Changes
+
+Each release has a section here. The release workflow copies the
+section into the release notes.
+
+== Unreleased
+
+=== Added
+
+* Sessions over SSH with X11 forwarding: `~/.xsession`, one xterm, a
+command through `/bin/sh`, or a raw command for OpenVMS.
+* XDMCP sessions, direct or through the host's chooser, and Find Hosts
+to search the network for display managers.
+* Terminal sessions over SSH and Telnet, and serial consoles.
+* Direct X sessions, and commands started with rexec and rsh.
+* VNC and RDP desktops.
+* Login with the terminal's own SSH key.
+* Configure: hosts, display mode with a timed confirmation, network,
+keyboard, USB export and import, diagnostics, and an administrator PIN.
+* A read-only image for the Raspberry Pi, with settings saved as
+checked generations on a partition of their own.

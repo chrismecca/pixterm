@@ -1,0 +1,33 @@
+// SPDX-FileCopyrightText: 2026 Chris Mecca
+// SPDX-License-Identifier: MIT
+
+= Security
+
+== Reporting a problem
+
+Please report security problems privately, through GitHub: on the
+repository's Security tab, choose "Report a vulnerability". Do not open
+a public issue for them.
+
+Say what you found, which version or image it affects, and how to
+reproduce it. You will get an answer within two weeks.
+
+== Supported versions
+
+Only the latest release gets fixes. A fix comes as a new image; see
+link:doc/upgrading.adoc[doc/upgrading.adoc].
+
+== What pixterm protects
+
+pixterm is meant for trusted home, lab and office networks, not for the
+open internet. link:doc/design.adoc#_security[The design] lists what it
+guards against and what it leaves to the network. In short:
+
+* Release images run no network services. During XDMCP and direct X
+sessions the X server accepts connections on TCP port 6000.
+* XDMCP, Telnet, rexec, rsh and direct X send everything, passwords
+included, in clear text.
+* A host reached with trusted X11 forwarding controls the display
+during its session.
+* The administrator PIN keeps passers-by out of the settings. It does
+not protect the SD card, which anyone holding the terminal can read.

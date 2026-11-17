@@ -1,0 +1,16 @@
+// SPDX-FileCopyrightText: 2026 Chris Mecca
+// SPDX-License-Identifier: MIT
+
+= Any host with xdm (XDMCP)
+
+For Linux and BSD hosts that run xdm. Other display managers need
+similar settings.
+
+* In `+/etc/X11/xdm/xdm-config+`, comment out
+`+DisplayManager.requestPort: 0+`.
+* In `+/etc/X11/xdm/Xaccess+`, enable the `+*+` line (any host) or list the
+terminal's address. A `+CHOOSER BROADCAST+` line allows indirect queries
+("Use the host's chooser" in the host entry).
+* Restart xdm, then use Find Hosts on the terminal.
+
+pixterm's own session test sets up Debian's xdm this way.

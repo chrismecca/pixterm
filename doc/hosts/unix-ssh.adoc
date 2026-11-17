@@ -1,0 +1,50 @@
+// SPDX-FileCopyrightText: 2026 Chris Mecca
+// SPDX-License-Identifier: MIT
+
+= Linux, BSD and other Unix hosts (SSH)
+
+Tested with NetBSD 11.1 (olvwm started from `+~/.xsession+`) and Debian.
+
+== Host entry
+
+[cols="1,1",options="header"]
+|===
+| Field | Value
+
+| Protocol | SSH / X11
+| Username | your user name, or empty to ask at login
+| Session | Your X session (~/.xsession)
+|===
+
+== Host setup
+
+* sshd needs `+X11Forwarding yes+` in `+sshd_config+`, and `+xauth+` installed.
+* `+~/.xsession+` (or `+~/.xinitrc+`) starts your session. Its last command,
+usually the window manager, must run in the foreground for the whole
+session:
++
+[source,sh]
+----
+#!/bin/sh
+xsetroot -solid gray30
+xterm &
+exec olvwm
+----
++
+Its output goes to `+~/.xsession-errors+` on the host.
+* If the file is not executable, pixterm runs it with `+/bin/sh+`.
+
+== Other session types
+
+* Single xterm (diagnostic) tests X11 forwarding without your session.
+* Custom command runs any command line with `+/bin/sh+` on the host. Its
+output goes to `+~/.pixterm-session-errors+`.
+
+== Notes
+
+* pixterm uses trusted X11 forwarding, so programs on the host have full
+access to the terminal's display, as with any X terminal.
+* If a session ends within five seconds, pixterm treats it as a session
+that failed to start and shows what the host printed.
+* The first login to a host asks you to confirm its key; the terminal
+remembers it.

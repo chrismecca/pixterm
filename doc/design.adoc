@@ -1,0 +1,367 @@
+// SPDX-FileCopyrightText: 2026 Chris Mecca
+// SPDX-License-Identifier: MIT
+
+= pixterm design
+:toc:
+
+== What pixterm is
+
+pixterm turns a small computer, today a Raspberry Pi, into an X
+terminal like the NCD terminals of the 1990s. You switch it on, pick a
+host from a list, and log in. The host runs your programs; the terminal
+shows them and takes your keyboard and mouse. When you log out, the
+terminal returns to its host list.
+
+The user never sees a local desktop, shell or login prompt. The
+terminal's own operating system stays out of sight, and you can switch
+it off at any time without harm.
+
+== Principles
+
+. *The computer inside stays hidden.* Users need not know which
+operating system runs, where files live or how X starts.
+. *The interface is real Motif.* pixterm uses the Motif toolkit and
+mwm, not an imitation.
+. *No local desktop.* No panel, launcher, file manager or browser. The
+local X display exists only for pixterm's own windows.
+. *Sessions leave nothing behind.* Every session ends with a fresh X
+server, so no window, clipboard or key survives into the next one.
+. *Settings persist; nothing else does.* The host list and device
+settings survive power cuts. Logs, sessions and temporary files do not.
+. *No outside services.* No cloud, accounts, web pages or management
+server. pixterm works on an isolated network.
+
+The loop that matters is: hosts, login, remote session, logout, hosts.
+Every feature must serve that loop.
+
+== Programs
+
+[cols="2,1,5",options="header"]
+|===
+| Program | Runs as | Job
+
+| `pixtermd` | pixterm | Starts and watches Xorg, mwm, the chooser and sessions
+| `pixterm-ui` | pixterm | The Motif host chooser and its Configure dialog
+| `pixterm-askpass` | pixterm | The Motif password and host key dialogs
+| `pixterm-xsetup` | pixterm | Sets the display mode, keyboard and font path
+| `pixterm-rexec` | pixterm | Starts rexec and rsh commands; may bind a port below 1024
+| `pixterm-helper` | root | The only privileged program: saves settings, applies network settings, makes the terminal's key, reboots
+|===
+
+systemd starts `pixtermd` in a logind session on the first virtual
+console, so Xorg runs without root. `pixtermd` links no X library and
+survives an Xorg crash. It never blocks: short programs run as
+background jobs, and requests to the helper go over a socket.
+
+The chooser never starts a session itself. It asks `pixtermd` over a
+socket pair, one line per message, and `pixtermd` checks every request
+against the settings it loaded itself.
+
+----
+systemd
+  pixtermd
+    Xorg
+    local mode:  mwm, pixterm-ui
+    a session:   its programs, such as ssh, xterm or a viewer
+  pixterm-helper   (one process per request, from a socket)
+----
+
+== Session lifecycle
+
+=== States
+
+----
+x_start -> x_setup -> local --(SSH and most hosts)--> connecting -> handoff -> session
+                        |                                                       |
+                        +--(XDMCP host)--> probe -> handoff -> x_switch -> remote
+                                                                                |
+any failure, or logout -----------------------------------> teardown -> x_start
+----
+
+In `session`, the session uses the terminal's own display. In
+`remote`, it has a display of its own: Xorg restarts with the
+arguments the host type needs, and its exit ends the session.
+
+=== Host types
+
+Each host type is a class in `src/supervisor/sessions/` derived from
+`Session`. It says how to begin connecting, how to cancel, how to
+start after the handoff, which arguments its own X server needs, and
+what each program's exit means. The state machine in
+`src/supervisor/supervisor.cpp` calls these at fixed points and knows
+nothing of any protocol. Parts that several host types share, such as
+asking for a password or opening a full-screen terminal, are in
+`parts.hpp`.
+
+=== SSH sessions
+
+. The user picks a host. `pixtermd` starts an ssh master connection
+while the chooser and mwm are still on screen, so the password and host
+key dialogs appear as ordinary Motif windows.
+. OpenSSH makes its control socket only after login succeeds. When the
+socket appears, `pixtermd` tells the chooser and mwm to exit.
+. `pixtermd` starts the session command through the master connection,
+with trusted X11 forwarding and no further prompts.
+. When the session command exits, or the connection drops, `pixtermd`
+ends every child process and starts a fresh Xorg.
+
+The session's standard input stays open until teardown: OpenVMS takes
+the end of input as the end of the command.
+
+=== XDMCP sessions
+
+. `pixtermd` sends its own XDMCP query to the host. If the host does not
+answer within a few seconds, or declines, the user sees why and stays on
+the chooser.
+. If the host is willing, `pixtermd` stops the local Xorg and starts a
+new one with `-query` (or `-indirect`) and `-once`.
+. The host's display manager shows its login screen. If it never
+connects to the display, `pixtermd` gives up after 30 seconds and says
+so.
+. When the user logs out, the host resets the display; `-once` makes
+Xorg exit, and `pixtermd` starts the chooser again.
+
+No local program ever connects to an XDMCP display: its disconnect
+could reset the server and end the session. The keyboard layout
+therefore comes from an Xorg configuration file that `pixtermd` writes
+before each start.
+
+=== Failures
+
+* A session that ends within five seconds counts as one that failed to
+start; the user sees what the host printed.
+* If the Ethernet link stays down for ten seconds during a session, the
+session ends with an error.
+* Ctrl+Alt+Backspace kills the X server at any time; `pixtermd` starts a
+new one and the chooser returns. This does not log out of the host.
+* Programs that keep failing are restarted with growing delays, not in a
+tight loop.
+
+== Host types
+
+=== SSH with X11 forwarding
+
+SSH gives encryption, host authentication and a command channel. The
+local X server listens on no TCP port during SSH sessions; remote
+programs reach it only through ssh.
+
+Full desktops need trusted forwarding (`ssh -Y`), which gives the host
+full control of the display for the session. The chooser exits before
+the session starts, the X server restarts after it, and ssh agent
+forwarding stays off.
+
+[cols="1,4",options="header"]
+|===
+| Session type | Runs on the host
+
+| xsession | `~/.xsession` or `~/.xinitrc`, as xdm would
+| xterm | one xterm, to test forwarding
+| custom | a command line, run by `/bin/sh`
+| raw | a command sent unchanged (OpenVMS DCL and other hosts with no POSIX shell)
+|===
+
+Login uses a password typed into a Motif dialog, or the terminal's own
+SSH key, chosen for each host.
+
+=== XDMCP
+
+XDMCP matches how classic X terminals worked, and older Unix hosts
+(IRIX, Solaris) offer nothing else. It sends everything in clear text,
+so use it only on trusted networks. Find Hosts searches the network for
+XDMCP hosts, as the old terminals did, and each host can use a font
+server.
+
+=== Terminal sessions
+
+An SSH terminal or Telnet host gets a text login, not X programs. The
+session is one xterm that fills the screen and runs ssh or telnet;
+there is no local shell, and when the login ends the chooser returns.
+A serial console works the same way, with picocom on one of the
+terminal's serial ports.
+
+* SSH terminal hosts log in like any SSH host. The session then asks
+for a terminal and forwards no X11.
+* Telnet hosts are checked while the chooser is up, so a host that
+refuses the connection is reported there. Telnet sends passwords in
+clear text.
+* Neither ssh nor telnet has an escape character, so the user cannot
+reach their local command prompts.
+* The font is the largest of 6x13, 9x15 and 10x20 that suits the
+screen; the root window turns white, so any edge the character grid
+leaves matches the terminal.
+
+=== Other host types
+
+* *Direct X:* the host opens windows on the terminal over TCP. The
+terminal lets in that host alone, for the length of the session.
+* *rexec and rsh:* one command, started by `pixterm-rexec`, opens its
+windows on the terminal the same way.
+* *VNC and RDP:* TigerVNC's viewer or FreeRDP shows a whole remote
+desktop. The chooser first checks that the host accepts connections,
+and for RDP that the password is right.
+
+See the guides in `doc/hosts/` for each kind of host.
+
+=== Not supported
+
+Network boot and settings kept on a central server. Wi-Fi. DECnet,
+since Linux no longer has it. The PEX, XIE, Display PostScript and LBX
+extensions, which X.org removed.
+
+== User interface
+
+The chooser looks like a 1990s Unix workstation: a woven root pattern,
+gray Motif windows with bevels, black mwm frames and core bitmap fonts.
+mwm runs only while the chooser is up, with no root menu and no way to
+start other programs.
+
+* The chooser lists the configured hosts; a double click or Return logs
+in. Find Hosts lists XDMCP hosts that answer a broadcast query.
+* Configure has six panels: Hosts, Display, Network, Keyboard, System
+and Diagnostics.
+* A new display mode stays only if the user confirms it within 15
+seconds.
+* An optional administrator PIN guards Configure. It keeps passers-by
+out of the settings; it does not protect the SD card.
+
+== Settings
+
+The settings are a small JSON file: device settings (display mode,
+keyboard, network, PIN hash) and a list of hosts. Each host has a
+random, stable identifier, so names and addresses can change.
+Passwords are never stored.
+
+Every field has a length limit and a check. The supervisor and the
+helper check all settings they receive, including imported ones, and
+reject the whole file if any part is wrong. Options that do not apply
+to a host's protocol are dropped.
+
+=== Safe writes
+
+The helper writes each change as a new generation:
+
+. Check the new settings.
+. Make the settings partition writable.
+. Write the new generation, with a CRC-32 header, to a temporary file
+and flush it.
+. Keep the current generation as the previous one, rename the new file
+into place, and flush the directory.
+. Make the partition read-only again.
+
+At startup, pixterm uses the newest generation that passes its check,
+then the previous one, then the factory file, then built-in defaults.
+
+=== Moving and resetting settings
+
+* Export and Import copy the settings, saved host keys and the
+terminal's public key to and from a FAT or exFAT USB drive.
+* An empty file named `pixterm-reset` on the boot partition resets the
+terminal to its factory settings at the next boot. The boot partition
+is FAT, so any computer can make the file.
+
+== Storage
+
+[cols="1,2,2",options="header"]
+|===
+| Partition | Contents | At run time
+
+| boot (FAT) | firmware, kernel | read-only
+| root (ext4) | the system | read-only
+| pixterm-data | settings, host keys, terminal key | read-only, except while the helper saves
+|===
+
+Logs, systemd state and temporary files live in RAM. The machine ID is
+made fresh at each boot, so DHCP knows the terminal by its MAC address.
+At boot, the helper writes the network settings into `/run` from the
+saved settings.
+
+No storage can promise safety against every failure: SD cards wear out,
+and a power cut during a save loses that one change. The design removes
+ordinary writes and makes the rest recoverable.
+
+There is no swap and no automatic update. Updates mean a new image, with
+settings carried over by Export and Import.
+
+== Security
+
+pixterm is meant for trusted home, lab and office networks, not for the
+open internet. `SECURITY.adoc` says how to report a problem.
+
+* *Inbound services:* none in release images. During an XDMCP or
+direct X session, the X server accepts connections on TCP port 6000,
+from that session's host alone where the host is known in advance.
+* *Remote hosts:* a host with trusted X11 forwarding controls the
+display during its session. Connect only to hosts you trust.
+* *Passwords:* typed into a dialog that keeps them in a fixed buffer,
+passed on through a pipe, and never written to disk, logs or command
+lines. XDMCP, Telnet and rexec hosts send the password across the
+network in clear text.
+* *Terminal key:* hosts set to key login accept anyone sitting at the
+terminal. Only the public key leaves the terminal.
+* *Privilege:* only `pixterm-helper` runs as root. systemd starts one
+copy per request on a socket that only the pixterm account can open;
+the helper checks the caller's identity and every argument again. No
+shell is ever involved. `pixterm-rexec` has one capability, to bind a
+port below 1024, and drops it once it has.
+* *Untrusted input:* settings files, XDMCP replies and the helper's
+requests are fuzzed.
+
+== Code
+
+pixterm is written in C++23 and built with Clang, libc++, CMake and
+Ninja. `CONTRIBUTING.adoc` has the rules for the code itself.
+
+* *Logic is kept apart from the system.* The supervisor's state machine
+reaches the system only through the `System` interface: starting
+programs, timers, files and the helper. The unit tests drive it with a
+fake system and a fake clock; `LinuxSystem` is the real one. The helper
+does the same with its `Privileged` interface, and the chooser's rules
+(`src/chooser/`) know nothing of Motif.
+* *Errors are values.* The code is built without exceptions; functions
+that can fail return `std::expected` or `std::optional`.
+* *Secrets are wiped.* Passwords and PINs live in fixed buffers that are
+cleared when they are no longer needed, and never in strings that may
+be copied around the heap.
+
+[cols="1,3",options="header"]
+|===
+| Directory | Contents
+
+| `include/pixterm/` | The shared library's interface: settings, their checks and file format, the wire formats, the PIN hash, starting programs
+| `src/core/` | The shared library itself
+| `src/supervisor/` | `pixtermd`'s state machine, its host types (`sessions/`) and its Linux side (`linux/`)
+| `src/helper/` | `pixterm-helper`'s requests
+| `src/chooser/` | What the chooser decides: messages, the host editor's rules, the PIN gate, the XDMCP search
+| `src/askpass/`, `src/rexec/`, `src/x11/` | The logic of the small programs, and the X display code they share
+| `app/` | One directory per program: its `main.cpp`, and for the chooser its Motif windows
+| `data/` | X resources, the mwm configuration, systemd units and the Xorg configuration
+| `tests/` | Unit tests, fuzzers, the session test and its stand-in servers
+| `image/linux/` | The SD card image
+|===
+
+=== Checks
+
+`tools/ci.sh` runs every check that needs no hardware, in a Debian
+container, and GitHub runs the same script:
+
+* the format, plain ASCII and licence headers;
+* a build with warnings as errors, and the unit tests;
+* the unit tests again under the address and undefined behaviour
+sanitizers;
+* clang-tidy;
+* the fuzzers;
+* the session test: the real programs on Xvfb, with stand-in hosts for
+every protocol, driven through the chooser with xdotool.
+
+== Risks
+
+[cols="1,1",options="header"]
+|===
+| Risk | Answer
+
+| A board's graphics driver misbehaves under X11 | Test each board; keep fixes in the Xorg configuration
+| Xorg and Motif get little upstream work | Keep pixterm's use of them small and plain
+| Some remote desktops do not work over SSH X11 | Support `~/.xsession` and test real hosts; document what works
+| Power cuts during saves | Generations with checks
+| The project grows into a desktop distribution | Every feature must serve the login loop
+|===

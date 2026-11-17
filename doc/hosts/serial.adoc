@@ -1,0 +1,53 @@
+// SPDX-FileCopyrightText: 2026 Chris Mecca
+// SPDX-License-Identifier: MIT
+
+= Serial consoles
+
+A USB serial adapter in the terminal reaches the console port of a
+server, workstation or router, even one whose network or disks are
+broken. Tested with a Sun workstation.
+
+== Host entry
+
+[cols="1,1",options="header"]
+|===
+| Field | Value
+
+| Protocol | Serial console
+| Serial device | `+/dev/ttyUSB0+` for most adapters (FTDI, Prolific, CH340); `+/dev/ttyACM0+` for some
+| Speed | 9600 for most consoles
+|===
+
+With more than one adapter, the `+/dev/ttyUSB+` numbers depend on the
+order they were found in. A name under `+/dev/serial/by-id/+` stays with
+the adapter.
+
+The line is 8 data bits, no parity, one stop bit, no flow control. If
+the adapter is not plugged in, the chooser says so before it closes.
+
+== Keys
+
+[cols="1,1",options="header"]
+|===
+| Keys | Does
+
+| Ctrl+A, then Ctrl+\ | send a BREAK
+| Ctrl+A, then Ctrl+X | end the session and return to the chooser
+| Ctrl+A, then Ctrl+H | list the other keys
+|===
+
+The terminal's title shows the first two.
+
+== Sun workstations and servers
+
+* Use port A (`+ttya+`). Most Sun ports need a null modem between them and
+the adapter.
+* With no Sun keyboard plugged in, OpenBoot sends the console to `+ttya+`
+by itself. Otherwise set `+input-device+` and `+output-device+` to `+ttya+`.
+* A BREAK is Stop-A: it stops the system at the `+ok+` prompt. From there,
+`+go+` resumes and `+boot+` starts again.
+
+== Notes
+
+* Nothing on the terminal can send or receive files over the line yet.
+* The session has no local shell: the keys above are all it offers.

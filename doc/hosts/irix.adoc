@@ -1,0 +1,40 @@
+// SPDX-FileCopyrightText: 2026 Chris Mecca
+// SPDX-License-Identifier: MIT
+
+= IRIX hosts (XDMCP)
+
+Tested on IRIX running on an SGI Origin 200.
+
+== Host entry
+
+[cols="1,1",options="header"]
+|===
+| Field | Value
+
+| Protocol | XDMCP
+| Host | the IRIX host
+| Port | 177
+|===
+
+Or use Find Hosts on the chooser. IRIX answers when its access list
+allows broadcast queries.
+
+== Host setup
+
+IRIX ships xdm, usually configured in `+/var/X11/xdm+`.
+
+* In `+xdm-config+`, `+DisplayManager.requestPort+` must not be `+0+`.
+* In `+Xaccess+`, allow the terminal: `+*+` allows any host, or give its
+address.
+* Restart xdm after a change.
+
+== Notes
+
+* XDMCP sends everything in clear text. Use it only on a network you
+trust.
+* The host connects back to the terminal on TCP port 6000. If no login
+screen appears within 30 seconds, pixterm says so; check for firewalls
+between the two.
+* If programs need fonts that only the host has, run its font server
+(`+fs+`, port 7100) and fill in Font server in the host entry.
+* Logging out of IRIX returns the terminal to its chooser.

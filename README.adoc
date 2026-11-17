@@ -14,15 +14,79 @@ and the list comes back.
 This is not PIXterm, the unrelated program that draws images in a text
 terminal.
 
-== Status
+* Design: link:doc/design.adoc[doc/design.adoc]
+* Supported boards: link:doc/hardware.adoc[doc/hardware.adoc]
+* Setting up hosts: link:doc/hosts/[doc/hosts/]
+* Upgrading: link:doc/upgrading.adoc[doc/upgrading.adoc]
+* Changes: link:CHANGELOG.adoc[CHANGELOG.adoc]
 
-pixterm is being rebuilt in {cpp}23. There is no image to download yet.
+== What it connects to
+
+* *SSH with X11 forwarding:* any Unix host running sshd. pixterm runs
+your `~/.xsession`, a single xterm, or a command you choose. OpenVMS
+hosts run DECwindows through a DCL command.
+* *XDMCP:* xdm and similar display managers (IRIX, Solaris, Linux and
+BSD). The chooser can search the network for them.
+* *Terminal sessions:* a text login over SSH or Telnet, in a terminal
+that fills the screen.
+* *Direct X:* the host opens windows on the terminal over TCP; rexec
+and rsh start a command on hosts too old for SSH.
+* *Remote desktops:* VNC (macOS Screen Sharing among them) and RDP.
+* *Serial consoles:* a USB serial adapter in the terminal reaches a
+machine's console port.
+
+== The terminal
+
+* The system and boot partitions are read-only. Settings live on a
+small partition that is writable only while a change is saved, and the
+last good settings are always kept. You can pull the power at any time.
+* Release images run no network services. One small program,
+`pixterm-helper`, runs as root and does only what the settings need.
+* Configure covers hosts, display mode, network, keyboard, USB export
+and import, and a log viewer. An optional PIN guards it.
+* To reset a terminal, or recover from a forgotten PIN, make an empty
+file named `pixterm-reset` on the SD card's boot partition. Any
+computer can write to it. The next boot restores the factory settings.
+
+== Building an image
+
+You need Docker, `curl` and `xz`.
+
+[source,sh]
+----
+image/linux/build.sh                       # development image, arm64
+PIXTERM_DEV=0 image/linux/build.sh         # release image
+PIXTERM_ARCH=armhf image/linux/build.sh    # 32-bit image
+PIXTERM_LOCK=1 image/linux/build.sh        # exact package versions from packages.<arch>.lock
+PIXTERM_LOCK=add image/linux/build.sh      # keep those versions, add new packages to the lock
+sudo image/linux/flash.sh /dev/diskN       # write to an SD card (macOS)
+----
+
+A development image adds a `dev` account that accepts the SSH key in
+`image/linux/dev/`, and any keys in the file `PIXTERM_DEV_KEYS` names. A
+file `image/linux/dev/config.json` becomes its factory settings.
+`PIXTERM_PI=ADDRESS image/linux/deploy-dev.sh` installs a new build on a
+development Pi without a new SD card. `image/linux/dev/` is never
+committed.
+
+== Releases
+
+Each release on GitHub has the compressed image, the list of packages in
+it, `SHA256SUMS` and release notes. To make one, add a section
+`== VERSION` to `CHANGELOG.adoc`, set the same version in
+`CMakeLists.txt`, and push a tag `vVERSION`. A workflow builds the image
+and makes a draft release to check and publish. `image/linux/release.sh`
+makes the same files from a local build.
+
+Each release also has `pixterm-imager.json`, a list Raspberry Pi Imager
+can read: `rpi-imager --repo` followed by the file's address shows
+pixterm among the systems to write.
 
 == Building the programs
 
-You need Clang 19 or later with libc++, CMake 3.28 or later, and Ninja.
-The programs that draw on the screen also need Motif, Xt, Xrandr and
-OpenSSL.
+You need Clang 19 or later with libc++, CMake 3.28 or later, Ninja and
+OpenSSL. The programs that draw on the screen also need Motif, Xt and
+Xrandr.
 
 [source,sh]
 ----
@@ -31,9 +95,79 @@ cmake --build --preset debug
 ctest --preset debug
 ----
 
-`tools/ci.sh` runs every check that needs no hardware in a Debian
-container, as GitHub Actions does. link:CONTRIBUTING.adoc[CONTRIBUTING.adoc]
-explains the presets, the checks and the code style.
+On macOS only the libraries and their tests build; the programs need
+Linux.
+
+== Checks
+
+`tools/ci.sh` runs every check that needs no hardware, in Debian
+containers, as GitHub Actions does:
+
+* format, plain ASCII and licence headers;
+* a build with warnings as errors, and the unit tests;
+* the unit tests under the address and undefined behaviour sanitizers;
+* clang-tidy;
+* fuzzers for every parser that reads untrusted input;
+* the session test: Xvfb stands in for Xorg, and sshd, xdm, Xvnc,
+FreeRDP's shadow server and others in the same container act as remote
+hosts.
+
+`tools/ci.sh sessions` runs the session test alone. It keeps its log in
+`out/sessions.log` and pictures of the screen in `out/shots/`.
+link:CONTRIBUTING.adoc[CONTRIBUTING.adoc] explains the presets, the
+checks and the code style.
+
+== Settings example
+
+[source,json]
+----
+{
+  "schema_version": 1,
+  "hosts": [
+    { "id": "ws1", "name": "Workstation", "address": "ws.example.org",
+      "protocol": "ssh-x11", "username": "alice", "session": "xsession" },
+    { "id": "sgi", "name": "IRIX", "address": "192.0.2.16",
+      "protocol": "xdmcp", "font_server": "tcp/192.0.2.16:7100" },
+    { "id": "vms", "name": "OpenVMS", "address": "vms.example.org",
+      "protocol": "ssh-x11", "username": "ALICE", "session": "raw",
+      "command": "RUN SYS$SYSTEM:DECW$SESSION", "auth": "key" }
+  ]
+}
+----
+
+Session types:
+
+* `xsession`, the default, runs `~/.xsession` or `~/.xinitrc`.
+* `xterm` runs one xterm, to test X11 forwarding.
+* `custom` runs `command` with `/bin/sh`.
+* `raw` sends `command` unchanged.
+
+An empty `username` makes the chooser ask for one. `auth` is `password`
+(the default) or `key`, the terminal's own SSH key.
+
+Other protocols: `xdmcp` (with `xdmcp_mode` `query` or `indirect`),
+`ssh-terminal` (`username` and `auth` as above), `telnet`, `direct-x`,
+`rexec` and `rsh` (`username` and `command`, where `%D` stands for the
+terminal's display), `vnc`, `rdp` (`username`, and `domain` if needed),
+and `serial` (`device` and `speed`, with no address). Terminal hosts
+with `"allow_x": true` let the host's X programs open windows on the
+terminal.
+
+== Debugging a development image
+
+* `journalctl -b -t pixtermd` shows the supervisor's log. It runs in a
+logind session, so `-u pixtermd` shows only the service start.
+* The Xorg log is `/run/pixterm/Xorg.log`.
+* Configure > Diagnostics shows the supervisor's recent log on the
+terminal itself.
+* Without a network, read `pixterm-debug/` on the SD card's boot
+partition.
+* The root file system is read-only. Run `sudo mount -o remount,rw /`
+before changing it by hand; `deploy-dev.sh` does this itself.
+
+== Security
+
+See link:SECURITY.adoc[SECURITY.adoc].
 
 == License
 

@@ -1,0 +1,70 @@
+// SPDX-FileCopyrightText: 2026 Chris Mecca
+// SPDX-License-Identifier: MIT
+
+= Direct X, rexec and rsh hosts
+
+In these sessions the host opens windows on the terminal itself, over
+TCP port 6000, the way X terminals were first used. The terminal lets
+in that host alone, and only for the length of the session.
+
+X sends everything in clear text, and so do rexec and rsh. Use them
+only on a network you trust.
+
+== Direct X
+
+The terminal shows "Waiting for windows from ..." and the display name
+to use, such as `+192.0.2.7:0+`. The session ends a few seconds after the
+host's last window closes, or at once with Ctrl+Alt+Backspace.
+
+[cols="1,1",options="header"]
+|===
+| Field | Value
+
+| Protocol | Direct X (the host opens windows)
+| Host | the host that will open windows
+|===
+
+On the host, point programs at the terminal:
+
+* Unix: `+xterm -display 192.0.2.7:0 &+`, or set `+DISPLAY+`.
+* OpenVMS: `+SET DISPLAY/CREATE/NODE=192.0.2.7/TRANSPORT=TCPIP+`, then
+run DECterm or other DECwindows programs.
+* Genera: give the terminal's address as the X screen to use.
+
+== Terminal hosts that allow X
+
+An SSH terminal or Telnet host can set "The host's X programs may open
+windows here". After logging in, start X programs from the terminal
+session with the display shown in the terminal's title. This is how
+OpenVMS users without SSH X forwarding run DECwindows from a Telnet
+login.
+
+== rexec and rsh
+
+These start one command on the host, which opens its windows on the
+terminal. The session lasts as long as the command. In the command,
+`+%D+` stands for the terminal's display.
+
+[cols="1,1",options="header"]
+|===
+| Field | Value
+
+| Protocol | rexec or rsh
+| Port | 512 (rexec) or 514 (rsh)
+| Username | the account on the host
+| Command | for example `+/usr/bin/X11/xterm -display %D+`
+|===
+
+The command must keep running for the whole session: start a terminal
+or a session manager, not a script that starts programs and exits.
+
+=== Host setup
+
+* rexec asks for the account's password, and the host checks it. Enable
+`+rexecd+` in `+/etc/inetd.conf+` (`+exec stream tcp nowait root
+/usr/etc/rexecd rexecd+` on IRIX) and restart inetd.
+* rsh sends no password. The host trusts the terminal's address: add a
+line with the terminal's address and the user name to the account's
+`+~/.rhosts+`, and enable `+rshd+` (`+shell+` in `+/etc/inetd.conf+`).
+Anyone who can use the terminal, or take its address, can then run
+commands as that user.

@@ -1,0 +1,61 @@
+// SPDX-FileCopyrightText: 2026 Chris Mecca
+// SPDX-License-Identifier: MIT
+
+= VNC and RDP hosts
+
+These show a whole remote desktop, filling the terminal's screen. The
+chooser first checks that the host accepts connections, so an
+unreachable host is reported there.
+
+== VNC
+
+[cols="1,1",options="header"]
+|===
+| Field | Value
+
+| Protocol | VNC
+| Port | 5900 (display :0); 5901 for :1, and so on
+|===
+
+The server decides how to log in, and TigerVNC's viewer asks for what
+it needs: nothing, a VNC password, or a user name and password. Press F8
+for the viewer's menu, which can end the session.
+
+=== macOS
+
+Turn on System Settings > General > Sharing > Screen Sharing. The
+viewer logs in with a macOS user name and password (Apple's own login
+method, which TigerVNC calls DH). Screen Sharing sends the screen
+encrypted only with Apple's own viewer; use it on a network you trust.
+
+=== Linux and the BSDs
+
+Any VNC server works: TigerVNC (`+x0vncserver+` for the desktop already
+on screen, `+Xvnc+` for a separate one), x11vnc or wayvnc.
+
+=== Windows, OS/2, Haiku and others
+
+Use the system's own VNC server where it has one (Haiku, RISC OS), or
+TightVNC or UltraVNC on Windows.
+
+== RDP
+
+[cols="1,1",options="header"]
+|===
+| Field | Value
+
+| Protocol | RDP
+| Port | 3389
+| Username | the Windows account; empty to ask
+| Domain | the Windows domain, or empty
+|===
+
+pixterm asks for the password in its own dialog, and checks it while
+the chooser is up: a wrong password is reported there. Logging off
+Windows returns the terminal to the chooser.
+
+The host's certificate is trusted the first time the terminal sees it
+after starting, and must not change until the terminal restarts.
+
+Windows: turn on Settings > System > Remote Desktop. Linux: install
+xrdp.

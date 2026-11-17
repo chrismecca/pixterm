@@ -1,0 +1,59 @@
+// SPDX-FileCopyrightText: 2026 Chris Mecca
+// SPDX-License-Identifier: MIT
+
+= OpenVMS hosts (DECwindows over SSH)
+
+Tested on OpenVMS V9.2-3 (x86-64) with VSI OpenSSH V9.9-2A and
+DECwindows Motif.
+
+== How it works
+
+OpenVMS has no XDMCP display manager, so pixterm reaches DECwindows over
+SSH with X11 forwarding. VSI's SSH server defines `+DECW$DISPLAY+` (a `+WSA+`
+device) for the session and runs the command with DCL.
+
+== Host entry
+
+[cols="1,1",options="header"]
+|===
+| Field | Value
+
+| Protocol | SSH / X11
+| Username | your OpenVMS user name
+| Session | Raw command (VMS, non-Unix)
+| Command | `+RUN SYS$SYSTEM:DECW$SESSION+`
+|===
+
+The other session types wrap the command in `+/bin/sh+`, which OpenVMS
+lacks. Test X11 first with `+RUN SYS$SYSTEM:DECW$CLOCK+`: a clock should
+appear, and closing it ends the session.
+
+== Host setup
+
+* `+SSH$ROOT:[ETC]SSHD_CONFIG.+` must contain `+X11Forwarding yes+`.
+* To check forwarding from a machine with an X server, run
+`+ssh -X user@host 'SHOW LOGICAL DECW$DISPLAY'+`. It should print a `+WSA+`
+device.
+
+== Logging in with the terminal's key
+
+VSI OpenSSH reads `+ssh/authorized_keys+` in the login directory, that is
+`+SYS$LOGIN:[.SSH]AUTHORIZED_KEYS.+`. Configure > Hosts > Terminal Key
+shows the line to add, and Export to USB writes it to
+`+pixterm-terminal-key.pub+`. Then tick "Log in with this terminal's key"
+in the host entry. A key avoids both problems below.
+
+== Known problems
+
+* Accounts with the `+PwdMix+` flag have case-sensitive passwords. `+MCR
+AUTHORIZE SHOW user+` shows the flags.
+* After repeated failures, VMS refuses even the right password from that
+address for a while, without saying why. `+SHOW INTRUSION+` lists the
+records and `+DELETE/INTRUSION_RECORD+` clears one (this needs the
+SECURITY privilege).
+* The command reads its input from the SSH channel, and end of input
+ends it. pixterm keeps the input open. Other clients that run
+`+ssh host command </dev/null+` see the command stop at once.
+* To find out why a session ended, run `+ACCOUNTING/SINCE=time/FULL+`: it
+shows how long each network process ran and its final status. The SSH
+server logs each connection in `+SSH$ROOT:[VAR]+` (this needs SYSPRV).
