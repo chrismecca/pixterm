@@ -7,3 +7,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     add_subdirectory(pixterm-rexec)
     add_subdirectory(pixtermd)
 endif()
+
+if(PIXTERM_X11)
+    add_subdirectory(pixterm-xsetup)
+endif()

@@ -5,6 +5,7 @@
 # the wire formats, and starting programs. It needs only POSIX and
 # OpenSSL's libcrypto, so its tests also run on macOS.
 add_library(pixterm_core STATIC
+    display_modes.cpp
     fd.cpp
     helper_protocol.cpp
     json.cpp
@@ -24,6 +25,7 @@ target_sources(pixterm_core
         FILE_SET HEADERS
         BASE_DIRS ${PROJECT_SOURCE_DIR}/include
         FILES
+            ${PROJECT_SOURCE_DIR}/include/pixterm/display_modes.hpp
             ${PROJECT_SOURCE_DIR}/include/pixterm/fd.hpp
             ${PROJECT_SOURCE_DIR}/include/pixterm/helper_protocol.hpp
             ${PROJECT_SOURCE_DIR}/include/pixterm/json.hpp
