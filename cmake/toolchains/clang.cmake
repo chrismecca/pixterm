@@ -15,3 +15,8 @@ if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
     set(CMAKE_SHARED_LINKER_FLAGS_INIT "-stdlib=libc++ -fuse-ld=lld")
     set(CMAKE_MODULE_LINKER_FLAGS_INIT "-stdlib=libc++ -fuse-ld=lld")
 endif()
+
+# Homebrew's OpenSSL, which CMake does not find by itself.
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin" AND EXISTS /opt/homebrew/opt/openssl@3)
+    set(OPENSSL_ROOT_DIR /opt/homebrew/opt/openssl@3)
+endif()

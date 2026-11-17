@@ -389,7 +389,7 @@ void write_string(std::string& out, std::string_view s) {
             // Strings come from parse or from checked settings, so they
             // are UTF-8; a stray byte is written as U+FFFD.
             const auto decoded = decode_utf8(s);
-            const char32_t cp = decoded ? decoded->first : U'�';
+            const char32_t cp = decoded ? decoded->first : char32_t{0xfffd};
             if (cp >= 0x10000) {
                 const auto v = cp - 0x10000;
                 out.append(

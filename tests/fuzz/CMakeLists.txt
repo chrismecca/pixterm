@@ -18,3 +18,5 @@ function(pixterm_add_fuzzer name)
 endfunction()
 
 pixterm_add_fuzzer(settings)
+pixterm_add_fuzzer(xdmcp)
+pixterm_add_fuzzer(helper)

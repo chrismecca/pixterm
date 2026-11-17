@@ -52,4 +52,16 @@ template <typename Int>
     return value;
 }
 
+/// Parses a whole string of lower-case hex digits.
+template <typename Int>
+[[nodiscard]] constexpr std::optional<Int> parse_hex(std::string_view s) noexcept {
+    if (s.empty() || !all_of(s, is_lower_hex))
+        return std::nullopt;
+    Int value{};
+    const auto [end, ec] = std::from_chars(s.data(), s.data() + s.size(), value, 16);
+    if (ec != std::errc{} || end != s.data() + s.size())
+        return std::nullopt;
+    return value;
+}
+
 } // namespace pixterm::ascii
