@@ -7,13 +7,13 @@
 #
 #   tools/ci.sh            all checks
 #   tools/ci.sh build      only the named steps: format, ascii, reuse,
-#                          build, sanitize, analysis, fuzz
+#                          build, sanitize, analysis, fuzz, sessions
 #   FUZZ_SECONDS=300 tools/ci.sh fuzz    fuzz each parser for longer
 set -eu
 
 root=$(cd "$(dirname "$0")/.." && pwd)
 cd "$root"
-steps=${*:-format ascii reuse build sanitize analysis fuzz}
+steps=${*:-format ascii reuse build sanitize analysis fuzz sessions}
 fuzz_seconds=${FUZZ_SECONDS:-30}
 fail=0
 
@@ -49,7 +49,7 @@ for step in $steps; do
 		;;
 	ascii)
 		run_step "plain ASCII" \
-			'! git ls-files -z | xargs -0 grep -lP "[^\\x00-\\x7F]"'
+			'! git ls-files -z | xargs -0 grep -IlP "[^\\x00-\\x7F]"'
 		;;
 	reuse)
 		run_step "licence headers (REUSE)" 'reuse lint --lines'
@@ -68,10 +68,14 @@ for step in $steps; do
 		;;
 	analysis)
 		run_step "clang-tidy" \
-			'cmake --preset analysis -B /tmp/build >/dev/null && cmake --build /tmp/build'
+			'cmake --preset analysis -B /tmp/build >/dev/null && cmake --build /tmp/build -- -k 0'
 		;;
 	fuzz)
 		run_step "fuzzing, ${fuzz_seconds}s for each parser" "tools/fuzz.sh $fuzz_seconds"
+		;;
+	sessions)
+		printf '\n=== sessions of every kind, on Xvfb\n'
+		tools/sessions.sh || { echo '=== sessions FAILED'; fail=1; }
 		;;
 	*)
 		echo "unknown step: $step" >&2

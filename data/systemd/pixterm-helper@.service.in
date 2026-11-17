@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 Chris Mecca
+# SPDX-License-Identifier: MIT
+
+[Unit]
+Description=pixterm privileged helper (one request)
+
+[Service]
+Type=oneshot
+ExecStart=@PIXTERM_LIBEXEC_DIR@/pixterm-helper --inetd
+StandardInput=socket
+StandardOutput=socket
+StandardError=journal
+TimeoutStartSec=60
+# No mount namespace (ProtectSystem, PrivateTmp, ...): remounting the
+# persistent partition must affect the whole system.
+NoNewPrivileges=yes
+RestrictAddressFamilies=AF_UNIX AF_NETLINK
+RestrictRealtime=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native

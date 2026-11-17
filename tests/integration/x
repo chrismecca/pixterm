@@ -1,0 +1,6 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2026 Chris Mecca
+# SPDX-License-Identifier: MIT
+#
+# Run an X client command against the pixterm display.
+DISPLAY=:0 XAUTHORITY=/tmp/rt/Xauthority exec "$@"

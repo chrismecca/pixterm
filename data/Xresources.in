@@ -1,0 +1,84 @@
+! SPDX-FileCopyrightText: 2026 Chris Mecca
+! SPDX-License-Identifier: MIT
+!
+! X resources for pixterm's local mode (loaded through $XENVIRONMENT by
+! pixterm-ui, pixterm-askpass, mwm and the xterm of terminal sessions).
+! Classic Motif: gray surfaces, bevels, core bitmap fonts.
+
+*background:              #bdbdbd
+*foreground:              #000000
+*XmList.background:       #d9d9d9
+*XmTextField.background:  #d9d9d9
+*highlightThickness:      2
+*fontList:                -adobe-helvetica-medium-r-normal--14-*-*-*-p-*-iso8859-1
+*XmPushButton.fontList:   -adobe-helvetica-bold-r-normal--14-*-*-*-p-*-iso8859-1
+
+! ---- host chooser
+! Root window: a classic X11 bitmap (root_weave, wide_weave, cross_weave)
+! tiled in rootForeground/rootBackground, or "none" for a solid fill.
+Pixterm.rootPattern:      wide_weave
+Pixterm.rootForeground:   black
+Pixterm.rootBackground:   white
+Pixterm*title.fontList:   -adobe-helvetica-bold-r-normal--17-*-*-*-p-*-iso8859-1
+Pixterm*hosts.fontList:   -adobe-helvetica-medium-r-normal--17-*-*-*-p-*-iso8859-1
+Pixterm*hosts.visibleItemCount: 8
+Pixterm*hostList.fontList: -adobe-courier-medium-r-normal--14-*-*-*-m-*-iso8859-1
+Pixterm*foundList.fontList: -adobe-courier-medium-r-normal--14-*-*-*-m-*-iso8859-1
+Pixterm*keyText.fontList: -adobe-courier-medium-r-normal--12-*-*-*-m-*-iso8859-1
+Pixterm*diagText.fontList: -adobe-courier-medium-r-normal--12-*-*-*-m-*-iso8859-1
+Pixterm*categories.fontList: -adobe-helvetica-bold-r-normal--14-*-*-*-p-*-iso8859-1
+Pixterm*login.marginWidth:     12
+Pixterm*login.marginHeight:    4
+Pixterm*find.marginWidth:      12
+Pixterm*find.marginHeight:     4
+Pixterm*configure.marginWidth: 12
+Pixterm*configure.marginHeight: 4
+Pixterm*version.fontList: -adobe-helvetica-medium-r-normal--12-*-*-*-p-*-iso8859-1
+Pixterm*network.fontList: -adobe-helvetica-medium-r-normal--12-*-*-*-p-*-iso8859-1
+Pixterm*errorDialog_popup.title:     pixterm
+Pixterm*connectingDialog_popup.title: pixterm
+Pixterm*userDialog_popup.title:      pixterm
+Pixterm*configureDialog_popup.title: pixterm
+Pixterm*pinDialog_popup.title:       pixterm
+
+! ---- askpass
+PixtermAskpass*secret.fontList: -adobe-courier-medium-r-normal--14-*-*-*-m-*-iso8859-1
+
+! ---- window manager
+Mwm*configFile:           @PIXTERM_DATA_DIR@/mwmrc
+Mwm*keyboardFocusPolicy:  explicit
+Mwm*startupKeyFocus:      True
+Mwm*focusAutoRaise:       True
+Mwm*useIconBox:           False
+Mwm*iconAutoPlace:        False
+Mwm*enableWarp:           False
+Mwm*interactivePlacement: False
+Mwm*clientAutoPlace:      False
+Mwm*positionIsFrame:      False
+Mwm*showFeedback:         none
+Mwm*windowMenu:           PixtermWindowMenu
+Mwm*buttonBindings:       PixtermButtons
+Mwm*keyBindings:          PixtermKeys
+Mwm*fontList:             -adobe-helvetica-bold-r-normal--14-*-*-*-p-*-iso8859-1
+Mwm*background:           #bdbdbd
+! Window frames: black with white titles ("client" = decorations only, so
+! mwm's menus keep the gray Motif look).
+Mwm*client*background:            #000000
+Mwm*client*foreground:            #a0a0a0
+Mwm*client*topShadowColor:        #4a4a4a
+Mwm*client*bottomShadowColor:     #000000
+Mwm*client*activeBackground:      #000000
+Mwm*client*activeForeground:      #ffffff
+Mwm*client*activeTopShadowColor:  #6a6a6a
+Mwm*client*activeBottomShadowColor: #000000
+
+! ---- terminal sessions
+! The xterm of SSH terminal and Telnet hosts: black on white, and the
+! host may not move, resize or retitle it or change its font.
+XTerm*VT100.background:     white
+XTerm*VT100.foreground:     black
+XTerm*VT100.cursorColor:    black
+XTerm*VT100.saveLines:      2000
+XTerm*VT100.allowWindowOps: false
+XTerm*VT100.allowFontOps:   false
+XTerm*VT100.allowTitleOps:  false

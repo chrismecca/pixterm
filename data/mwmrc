@@ -1,0 +1,24 @@
+! SPDX-FileCopyrightText: 2026 Chris Mecca
+! SPDX-License-Identifier: MIT
+
+! mwm configuration for pixterm's local mode.
+!
+! Kept small on purpose: no root menu, no application launching, no window
+! cycling. mwm exists only to decorate and focus pixterm's own dialogs.
+! (An empty Keys block makes mwm fall back to its builtin bindings, so the
+! window-move binding appears below.)
+
+Menu PixtermWindowMenu
+{
+	Move		_M	Alt<Key>F7	f.move
+}
+
+Keys PixtermKeys
+{
+	Alt<Key>F7	window		f.move
+}
+
+Buttons PixtermButtons
+{
+	<Btn1Down>	frame|icon	f.raise
+}

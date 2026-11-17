@@ -1,0 +1,22 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2026 Chris Mecca
+# SPDX-License-Identifier: MIT
+#
+# Accepts pixtermd's Xorg arguments and runs Xvfb instead (XDMCP options
+# and -noreset pass through).
+auth= fd= disp= extra=
+while [ $# -gt 0 ]; do
+	case $1 in
+	:*) disp=$1 ;;
+	-auth) auth=$2; shift ;;
+	-displayfd) fd=$2; shift ;;
+	-logfile) shift ;;
+	-query|-indirect|-port|-fp) extra="$extra $1 $2"; shift ;;
+	-once|-noreset) extra="$extra $1" ;;
+	-listen) extra="$extra -listen $2"; shift ;;
+	esac
+	shift
+done
+listen="-nolisten tcp"
+case $extra in *-listen*) listen= ;; esac
+exec Xvfb "$disp" $listen -auth "$auth" -displayfd "$fd" -screen 0 1280x1024x24 $extra

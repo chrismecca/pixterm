@@ -7,6 +7,9 @@ version = 1
 [[annotations]]
 path = [
     "CMakePresets.json",
+    "data/pixterm-icon.png",
+    "image/linux/packages.*.lock",
+    "image/linux/rootfs/etc/pixterm/config.json",
     "doc/img/**",
     "tests/fuzz/corpus/**",
     "README.adoc",

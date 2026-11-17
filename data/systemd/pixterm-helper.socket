@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Chris Mecca
+# SPDX-License-Identifier: MIT
+
+[Unit]
+Description=pixterm privileged helper socket
+
+[Socket]
+# Only the pixterm account can connect; the helper checks credentials too.
+ListenStream=/run/pixterm-helper.sock
+SocketUser=pixterm
+SocketGroup=pixterm
+SocketMode=0600
+Accept=yes
+MaxConnections=4
+
+[Install]
+WantedBy=sockets.target

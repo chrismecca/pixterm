@@ -7,7 +7,7 @@
 
 * Clang 19 or later, with libc++ and, on Linux, the lld linker
 * CMake 3.28 or later, and Ninja
-* Docker, for `tools/ci.sh` (colima works on macOS)
+* Docker, for `tools/ci.sh`
 
 The core library and its tests build on macOS with Apple's Clang. The
 programs that use X11 build only on Linux; use the toolchain container
@@ -43,6 +43,9 @@ image uses:
 * `build`: warnings as errors, then the unit tests
 * `sanitize`: the unit tests under ASan and UBSan
 * `analysis`: clang-tidy, warnings as errors
+* `fuzz`: each fuzzer for 30 seconds (`FUZZ_SECONDS` sets another time)
+* `sessions`: the session test, a session of every kind on Xvfb, driven
+  through the chooser
 
 Name steps to run only those: `tools/ci.sh build sanitize`. GitHub
 Actions runs the same script on every push and pull request.

@@ -27,3 +27,7 @@ function(pixterm_add_tests suite)
 endfunction()
 
 add_subdirectory(unit)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    add_subdirectory(tools)
+endif()

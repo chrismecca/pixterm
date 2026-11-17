@@ -1,0 +1,7 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2026 Chris Mecca
+# SPDX-License-Identifier: MIT
+#
+# shot NAME: saves a picture of the pixterm display as out/shots/NAME.png.
+mkdir -p /src/out/shots
+DISPLAY=:0 XAUTHORITY=/tmp/rt/Xauthority import -window root "/src/out/shots/$1.png"

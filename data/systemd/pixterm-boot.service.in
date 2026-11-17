@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Chris Mecca
+# SPDX-License-Identifier: MIT
+
+[Unit]
+Description=pixterm early boot setup (factory reset marker, network)
+DefaultDependencies=no
+After=local-fs.target
+Before=systemd-networkd.service network-pre.target pixtermd.service
+Wants=network-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=@PIXTERM_LIBEXEC_DIR@/pixterm-helper boot-init
+
+[Install]
+WantedBy=sysinit.target
