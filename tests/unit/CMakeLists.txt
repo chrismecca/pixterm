@@ -3,3 +3,5 @@
 
 pixterm_add_tests(validate SOURCES validate_test.cpp LIBRARIES pixterm::core)
 pixterm_add_tests(json SOURCES json_test.cpp LIBRARIES pixterm::core)
+pixterm_add_tests(settings SOURCES settings_test.cpp LIBRARIES pixterm::core)
+pixterm_add_tests(settings_store SOURCES settings_store_test.cpp LIBRARIES pixterm::core)

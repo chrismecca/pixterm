@@ -4,7 +4,10 @@
 # The code every pixterm program shares: settings, their checks and
 # the wire formats. It uses only POSIX, so its tests also run on macOS.
 add_library(pixterm_core STATIC
+    fd.cpp
     json.cpp
+    settings.cpp
+    settings_store.cpp
     validate.cpp
 )
 add_library(pixterm::core ALIAS pixterm_core)
@@ -14,7 +17,10 @@ target_sources(pixterm_core
         FILE_SET HEADERS
         BASE_DIRS ${PROJECT_SOURCE_DIR}/include
         FILES
+            ${PROJECT_SOURCE_DIR}/include/pixterm/fd.hpp
             ${PROJECT_SOURCE_DIR}/include/pixterm/json.hpp
+            ${PROJECT_SOURCE_DIR}/include/pixterm/settings.hpp
+            ${PROJECT_SOURCE_DIR}/include/pixterm/settings_store.hpp
             ${PROJECT_SOURCE_DIR}/include/pixterm/validate.hpp
 )
 target_link_libraries(pixterm_core PRIVATE pixterm::options)

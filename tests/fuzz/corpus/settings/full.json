@@ -1,0 +1,10 @@
+{"schema_version":1,"device":{"display":{"mode":"1920x1080@60"},
+"keyboard":{"layout":"de","variant":"nodeadkeys"},
+"network":{"method":"static","address":"10.0.0.2/24","gateway":"10.0.0.1","dns":["10.0.0.1"]}},
+"hosts":[
+{"id":"a","name":"xdmhost","address":"i","protocol":"xdmcp","xdmcp_mode":"indirect","font_server":"fs"},
+{"id":"b","name":"desktop","address":"e","protocol":"ssh-x11","username":"alice","session":"custom","command":"xterm","auth":"key"},
+{"id":"c","name":"t","address":"t","protocol":"telnet","allow_x":true},
+{"id":"d","name":"r","address":"r","protocol":"rexec","username":"u","command":"xclock -display %D"},
+{"id":"e","name":"w","address":"w","protocol":"rdp","domain":"LAB"},
+{"id":"f","name":"s","protocol":"serial","device":"/dev/ttyUSB0","speed":9600}]}

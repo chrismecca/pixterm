@@ -27,3 +27,7 @@ add_subdirectory(src)
 if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()
+
+if(PIXTERM_FUZZ)
+    add_subdirectory(tests/fuzz)
+endif()

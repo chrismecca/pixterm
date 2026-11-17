@@ -7,12 +7,14 @@
 #
 #   tools/ci.sh            all checks
 #   tools/ci.sh build      only the named steps: format, ascii, reuse,
-#                          build, sanitize, analysis
+#                          build, sanitize, analysis, fuzz
+#   FUZZ_SECONDS=300 tools/ci.sh fuzz    fuzz each parser for longer
 set -eu
 
 root=$(cd "$(dirname "$0")/.." && pwd)
 cd "$root"
-steps=${*:-format ascii reuse build sanitize analysis}
+steps=${*:-format ascii reuse build sanitize analysis fuzz}
+fuzz_seconds=${FUZZ_SECONDS:-30}
 fail=0
 
 docker build -q -t pixterm-ci tools/ci >/dev/null
@@ -58,6 +60,9 @@ for step in $steps; do
 	analysis)
 		run_step "clang-tidy" \
 			'cmake --preset analysis -B /tmp/build >/dev/null && cmake --build /tmp/build'
+		;;
+	fuzz)
+		run_step "fuzzing, ${fuzz_seconds}s for each parser" "tools/fuzz.sh $fuzz_seconds"
 		;;
 	*)
 		echo "unknown step: $step" >&2

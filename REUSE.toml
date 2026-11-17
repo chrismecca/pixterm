@@ -8,6 +8,7 @@ version = 1
 path = [
     "CMakePresets.json",
     "doc/img/**",
+    "tests/fuzz/corpus/**",
     "README.adoc",
 ]
 SPDX-FileCopyrightText = "2026 Chris Mecca"
