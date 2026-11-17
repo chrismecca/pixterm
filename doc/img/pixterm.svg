@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 34" width="540" height="34">
+  <defs>
+    <!-- 2x2 X11 50_foreground Stipple Patterns (Light Mode) -->
+    <pattern id="dither-hi-light" width="2" height="2" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="1" height="1" fill="#E8EEF5" />
+      <rect x="1" y="1" width="1" height="1" fill="#E8EEF5" />
+      <rect x="1" y="0" width="1" height="1" fill="#7D96B0" />
+      <rect x="0" y="1" width="1" height="1" fill="#7D96B0" />
+    </pattern>
+
+    <pattern id="dither-lo-light" width="2" height="2" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="1" height="1" fill="#32404E" />
+      <rect x="1" y="1" width="1" height="1" fill="#32404E" />
+      <rect x="1" y="0" width="1" height="1" fill="#637B94" />
+      <rect x="0" y="1" width="1" height="1" fill="#637B94" />
+    </pattern>
+
+    <!-- 2x2 X11 50_foreground Stipple Patterns (Dark Mode) -->
+    <pattern id="dither-hi-dark" width="2" height="2" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="1" height="1" fill="#8BA4BE" />
+      <rect x="1" y="1" width="1" height="1" fill="#8BA4BE" />
+      <rect x="1" y="0" width="1" height="1" fill="#3C4E60" />
+      <rect x="0" y="1" width="1" height="1" fill="#3C4E60" />
+    </pattern>
+
+    <pattern id="dither-lo-dark" width="2" height="2" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="1" height="1" fill="#10161C" />
+      <rect x="1" y="1" width="1" height="1" fill="#10161C" />
+      <rect x="1" y="0" width="1" height="1" fill="#2A3744" />
+      <rect x="0" y="1" width="1" height="1" fill="#2A3744" />
+    </pattern>
+  </defs>
+
+  <style>
+    /* Default: Authentic emwm / OSF Motif Slate-Blue Palette */
+    .outer-edge  { fill: #252E38; }
+    .base-fill   { fill: #738CA6; }
+    .bevel-hi    { fill: url(#dither-hi-light); }
+    .bevel-lo    { fill: url(#dither-lo-light); }
+    .seam-dark   { fill: #2E3A46; }
+    .seam-light  { fill: #DCE5EE; }
+    .gallant-ink { fill: #FFFFFF; }
+
+    /* Automatic GitHub Dark Mode */
+    @media (prefers-color-scheme: dark) {
+      .outer-edge  { fill: #0B0E12; }
+      .base-fill   { fill: #354656; }
+      .bevel-hi    { fill: url(#dither-hi-dark); }
+      .bevel-lo    { fill: url(#dither-lo-dark); }
+      .seam-dark   { fill: #12181F; }
+      .seam-light  { fill: #698096; }
+      .gallant-ink { fill: #F0F6FC; }
+    }
+  </style>
+
+  <!-- 1. Outer 1px Window Frame Border -->
+  <rect x="0" y="0" width="540" height="34" class="outer-edge" />
+
+  <!-- 2. Outer Resize Frame Base + 2px Dithered Bevels -->
+  <rect x="1" y="1" width="538" height="32" class="base-fill" />
+  <polygon points="1,1 539,1 537,3 3,3 3,31 1,33" class="bevel-hi" />
+  <polygon points="539,1 539,33 1,33 3,31 537,31 537,3" class="bevel-lo" />
+
+  <!-- Top Resize Handle Corner Grooves -->
+  <rect x="25" y="1" width="1" height="5" class="seam-dark" />
+  <rect x="26" y="1" width="1" height="5" class="seam-light" />
+  <rect x="513" y="1" width="1" height="5" class="seam-dark" />
+  <rect x="514" y="1" width="1" height="5" class="seam-light" />
+
+  <!-- Inner Frame Well Border -->
+  <rect x="5" y="5" width="530" height="24" class="seam-dark" />
+
+  <!-- 3. Left Window Menu Button (20x22) -->
+  <g transform="translate(6, 6)">
+    <rect x="0" y="0" width="20" height="22" class="base-fill" />
+    <polygon points="0,0 20,0 18,2 2,2 2,20 0,22" class="bevel-hi" />
+    <polygon points="20,0 20,22 0,22 2,20 18,20 18,2" class="bevel-lo" />
+    <rect x="4" y="9" width="12" height="4" class="base-fill" />
+    <polygon points="4,9 16,9 15,10 5,10 5,12 4,13" class="bevel-hi" />
+    <polygon points="16,9 16,13 4,13 5,12 15,12 15,10" class="bevel-lo" />
+  </g>
+
+  <!-- 1px Separator -->
+  <rect x="26" y="6" width="1" height="22" class="seam-dark" />
+
+  <!-- 4. Center Active Title Bar Block (465x22) -->
+  <g transform="translate(27, 6)">
+    <rect x="0" y="0" width="465" height="22" class="base-fill" />
+    <polygon points="0,0 465,0 463,2 2,2 2,20 0,22" class="bevel-hi" />
+    <polygon points="465,0 465,22 0,22 2,20 463,20 463,2" class="bevel-lo" />
+
+    <!-- Hard-Coded Sun OpenBoot Gallant (12x22 style) Bitmap Paths: "PIXterm" -->
+    <!-- Centered at x=191 (total width = 83px across 7 fixed-width cells) -->
+    <g transform="translate(191, 4)" class="gallant-ink">
+      <!-- 'P' (cell 0, x=0..10) -->
+      <path d="M0,0 h8 v1 h1 v1 h1 v4 h-1 v1 h-1 v1 h-5 v5 h2 v1 h-5 v-1 h1 v-12 h-1 z M3,1 v6 h4 v-1 h1 v-4 h-1 v-1 z" />
+
+      <!-- 'I' (cell 1, x=12..22) -->
+      <path d="M14,0 h6 v1 h-2 v12 h2 v1 h-6 v-1 h2 v-12 h-2 z" />
+
+      <!-- 'X' (cell 2, x=24..34) -->
+      <path d="M24,0 h4 v1 h-1 v1 h1 v2 h1 v1 h1 v-1 h1 v-2 h1 v-1 h-1 v-1 h3 v1 h-1 v2 h-1 v2 h-1 v2 h1 v2 h1 v2 h1 v2 h1 v1 h-4 v-1 h1 v-1 h-1 v-2 h-1 v-1 h-1 v1 h-1 v2 h-1 v1 h1 v1 h-3 v-1 h1 v-2 h1 v-2 h1 v-2 h-1 v-2 h-1 v-2 h-1 z" />
+
+      <!-- 't' (cell 3, x=36..46) -->
+      <path d="M39,2 h2 v2 h3 v1 h-3 v7 h1 v1 h1 v-1 h1 v1 h-1 v1 h-3 v-1 h-1 v-8 h-2 v-1 h2 z" />
+
+      <!-- 'e' (cell 4, x=48..58) -->
+      <path d="M51,4 h4 v1 h1 v1 h1 v3 h-7 v3 h1 v1 h4 v-1 h1 v-1 h1 v1 h-1 v1 h-1 v1 h-5 v-1 h-1 v-1 h-1 v-6 h1 v-1 h1 z M51,5 v1 h-1 v2 h5 v-2 h-1 v-1 z" />
+
+      <!-- 'r' (cell 5, x=60..70) -->
+      <path d="M60,4 h3 v2 h1 v-1 h1 v-1 h3 v2 h-2 v-1 h-1 v1 h-1 v1 h-1 v6 h2 v1 h-5 v-1 h1 v-8 h-1 z" />
+
+      <!-- 'm' (cell 6, x=72..83) -->
+      <path d="M72,4 h2 v1 h1 v-1 h2 v1 h1 v-1 h2 v1 h1 v8 h1 v1 h-3 v-1 h1 v-7 h-1 v-1 h-1 v1 h-1 v7 h1 v1 h-3 v-1 h1 v-7 h-1 v-1 h-1 v1 h-1 v7 h1 v1 h-3 v-1 h1 v-8 h-1 z" />
+    </g>
+  </g>
+
+  <!-- 1px Separator -->
+  <rect x="492" y="6" width="1" height="22" class="seam-dark" />
+
+  <!-- 5. Minimize / Iconify Button (20x22) -->
+  <g transform="translate(493, 6)">
+    <rect x="0" y="0" width="20" height="22" class="base-fill" />
+    <polygon points="0,0 20,0 18,2 2,2 2,20 0,22" class="bevel-hi" />
+    <polygon points="20,0 20,22 0,22 2,20 18,20 18,2" class="bevel-lo" />
+    <rect x="8" y="9" width="4" height="4" class="base-fill" />
+    <polygon points="8,9 12,9 11,10 9,10 9,12 8,13" class="bevel-hi" />
+    <polygon points="12,9 12,13 8,13 9,12 11,12 11,10" class="bevel-lo" />
+  </g>
+
+  <!-- 1px Separator -->
+  <rect x="513" y="6" width="1" height="22" class="seam-dark" />
+
+  <!-- 6. Maximize Button (20x22) -->
+  <g transform="translate(514, 6)">
+    <rect x="0" y="0" width="20" height="22" class="base-fill" />
+    <polygon points="0,0 20,0 18,2 2,2 2,20 0,22" class="bevel-hi" />
+    <polygon points="20,0 20,22 0,22 2,20 18,20 18,2" class="bevel-lo" />
+    <rect x="5" y="6" width="10" height="10" class="base-fill" />
+    <polygon points="5,6 15,6 14,7 6,7 6,15 5,16" class="bevel-hi" />
+    <polygon points="15,6 15,16 5,16 6,15 14,15 14,7" class="bevel-lo" />
+  </g>
+</svg>
