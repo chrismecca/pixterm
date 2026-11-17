@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 # Checks that find bugs or unsafe code. Style checks that fight the C
-# libraries pixterm uses (POSIX, Xlib, Motif) are turned off.
+# libraries pixterm uses (POSIX, Xlib, Motif) are turned off, and so is
+# misc-no-recursion: the parsers recurse, with a fixed depth limit.
 Checks: >
   bugprone-*,
   cert-*,
@@ -29,6 +30,7 @@ Checks: >
   -cppcoreguidelines-pro-type-vararg,
   -cppcoreguidelines-avoid-do-while,
   -misc-include-cleaner,
+  -misc-no-recursion,
   -misc-non-private-member-variables-in-classes,
   -misc-use-anonymous-namespace,
   -modernize-avoid-c-arrays,
