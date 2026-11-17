@@ -66,7 +66,8 @@ tar -C /src --exclude=./out --exclude=./image/linux/cache --exclude=./image/linu
 
 chroot /mnt /bin/bash /tmp/pixterm-src/image/linux/customize.sh
 cp /mnt/tmp/pixterm-packages "/out/$out.packages"
-rm -rf /mnt/tmp/pixterm-src /mnt/tmp/pixterm-packages
+cp /mnt/tmp/pixterm-lock "/out/$out.lock"
+rm -rf /mnt/tmp/pixterm-src /mnt/tmp/pixterm-packages /mnt/tmp/pixterm-lock
 umount /mnt/var/cache/pixterm-debs /mnt/var/cache/apt/archives
 rmdir /mnt/var/cache/pixterm-debs
 

@@ -90,8 +90,9 @@ docker run --rm --privileged -v /dev:/dev \
     -e PIXTERM_BUILD_ID="$BUILD_ID" \
     pixterm-builder /src/image/linux/build-in-container.sh "$BASE" "$OUT"
 
-# The first build of an architecture records its package versions;
-# PIXTERM_LOCK=add records the added ones.
+# The first build of an architecture records its package versions, the
+# build tools' among them; PIXTERM_LOCK=add records the added ones.
 if [ ! -f "$here/packages.$ARCH.lock" ] || [ "$LOCK" = add ]; then
-	cp "$here/out/$OUT.packages" "$here/packages.$ARCH.lock"
+	cp "$here/out/$OUT.lock" "$here/packages.$ARCH.lock"
 fi
+rm -f "$here/out/$OUT.lock"

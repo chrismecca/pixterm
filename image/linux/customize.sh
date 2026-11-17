@@ -77,6 +77,10 @@ cd /
 # rsh connects from a port below 1024; only pixterm-rexec may bind one.
 setcap cap_net_bind_service=ep /usr/libexec/pixterm/pixterm-rexec
 
+# The lock records the build tools too, so a locked build uses the same
+# compiler.
+dpkg-query -W -f '${binary:Package}=${Version}\n' | sort > /tmp/pixterm-build-packages
+
 say "Removing build tools"
 # Name the compilers' own packages too: autoremove alone leaves some
 # behind. Not libllvm: the X server's Mesa may need it.
@@ -90,6 +94,8 @@ apt-get install -y --no-install-recommends systemd-resolved
 
 say "Package manifest"
 dpkg-query -W -f '${binary:Package}=${Version}\n' | sort > /tmp/pixterm-packages
+sort -u /tmp/pixterm-build-packages /tmp/pixterm-packages > /tmp/pixterm-lock
+rm /tmp/pixterm-build-packages
 if [ "$LOCK" != 0 ]; then
 	# Every installed package must be in the lock at exactly that version.
 	# LOCK=add allows packages the lock lacks: they are being added.

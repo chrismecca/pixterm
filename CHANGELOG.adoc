@@ -6,7 +6,10 @@
 Each release has a section here. The release workflow copies the
 section into the release notes.
 
-== Unreleased
+== 0.9.0
+
+The first public test release. It does all the old C version did,
+rebuilt in C++23.
 
 === Added
 
