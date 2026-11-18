@@ -108,6 +108,16 @@ ENTRY
 	} > pixterm-imager.json
 fi
 
+# A release built by GitHub Actions carries a signed statement of the
+# workflow and commit that built each file.
+attest_note=
+if [ -n "${RELEASE_REPO:-}" ]; then
+	attest_note="- The image and the package list have a signed record of the GitHub
+  workflow and commit that built them. Check one with
+  \`gh attestation verify FILE -R $RELEASE_REPO\`.
+"
+fi
+
 {
 	printf '%s\n\n' "$notes"
 	cat <<EOF
@@ -116,7 +126,7 @@ fi
 - \`pixterm-$VERSION-arm64.img.xz\`: the SD card image for the Raspberry Pi 3, 4 and 5.
 - \`.img.packages\`: every package in the image, with its version.
 - \`SHA256SUMS\`: checksums. Check the download with \`sha256sum -c SHA256SUMS\`.
-
+$attest_note
 ### Installing
 
 Write the image to an SD card with Raspberry Pi Imager ("Use custom"), or

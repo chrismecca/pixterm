@@ -74,10 +74,18 @@ committed.
 == Releases
 
 Each release on GitHub has the compressed image, the list of packages in
-it, `SHA256SUMS` and release notes. To make one, add a section
-`== VERSION` to `CHANGELOG.adoc`, set the same version in
-`CMakeLists.txt`, and push a tag `vVERSION`. A workflow builds the image
-and makes a draft release to check and publish. `image/linux/release.sh`
+it, `SHA256SUMS` and release notes. The image and the package list also
+have a signed record of the workflow and commit that built them:
+
+[source,sh]
+----
+gh attestation verify pixterm-VERSION-arm64.img.xz -R chrismecca/pixterm
+----
+
+To make a release, add a section `== VERSION` to `CHANGELOG.adoc`, set
+the same version in `CMakeLists.txt`, and push a tag `vVERSION`. A
+workflow builds the image and makes a draft release to check and
+publish. `image/linux/release.sh`
 makes the same files from a local build.
 
 Each release also has `pixterm-imager.json`, a list Raspberry Pi Imager

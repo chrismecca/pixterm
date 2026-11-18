@@ -32,7 +32,6 @@ are kept from the first plan so that issues can refer to them.
 |===
 | # | Item | Size
 
-| 6 | Signed releases (minisign or cosign), with the public key in the repository | S
 | 8 | Ask Raspberry Pi to list pixterm in Imager | S
 | 9 | The checklist in `doc/hardware.adoc` on the Pi 3B+, 4B, 400 and 5 | M
 | 10 | Hundreds of automatic power cuts, some during saves | M
