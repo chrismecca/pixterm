@@ -28,7 +28,8 @@ struct Font {
 constexpr std::array fonts{
     Font{.max_height = 799, .name = "6x13", .width = 6, .height = 13},
     Font{.max_height = 1049, .name = "9x15", .width = 9, .height = 15},
-    Font{.max_height = 1 << 30, .name = "10x20", .width = 10, .height = 20},
+    Font{.max_height = large_screen_height - 1, .name = "10x20", .width = 10, .height = 20},
+    Font{.max_height = 1 << 30, .name = "12x24", .width = 12, .height = 24},
 };
 
 } // namespace

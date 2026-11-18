@@ -10,6 +10,7 @@
 
 #include <sys/wait.h>
 
+#include <charconv>
 #include <csignal>
 #include <format>
 #include <string>
@@ -69,6 +70,8 @@ std::string Supervisor::libexec(std::string_view program) const {
 
 std::vector<std::string> Supervisor::child_env(std::vector<std::string> extra) const {
     auto env = env_.base_env;
+    env.push_back("XENVIRONMENT="
+                  + (env_.data_dir / (large_screen_ ? "Xresources-large" : "Xresources")).string());
     env.insert(env.end(), std::make_move_iterator(extra.begin()),
                std::make_move_iterator(extra.end()));
     return env;
@@ -122,15 +125,29 @@ void Supervisor::x_ready() {
     // own it, and a client of ours disconnecting could reset the server
     // and end the session. That display's keyboard comes from the Xorg
     // configuration the system writes.
-    if (own_display_ || !run_xsetup({}, [this](ExitStatus s, std::string_view) { xsetup_done(s); }))
-        xsetup_done(ExitStatus::exited(0));
+    if (own_display_
+        || !run_xsetup({}, [this](ExitStatus s, std::string_view out) { xsetup_done(s, out); }))
+        xsetup_done(ExitStatus::exited(0), "");
 }
 
-void Supervisor::xsetup_done(ExitStatus status) {
+void Supervisor::xsetup_done(ExitStatus status, std::string_view output) {
     if (state_ != State::x_setup)
         return;
     if (!status.succeeded())
         log("pixterm-xsetup failed");
+    // "SCREEN width height", after any error lines.
+    constexpr std::string_view screen = "SCREEN ";
+    if (const auto at = output.find(screen); at != std::string_view::npos) {
+        const auto size = output.substr(at + screen.size());
+        const auto space = size.find(' ');
+        int height = 0;
+        if (space != std::string_view::npos) {
+            auto h = size.substr(space + 1);
+            h = h.substr(0, h.find('\n'));
+            std::from_chars(h.data(), h.data() + h.size(), height);
+        }
+        large_screen_ = height >= large_screen_height;
+    }
     if (own_display_ && session_) {
         session_->display_ready();
         return;

@@ -63,7 +63,6 @@ int main() {
         "PATH=/usr/bin:/bin",
         "LANG=C.UTF-8",
         "DISPLAY=:0",
-        "XENVIRONMENT=" + std::string(build::data_dir) + "/Xresources",
         "HOME=" + home.string(),
         "USER=" + name,
         "LOGNAME=" + name,
@@ -89,6 +88,7 @@ int main() {
     Supervisor supervisor(system, {.runtime_dir = runtime,
                                    .state_dir = state,
                                    .libexec_dir = std::string(build::libexec_dir),
+                                   .data_dir = std::string(build::data_dir),
                                    .base_env = env});
     system.set_events(supervisor);
     // systemd gives pixtermd tty1 as its input; it is the text console

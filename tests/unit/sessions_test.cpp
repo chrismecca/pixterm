@@ -36,6 +36,7 @@ struct Rig {
         sup = std::make_unique<Supervisor>(sys, Environment{.runtime_dir = "/run/pixterm",
                                                             .state_dir = "/var/lib/pixterm",
                                                             .libexec_dir = "/usr/libexec/pixterm",
+                                                            .data_dir = "/usr/share/pixterm",
                                                             .base_env = {"PATH=/usr/bin:/bin"}});
         sup->start();
         sup->x_ready();
@@ -397,6 +398,8 @@ TEST(terminal_font_follows_the_screen_height) {
     CHECK_EQ(font, "10x20");
     CHECK(TerminalWindow::layout(1024, 768).second == "6x13");
     CHECK(TerminalWindow::layout(1280, 1024).second == "9x15");
+    CHECK(TerminalWindow::layout(2560, 1440).second == "10x20");
+    CHECK(TerminalWindow::layout(3840, 2160).second == "12x24");
     const std::pair fallback{1024, 768};
     const std::pair big{3840, 2160};
     CHECK(screen_size(ExitStatus::exited(1), "") == fallback);

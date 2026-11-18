@@ -1,0 +1,33 @@
+! SPDX-FileCopyrightText: 2026 Chris Mecca
+! SPDX-License-Identifier: MIT
+!
+! X resources for screens at least 1800 pixels tall (4K): the normal
+! ones, with bitmap fonts about twice the size. pixtermd picks this file
+! from the screen size pixterm-xsetup reports.
+
+#include "Xresources"
+
+*fontList:                -adobe-helvetica-medium-r-normal--25-*-*-*-p-*-iso8859-1
+*XmPushButton.fontList:   -adobe-helvetica-bold-r-normal--25-*-*-*-p-*-iso8859-1
+*highlightThickness:      3
+*shadowThickness:         3
+
+Pixterm*title.fontList:   -adobe-helvetica-bold-r-normal--34-*-*-*-p-*-iso8859-1
+Pixterm*hosts.fontList:   -adobe-helvetica-medium-r-normal--34-*-*-*-p-*-iso8859-1
+Pixterm*hostList.fontList: -adobe-courier-medium-r-normal--25-*-*-*-m-*-iso8859-1
+Pixterm*foundList.fontList: -adobe-courier-medium-r-normal--25-*-*-*-m-*-iso8859-1
+Pixterm*keyText.fontList: -adobe-courier-medium-r-normal--20-*-*-*-m-*-iso8859-1
+Pixterm*diagText.fontList: -adobe-courier-medium-r-normal--20-*-*-*-m-*-iso8859-1
+Pixterm*categories.fontList: -adobe-helvetica-bold-r-normal--25-*-*-*-p-*-iso8859-1
+Pixterm*login.marginWidth:     24
+Pixterm*login.marginHeight:    8
+Pixterm*find.marginWidth:      24
+Pixterm*find.marginHeight:     8
+Pixterm*configure.marginWidth: 24
+Pixterm*configure.marginHeight: 8
+Pixterm*version.fontList: -adobe-helvetica-medium-r-normal--20-*-*-*-p-*-iso8859-1
+Pixterm*network.fontList: -adobe-helvetica-medium-r-normal--20-*-*-*-p-*-iso8859-1
+
+PixtermAskpass*secret.fontList: -adobe-courier-medium-r-normal--25-*-*-*-m-*-iso8859-1
+
+Mwm*fontList:             -adobe-helvetica-bold-r-normal--25-*-*-*-p-*-iso8859-1

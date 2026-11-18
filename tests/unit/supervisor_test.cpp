@@ -41,6 +41,7 @@ struct Rig {
             sys, Environment{.runtime_dir = "/run/pixterm",
                              .state_dir = "/var/lib/pixterm",
                              .libexec_dir = "/usr/libexec/pixterm",
+                             .data_dir = "/usr/share/pixterm",
                              .base_env = {"PATH=/usr/bin:/bin", "DISPLAY=:0"}});
     }
 
@@ -202,6 +203,28 @@ TEST(xorg_errors_leave_out_the_boilerplate) {
     CHECK(xorg_errors("[ 1.0] (EE) a\n[ 1.1] (EE) b\n[ 1.2] (EE) c\n", 2)
           == (std::vector<std::string>{"b", "c"}));
     CHECK(xorg_errors("", 5).empty());
+}
+
+TEST(a_large_screen_gets_large_fonts) {
+    Rig r;
+    r.sup->start();
+    r.sup->x_ready();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "SCREEN 3840 2160\n");
+    for (const auto slot : {Slot::chooser, Slot::mwm}) {
+        const auto* p = r.sys.program(slot);
+        REQUIRE(p != nullptr);
+        CHECK(has_sequence(p->env, {"XENVIRONMENT=/usr/share/pixterm/Xresources-large"}));
+    }
+}
+
+TEST(an_ordinary_screen_gets_ordinary_fonts) {
+    Rig r;
+    r.sup->start();
+    r.sup->x_ready();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "SCREEN 1920 1080\n");
+    const auto* p = r.sys.program(Slot::chooser);
+    REQUIRE(p != nullptr);
+    CHECK(has_sequence(p->env, {"XENVIRONMENT=/usr/share/pixterm/Xresources"}));
 }
 
 TEST(a_crashed_chooser_comes_back) {

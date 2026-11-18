@@ -61,8 +61,12 @@ struct Environment {
     std::filesystem::path runtime_dir; ///< emptied at every boot
     std::filesystem::path state_dir;   ///< the settings partition
     std::filesystem::path libexec_dir; ///< pixterm's own programs
+    std::filesystem::path data_dir;    ///< pixterm's X resources
     std::vector<std::string> base_env; ///< NAME=value for every child
 };
+
+/// Screens at least this tall (4K) get the large fonts.
+inline constexpr int large_screen_height = 1800;
 
 /// How long the supervisor waits for things.
 namespace timeouts {
@@ -223,6 +227,7 @@ private:
     bool own_display_ = false; ///< the X server is the session's own
     std::array<Child, slot_count> children_{};
     int xstart_failures_ = 0;
+    bool large_screen_ = false; ///< as pixterm-xsetup last reported
     std::string pending_error_;
 
     std::optional<Time> deadline_;   ///< the current state's timer
@@ -236,7 +241,7 @@ private:
 
     void reload_settings();
     void start_x();
-    void xsetup_done(ExitStatus status);
+    void xsetup_done(ExitStatus status, std::string_view output);
     void start_mwm();
     void start_chooser();
     void begin_session(const Host& host, std::string_view username);

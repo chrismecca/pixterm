@@ -229,6 +229,11 @@ console says why, from the errors in Xorg's log. pixterm keeps trying;
 Enter tries again at once, and typing `+reset+` restores the factory
 settings and restarts the terminal, after the administrator PIN if one
 is set. A wrong PIN blocks the reset for 30 seconds.
+* On screens at least 1800 pixels tall (4K), the chooser, its dialogs,
+mwm and terminal sessions use bitmap fonts about twice the usual size.
+pixterm-xsetup reports the screen size when X starts, and pixtermd
+picks `Xresources-large` instead of `Xresources` for the programs it
+starts.
 * A monitor plugged in while the chooser is up, or after a start with
 none, lights in the saved mode, or the automatic one. One plugged in
 during a session lights when the session ends and Xorg restarts.

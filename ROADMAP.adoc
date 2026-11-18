@@ -45,7 +45,6 @@ are kept from the first plan so that issues can refer to them.
 |===
 | # | Item | Size
 
-| 14 | A larger interface on 4K screens | M
 | 24 | Wi-Fi: scan and join WPA2 and WPA3-Personal networks from Configure > Network | L
 |===
 

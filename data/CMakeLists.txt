@@ -5,7 +5,7 @@
 # configuration, and on Linux the systemd units and Xorg configuration
 # of the appliance.
 configure_file(Xresources.in Xresources @ONLY)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Xresources mwmrc
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Xresources Xresources-large mwmrc
         DESTINATION ${CMAKE_INSTALL_DATADIR}/pixterm)
 
 if(NOT PIXTERM_SYSTEM_FILES)

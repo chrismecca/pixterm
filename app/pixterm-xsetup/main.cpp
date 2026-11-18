@@ -6,7 +6,8 @@
 //     pixterm-xsetup
 //         Sets the saved display mode, blanking time and keyboard.
 //         "auto" leaves the mode Xorg chose from the monitor's EDID, or
-//         picks one for a monitor Xorg left dark.
+//         picks one for a monitor Xorg left dark. Prints
+//         "SCREEN WIDTH HEIGHT", the screen's size after.
 //     pixterm-xsetup --allow-host HOST
 //         The same, then lets HOST open windows over TCP (direct X): adds
 //         its addresses to the server's access list and prints
@@ -250,5 +251,19 @@ int main(int argc, char** argv) {
         status = exit_not_allowed;
     if (!apply_keyboard(settings) && status == 0)
         status = exit_failed;
+    if (args.empty()) {
+        // From the server: Xlib's own copy misses a mode just set.
+        Window root = 0;
+        int x = 0;
+        int y = 0;
+        unsigned width = 0;
+        unsigned height = 0;
+        unsigned border = 0;
+        unsigned depth = 0;
+        if (XGetGeometry(display.get(), DefaultRootWindow(display.get()), &root, &x, &y, &width,
+                         &height, &border, &depth)
+            != 0)
+            std::println("SCREEN {} {}", width, height);
+    }
     return status;
 }
