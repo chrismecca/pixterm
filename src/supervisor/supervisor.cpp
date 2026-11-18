@@ -245,6 +245,8 @@ void Supervisor::chooser_line(std::string_view line) {
         // The name is escaped free text, and may hold spaces.
         const auto name = line.substr(line.find(words[2], verb.size() + words[1].size() + 1));
         query_request(words[1], name);
+    } else if (verb == "WIFI_SCAN" && state_ == State::local && words.size() == 2) {
+        requests_->scan(words[1]);
     } else if (SettingsRequests::handles(verb) && state_ == State::local) {
         requests_->request(verb);
     } else if (verb == "CANCEL" && (state_ == State::probe || state_ == State::connecting)) {

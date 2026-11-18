@@ -31,16 +31,23 @@ public:
     [[nodiscard]] bool busy() const noexcept { return busy_; }
 
     void request(std::string_view verb);
+    /// Scans for Wi-Fi networks; the chooser hears "APPLIED" and what
+    /// was found, as scan_reply.
+    void scan(std::string_view country);
 
 private:
     Supervisor& sup_;
     bool busy_ = false;
     Settings before_;
     std::string message_;
+    Settings candidate_;
+    std::string passphrase_; ///< a new Wi-Fi passphrase, until handed on
 
     void applied(std::string_view text);
     void failed(std::string_view text);
     void apply_candidate();
+    void apply_network();
+    void apply_wifi();
     void save(const Settings& candidate);
     /// After the settings changed under the running system: apply the
     /// network (if asked) and display settings that differ from before,

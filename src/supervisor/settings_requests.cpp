@@ -6,11 +6,15 @@
 #include "supervisor.hpp"
 
 #include <pixterm/lines.hpp>
+#include <pixterm/pin.hpp>
 #include <pixterm/settings_store.hpp>
+#include <pixterm/validate.hpp>
+#include <pixterm/wifi.hpp>
 
 #include <algorithm>
 #include <array>
 #include <format>
+#include <optional>
 
 namespace pixterm::supervisor {
 
@@ -124,21 +128,95 @@ void SettingsRequests::apply_candidate() {
         return;
     }
     sup_.reload_settings();
-    if (candidate->network == sup_.settings().network) {
-        save(*candidate);
+    // A new Wi-Fi passphrase comes in a file of its own, read once.
+    const auto secret_path = sup_.environment().runtime_dir / "wifi.passphrase";
+    auto secret = sup_.system().read_file(secret_path);
+    sup_.system().remove_file(secret_path);
+    wipe(passphrase_);
+    passphrase_.clear();
+    if (secret) {
+        const bool valid = is_valid_wifi_passphrase(*secret);
+        if (valid)
+            passphrase_ = *secret;
+        wipe(*secret);
+        if (!valid) {
+            failed("The Wi-Fi passphrase must be 8 to 63 letters, digits, spaces or punctuation.");
+            return;
+        }
+    }
+    candidate_ = std::move(*candidate);
+    apply_network();
+}
+
+// The network, then Wi-Fi, then the save: if one cannot be applied, the
+// settings are not saved.
+void SettingsRequests::apply_network() {
+    const auto& next = candidate_.network;
+    if (next == sup_.settings().network) {
+        apply_wifi();
         return;
     }
-    // The network first: if it cannot be applied, nothing changes.
-    sup_.log(std::format("applying network settings ({})",
-                         candidate->network.is_static ? candidate->network.address : "DHCP"));
-    const auto done = [this, c = *candidate](const helper::Reply& reply) {
+    sup_.log(std::format("applying network settings ({})", next.is_static ? next.address : "DHCP"));
+    const auto done = [this](const helper::Reply& reply) {
         if (!reply.ok)
             failed("The network settings could not be applied.\n\n" + reply.message);
         else
-            save(c);
+            apply_wifi();
     };
-    if (!sup_.system().call_helper(network_request(candidate->network), done))
+    if (!sup_.system().call_helper(network_request(next), done))
         failed("The network settings could not be applied.");
+}
+
+void SettingsRequests::apply_wifi() {
+    const auto& now = sup_.settings().wifi;
+    const auto& next = candidate_.wifi;
+    std::optional<helper::Request> wifi;
+    if (next.enabled && (next != now || !passphrase_.empty())) {
+        sup_.log(std::format("joining the Wi-Fi network {}", next.ssid));
+        wifi = helper::Request{
+            .args = {"wifi", "on", next.country, to_hex(next.ssid), next.hidden ? "1" : "0"},
+            .payload = passphrase_};
+    } else if (!next.enabled && now.enabled) {
+        sup_.log("turning Wi-Fi off");
+        wifi = helper::Request{.args = {"wifi", "off"}, .payload = {}};
+    }
+    wipe(passphrase_);
+    passphrase_.clear();
+    if (!wifi) {
+        save(candidate_);
+        return;
+    }
+    const auto done = [this](const helper::Reply& reply) {
+        if (!reply.ok)
+            failed("Wi-Fi could not be set up.\n\n" + reply.message);
+        else
+            save(candidate_);
+    };
+    const bool sent = sup_.system().call_helper(*wifi, done);
+    wipe(wifi->payload);
+    if (!sent)
+        failed("Wi-Fi could not be set up.");
+}
+
+void SettingsRequests::scan(std::string_view country) {
+    if (busy_ || sup_.system().helper_busy()) {
+        sup_.system().send_to_chooser("APPLY_FAILED Another change is still in progress.");
+        return;
+    }
+    if (!is_valid_country(country)) {
+        failed("Choose the country first: it decides which Wi-Fi channels may be used.");
+        return;
+    }
+    busy_ = true;
+    const auto done = [this](const helper::Reply& reply) {
+        if (reply.ok)
+            applied(reply.payload);
+        else
+            failed("The Wi-Fi scan failed.\n\n" + reply.message);
+    };
+    if (!sup_.system().call_helper({.args = {"wifi-scan", std::string(country)}, .payload = {}},
+                                   done))
+        failed("The Wi-Fi scan failed.");
 }
 
 void SettingsRequests::save(const Settings& candidate) {

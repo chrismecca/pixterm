@@ -4,6 +4,7 @@
 #include "fake_system.hpp"
 #include "test.hpp"
 
+#include <pixterm/lines.hpp>
 #include <pixterm/pin.hpp>
 
 #include <failure_console.hpp>
@@ -463,6 +464,86 @@ TEST(a_new_blanking_time_is_applied_at_once) {
     r.sys.answer_helper(*r.sup, {.ok = true, .message = {}, .payload = {}});
     REQUIRE(r.sys.job_program() != nullptr);
     CHECK_EQ(r.sys.job_program()->name, "pixterm-xsetup");
+}
+
+namespace {
+
+constexpr std::string_view join_home =
+    R"({"schema_version":1,"device":{"wifi":{"enabled":true,"ssid":"home","country":"GB"}}})";
+
+} // namespace
+
+TEST(joining_wifi_hands_the_passphrase_to_the_helper_before_saving) {
+    Rig r;
+    r.boot();
+    r.sys.files["/run/pixterm/config.candidate.json"] = join_home;
+    r.sys.files["/run/pixterm/wifi.passphrase"] = "correct horse";
+    r.sup->chooser_line("APPLY");
+    REQUIRE(r.sys.helper_request.has_value());
+    CHECK(r.sys.helper_request->args
+          == (std::vector<std::string>{"wifi", "on", "GB", "686f6d65", "0"}));
+    CHECK_EQ(r.sys.helper_request->payload, "correct horse");
+    CHECK(!r.sys.files.contains("/run/pixterm/wifi.passphrase"));
+    r.sys.answer_helper(*r.sup, {.ok = true, .message = {}, .payload = {}});
+    REQUIRE(r.sys.helper_request.has_value());
+    CHECK_EQ(r.sys.helper_request->args.at(0), "config-save");
+    CHECK(!r.sys.helper_request->payload.contains("correct horse"));
+}
+
+TEST(unchanged_wifi_is_saved_without_the_helper_joining_again) {
+    Rig r;
+    r.sys.settings = parse_settings(join_home).value_or(Settings{});
+    r.boot();
+    r.sys.files["/run/pixterm/config.candidate.json"] = join_home;
+    r.sup->chooser_line("APPLY");
+    REQUIRE(r.sys.helper_request.has_value());
+    CHECK_EQ(r.sys.helper_request->args.at(0), "config-save");
+}
+
+TEST(turning_wifi_off_tells_the_helper) {
+    Rig r;
+    r.sys.settings = parse_settings(join_home).value_or(Settings{});
+    r.boot();
+    r.sys.files["/run/pixterm/config.candidate.json"] =
+        R"({"schema_version":1,"device":{"wifi":{"enabled":false,"ssid":"home","country":"GB"}}})";
+    r.sup->chooser_line("APPLY");
+    REQUIRE(r.sys.helper_request.has_value());
+    CHECK(r.sys.helper_request->args == (std::vector<std::string>{"wifi", "off"}));
+}
+
+TEST(wifi_that_cannot_be_joined_is_not_saved) {
+    Rig r;
+    r.boot();
+    r.sys.files["/run/pixterm/config.candidate.json"] = join_home;
+    r.sup->chooser_line("APPLY");
+    r.sys.answer_helper(*r.sup,
+                        {.ok = false, .message = "Type the passphrase for home.", .payload = {}});
+    CHECK(!r.sys.helper_request.has_value());
+    CHECK(r.sys.was_sent("APPLY_FAILED"));
+}
+
+TEST(a_bad_passphrase_never_reaches_the_helper) {
+    Rig r;
+    r.boot();
+    r.sys.files["/run/pixterm/config.candidate.json"] = join_home;
+    r.sys.files["/run/pixterm/wifi.passphrase"] = "short";
+    r.sup->chooser_line("APPLY");
+    CHECK(!r.sys.helper_request.has_value());
+    CHECK(r.sys.was_sent("APPLY_FAILED"));
+    CHECK(!r.sys.files.contains("/run/pixterm/wifi.passphrase"));
+}
+
+TEST(a_wifi_scan_answers_with_what_the_helper_found) {
+    Rig r;
+    r.boot();
+    r.sup->chooser_line("WIFI_SCAN GB");
+    REQUIRE(r.sys.helper_request.has_value());
+    CHECK(r.sys.helper_request->args == (std::vector<std::string>{"wifi-scan", "GB"}));
+    r.sys.answer_helper(*r.sup, {.ok = true, .message = {}, .payload = "-48 wpa2 686f6d65\n"});
+    CHECK(r.sys.was_sent("APPLIED " + escape_line("-48 wpa2 686f6d65\n")));
+    r.sup->chooser_line("WIFI_SCAN Britain");
+    CHECK(!r.sys.helper_request.has_value());
+    CHECK(r.sys.was_sent("APPLY_FAILED"));
 }
 
 TEST(new_network_settings_are_applied_before_saving) {
