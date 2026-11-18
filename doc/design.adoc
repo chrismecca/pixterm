@@ -169,7 +169,9 @@ XDMCP matches how classic X terminals worked, and older Unix hosts
 (IRIX, Solaris) offer nothing else. It sends everything in clear text,
 so use it only on trusted networks. Find Hosts searches the network for
 XDMCP hosts, as the old terminals did, and each host can use a font
-server.
+server. The terminal's own fonts are the X.Org misc, 75 and 100 dpi
+bitmap fonts, which include the DEC Terminal, DEC Technical and
+DECwindows cursor and session fonts, and the 3270 fonts.
 
 === Terminal sessions
 

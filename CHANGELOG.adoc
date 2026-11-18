@@ -12,6 +12,8 @@ section into the release notes.
 
 * IBM mainframes: TN3270E sessions in x3270, with the PC 3270 keys, in
 the largest 3270 font that fits the screen. Port 992 uses TLS.
+* The 3270 fonts, and notes on the DEC fonts the terminal has for
+DECwindows and how to reach the rest through a font server.
 * Indirect GLX: OpenGL programs on IRIX, Solaris and other hosts draw
 on the terminal, in software.
 * Plan 9 and 9front: drawterm sessions, with 9front's drawterm (dp9ik

@@ -43,6 +43,14 @@ shows the line to add, and Export to USB writes it to
 `+pixterm-terminal-key.pub+`. Then tick "Log in with this terminal's key"
 in the host entry. A key avoids both problems below.
 
+== Fonts
+
+The terminal has the DEC fonts DECwindows asks for most: the DEC
+Terminal and DEC Technical fonts, and the DECwindows cursor and session
+fonts. A program that wants other DEC fonts reports missing fonts; give
+the host entry the host's font server, `+tcp/host:7100+`. DECwindows
+Motif includes one; its documentation says how to start it.
+
 == Known problems
 
 * Accounts with the `+PwdMix+` flag have case-sensitive passwords. `+MCR
