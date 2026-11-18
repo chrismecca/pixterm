@@ -121,6 +121,19 @@ bool is_valid_display_mode(std::string_view s) noexcept {
            && *hz <= 240;
 }
 
+bool is_valid_ssid(std::string_view s) noexcept {
+    return length_within(s, 1, limits::ssid) && no_control(s);
+}
+
+bool is_valid_wifi_passphrase(std::string_view s) noexcept {
+    return length_within(s, 8, limits::wifi_passphrase)
+           && all_of(s, [](char c) { return c >= ' ' && c <= '~'; });
+}
+
+bool is_valid_country(std::string_view s) noexcept {
+    return s.size() == 2 && all_of(s, [](char c) { return c >= 'A' && c <= 'Z'; });
+}
+
 bool is_valid_layout(std::string_view s) noexcept {
     return is_xkb_word(s, 2, limits::layout);
 }

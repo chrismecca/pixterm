@@ -167,3 +167,30 @@ TEST(pin_hash_has_the_stored_form) {
     CHECK(!is_valid_pin_hash("pbkdf2-sha256$x$00112233445566778899aabbccddeeff$" + hash64));
     CHECK(!is_valid_pin_hash("md5$100000$00112233445566778899aabbccddeeff$" + hash64));
 }
+
+TEST(ssid_is_one_to_32_bytes_without_control_characters) {
+    CHECK(is_valid_ssid("home"));
+    CHECK(is_valid_ssid("Caf\xc3\xa9 Wi-Fi \"5G\""));
+    CHECK(is_valid_ssid(std::string(32, 'a')));
+    CHECK(!is_valid_ssid(""));
+    CHECK(!is_valid_ssid(std::string(33, 'a')));
+    CHECK(!is_valid_ssid("bad\nname"));
+}
+
+TEST(wifi_passphrase_is_8_to_63_printable_characters) {
+    CHECK(is_valid_wifi_passphrase("correct horse"));
+    CHECK(is_valid_wifi_passphrase("quote\"inside"));
+    CHECK(is_valid_wifi_passphrase(std::string(63, 'x')));
+    CHECK(!is_valid_wifi_passphrase("short"));
+    CHECK(!is_valid_wifi_passphrase(std::string(64, 'x')));
+    CHECK(!is_valid_wifi_passphrase("tab\there!"));
+    CHECK(!is_valid_wifi_passphrase("caf\xc3\xa9 caf\xc3\xa9"));
+}
+
+TEST(country_is_two_capital_letters) {
+    CHECK(is_valid_country("GB"));
+    CHECK(is_valid_country("US"));
+    CHECK(!is_valid_country("gb"));
+    CHECK(!is_valid_country("GBR"));
+    CHECK(!is_valid_country(""));
+}

@@ -43,6 +43,7 @@ TEST(defaults_when_only_the_version_is_given) {
     CHECK_EQ(s.keyboard_layout, "us");
     CHECK_EQ(s.keyboard_variant, "");
     CHECK(!s.network.is_static);
+    CHECK(!s.wifi.enabled);
     CHECK_EQ(s.generation, 0U);
 }
 
@@ -166,6 +167,7 @@ TEST(serial_hosts_have_a_device_instead_of_an_address) {
 TEST(round_trips_through_json) {
     const auto first = parse_ok(R"({"schema_version":1,
         "device":{"display":{"mode":"1280x1024@75","blank_minutes":30},
+                  "wifi":{"enabled":true,"ssid":"Caf\u00e9","hidden":false,"country":"FR"},
                   "keyboard":{"layout":"de","variant":"nodeadkeys"},
                   "network":{"method":"static","address":"10.0.0.2/24","dns":["10.0.0.1"]}},
         "hosts":[
@@ -198,6 +200,29 @@ TEST(rejects_bad_settings_whole) {
     CHECK(rejects(R"({"schema_version":1,"device":{"display":{"blank_minutes":121}}})"));
     CHECK(rejects(R"({"schema_version":1,"device":{"display":{"blank_minutes":"10"}}})"));
     CHECK(rejects(R"({"schema_version":1,"device":{"keyboard":{"layout":"us;rm"}}})"));
+}
+
+TEST(reads_wifi_settings) {
+    const auto s = parse_ok(R"({"schema_version":1,"device":{"wifi":{
+        "enabled":true,"ssid":"home","hidden":true,"country":"GB"}}})");
+    CHECK(s.wifi.enabled);
+    CHECK_EQ(s.wifi.ssid, "home");
+    CHECK(s.wifi.hidden);
+    CHECK_EQ(s.wifi.country, "GB");
+    // Off, it may keep the network it last used.
+    CHECK(!parse_ok(R"({"schema_version":1,"device":{"wifi":{"enabled":false,"ssid":"home"}}})")
+               .wifi.enabled);
+}
+
+TEST(rejects_bad_wifi_settings) {
+    // On, it needs a network and a country.
+    CHECK(rejects(R"({"schema_version":1,"device":{"wifi":{"enabled":true,"country":"GB"}}})"));
+    CHECK(rejects(R"({"schema_version":1,"device":{"wifi":{"enabled":true,"ssid":"home"}}})"));
+    CHECK(rejects(R"({"schema_version":1,"device":{"wifi":{"enabled":"yes"}}})"));
+    CHECK(rejects(R"({"schema_version":1,"device":{"wifi":{"country":"Britain"}}})"));
+    CHECK(rejects(R"({"schema_version":1,"device":{"wifi":{"ssid":""}}})") == false);
+    // The passphrase never belongs in the settings.
+    CHECK(rejects(R"({"schema_version":1,"device":{"wifi":{"passphrase":"secret12"}}})"));
 }
 
 TEST(rejects_bad_hosts) {

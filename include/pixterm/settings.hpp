@@ -124,6 +124,18 @@ struct Host {
     friend bool operator==(const Host&, const Host&) = default;
 };
 
+/// The Wi-Fi network the terminal joins, with DHCP. Its passphrase is
+/// not part of the settings: pixterm-helper keeps it where only root
+/// can read it.
+struct Wifi {
+    bool enabled = false;
+    std::string ssid;    ///< the network's name
+    bool hidden = false; ///< it does not announce itself: ask for it by name
+    std::string country; ///< ISO 3166 code: which channels are legal
+
+    friend bool operator==(const Wifi&, const Wifi&) = default;
+};
+
 /// The wired network: DHCP, or a static IPv4 address.
 struct Network {
     bool is_static = false;
@@ -142,6 +154,7 @@ struct Settings {
     std::string keyboard_layout = "us";
     std::string keyboard_variant;
     Network network;
+    Wifi wifi;
     std::string admin_pin; ///< a PIN hash, or empty for no PIN
     std::vector<Host> hosts;
 

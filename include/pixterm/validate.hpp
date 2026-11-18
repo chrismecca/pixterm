@@ -30,6 +30,8 @@ inline constexpr std::size_t display_mode = 24;
 inline constexpr std::size_t font_server = 270;
 inline constexpr std::size_t command = 512;
 inline constexpr std::size_t pin_hash = 200;
+inline constexpr std::size_t ssid = 32; ///< bytes, as 802.11 allows
+inline constexpr std::size_t wifi_passphrase = 63;
 } // namespace limits
 
 /// A host identifier: letters, digits, '-' and '_'.
@@ -74,6 +76,17 @@ inline constexpr std::size_t pin_hash = 200;
 
 /// A stored PIN hash, as make_pin_hash writes it.
 [[nodiscard]] bool is_valid_pin_hash(std::string_view s) noexcept;
+
+/// A Wi-Fi network's name: 1 to 32 bytes (often UTF-8) without control
+/// characters.
+[[nodiscard]] bool is_valid_ssid(std::string_view s) noexcept;
+
+/// A WPA2 or WPA3-Personal passphrase: 8 to 63 printable ASCII
+/// characters.
+[[nodiscard]] bool is_valid_wifi_passphrase(std::string_view s) noexcept;
+
+/// An ISO 3166 country code, such as "GB": two capital letters.
+[[nodiscard]] bool is_valid_country(std::string_view s) noexcept;
 
 /// Converts a font server given as "host", "host:port" or
 /// "tcp/host:port" to "tcp/host:port".

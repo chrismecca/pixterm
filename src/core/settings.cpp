@@ -252,6 +252,33 @@ std::expected<Network, std::string> parse_network(const json::Value* v) {
     return n;
 }
 
+std::expected<Wifi, std::string> parse_wifi(const json::Value& v) {
+    if (v.find("passphrase") != nullptr)
+        return error("wifi: the passphrase is not kept in the settings");
+    Wifi w;
+    if (const auto* enabled = v.find("enabled")) {
+        const auto b = enabled->as_bool();
+        if (!b)
+            return error("wifi: invalid enabled");
+        w.enabled = *b;
+    }
+    if (const auto* hidden = v.find("hidden")) {
+        const auto b = hidden->as_bool();
+        if (!b)
+            return error("wifi: invalid hidden");
+        w.hidden = *b;
+    }
+    auto ssid = checked_member(&v, "ssid", is_valid_ssid, true);
+    auto country = checked_member(&v, "country", is_valid_country, true);
+    if (!ssid || !country)
+        return error("wifi: {}", !ssid ? ssid.error() : country.error());
+    w.ssid = std::move(*ssid);
+    w.country = std::move(*country);
+    if (w.enabled && (w.ssid.empty() || w.country.empty()))
+        return error("wifi: a network and a country are needed");
+    return w;
+}
+
 std::expected<Settings, std::string> parse_document(const json::Value& root) {
     Settings s;
     if (root.as_object() == nullptr)
@@ -288,6 +315,13 @@ std::expected<Settings, std::string> parse_document(const json::Value& root) {
         s.blank_minutes = static_cast<int>(*blank);
     }
     s.admin_pin = std::move(*pin);
+
+    if (const auto* wifi = device != nullptr ? device->find("wifi") : nullptr) {
+        auto w = parse_wifi(*wifi);
+        if (!w)
+            return std::unexpected(w.error());
+        s.wifi = std::move(*w);
+    }
 
     if (const auto* network = device != nullptr ? device->find("network") : nullptr) {
         auto n = parse_network(network);
@@ -445,6 +479,12 @@ std::string to_json(const Settings& s) {
         {.key = "keyboard", .value = std::move(keyboard)},
         {.key = "network", .value = std::move(network)},
     };
+    if (s.wifi != Wifi{})
+        device.push_back({.key = "wifi",
+                          .value = json::Object{{.key = "enabled", .value = s.wifi.enabled},
+                                                {.key = "ssid", .value = s.wifi.ssid},
+                                                {.key = "hidden", .value = s.wifi.hidden},
+                                                {.key = "country", .value = s.wifi.country}}});
     if (!s.admin_pin.empty())
         device.push_back({.key = "admin_pin", .value = s.admin_pin});
 
