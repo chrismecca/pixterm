@@ -89,14 +89,14 @@
     <polygon points="0,0 465,0 463,2 2,2 2,20 0,22" class="bevel-hi" />
     <polygon points="465,0 465,22 0,22 2,20 463,20 463,2" class="bevel-lo" />
 
-    <!-- Hard-Coded Sun OpenBoot Gallant (12x22 style) Bitmap Paths: "PIXterm" -->
+    <!-- Hard-Coded Sun OpenBoot Gallant (12x22 style) Bitmap Paths: "PiXterm" -->
     <!-- Centered at x=191 (total width = 83px across 7 fixed-width cells) -->
     <g transform="translate(191, 4)" class="gallant-ink">
       <!-- 'P' (cell 0, x=0..10) -->
       <path d="M0,0 h8 v1 h1 v1 h1 v4 h-1 v1 h-1 v1 h-5 v5 h2 v1 h-5 v-1 h1 v-12 h-1 z M3,1 v6 h4 v-1 h1 v-4 h-1 v-1 z" />
 
-      <!-- 'I' (cell 1, x=12..22) -->
-      <path d="M14,0 h6 v1 h-2 v12 h2 v1 h-6 v-1 h2 v-12 h-2 z" />
+      <!-- 'i' (cell 1, x=12..22) -->
+      <path d="M16,1 h2 v2 h-2 z M14,5 h4 v1 h-1 v7 h2 v1 h-6 v-1 h2 v-7 h-1 z" />
 
       <!-- 'X' (cell 2, x=24..34) -->
       <path d="M24,0 h4 v1 h-1 v1 h1 v2 h1 v1 h1 v-1 h1 v-2 h1 v-1 h-1 v-1 h3 v1 h-1 v2 h-1 v2 h-1 v2 h1 v2 h1 v2 h1 v2 h1 v1 h-4 v-1 h1 v-1 h-1 v-2 h-1 v-1 h-1 v1 h-1 v2 h-1 v1 h1 v1 h-3 v-1 h1 v-2 h1 v-2 h1 v-2 h-1 v-2 h-1 v-2 h-1 z" />
