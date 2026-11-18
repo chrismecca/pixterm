@@ -54,6 +54,9 @@ enum class Request {
 /// saved one, or none.
 [[nodiscard]] std::string start_request(std::string_view host_id, std::string_view username);
 
+/// Asks pixtermd to scan for Wi-Fi networks, for a country.
+[[nodiscard]] std::string wifi_scan_request(std::string_view country);
+
 /// Asks for an XDMCP session with a host found on the network.
 [[nodiscard]] std::string query_request(std::string_view address, std::string_view name);
 

@@ -5,6 +5,7 @@
 #include "test.hpp"
 
 #include <pixterm/pin.hpp>
+#include <pixterm/wifi.hpp>
 
 #include <host_list.hpp>
 #include <messages.hpp>
@@ -262,6 +263,68 @@ TEST(a_saved_blanking_time_shows_as_the_nearest_choice) {
     CHECK_EQ(blank_choices.at(blank_row(120)), 60);
     CHECK_EQ(blank_choices.at(blank_row(1)), 0);
     CHECK_EQ(blank_choices.at(blank_row(3)), 5);
+}
+
+TEST(the_wifi_form_shows_the_saved_settings) {
+    const auto f = wifi_form({.enabled = true, .ssid = "home", .hidden = true, .country = "GB"});
+    CHECK(f.enabled);
+    CHECK_EQ(f.ssid, "home");
+    CHECK(f.hidden);
+    CHECK_EQ(f.country, "GB");
+}
+
+TEST(the_wifi_form_needs_a_network_a_country_and_a_passphrase) {
+    const Wifi off;
+    const auto joined =
+        read_wifi_form({.enabled = true, .country = " gb ", .ssid = "home", .hidden = false}, off,
+                       "correct horse");
+    REQUIRE(joined.has_value());
+    CHECK(joined->enabled);
+    CHECK_EQ(joined->country, "GB");
+    CHECK_EQ(joined->ssid, "home");
+
+    const auto no_country =
+        read_wifi_form({.enabled = true, .country = "", .ssid = "home"}, off, "correct horse");
+    REQUIRE(!no_country);
+    CHECK(no_country.error().contains("country"));
+    const auto no_network =
+        read_wifi_form({.enabled = true, .country = "GB", .ssid = ""}, off, "correct horse");
+    REQUIRE(!no_network);
+    CHECK(no_network.error().contains("network"));
+    const auto short_passphrase =
+        read_wifi_form({.enabled = true, .country = "GB", .ssid = "home"}, off, "short");
+    REQUIRE(!short_passphrase);
+    CHECK(short_passphrase.error().contains("8 to 63"));
+    const auto no_passphrase =
+        read_wifi_form({.enabled = true, .country = "GB", .ssid = "home"}, off, "");
+    REQUIRE(!no_passphrase);
+    CHECK(no_passphrase.error().contains("passphrase for home"));
+}
+
+TEST(the_saved_passphrase_serves_the_same_network) {
+    const Wifi saved{.enabled = true, .ssid = "home", .hidden = false, .country = "GB"};
+    CHECK(read_wifi_form({.enabled = true, .country = "FR", .ssid = "home", .hidden = true}, saved,
+                         "")
+              .has_value());
+    CHECK(!read_wifi_form({.enabled = true, .country = "GB", .ssid = "cafe"}, saved, ""));
+    // Off needs nothing, and keeps the rest.
+    const auto off = read_wifi_form({.enabled = false, .country = "", .ssid = "home"}, saved, "");
+    REQUIRE(off.has_value());
+    CHECK(!off->enabled);
+    CHECK_EQ(off->ssid, "home");
+}
+
+TEST(wifi_rows_show_name_signal_and_security) {
+    CHECK_EQ(wifi_row({.ssid = "home", .signal = -48, .wpa2 = true, .wpa3 = true}),
+             "home                              ||||  WPA2/WPA3");
+    CHECK(wifi_row({.ssid = "far", .signal = -82, .wpa2 = true, .wpa3 = false})
+              .ends_with("|     WPA2"));
+    CHECK(wifi_row({.ssid = "new", .signal = -70, .wpa2 = false, .wpa3 = true})
+              .ends_with("||    WPA3"));
+}
+
+TEST(a_wifi_scan_names_the_country) {
+    CHECK_EQ(wifi_scan_request("GB"), "WIFI_SCAN GB");
 }
 
 TEST(keyboard_layouts_are_listed_by_code) {

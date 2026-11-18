@@ -67,7 +67,8 @@ public:
 
     /// Hands new settings to pixtermd, which checks, applies and saves
     /// them, then answers APPLIED or APPLY_FAILED.
-    [[nodiscard]] bool apply(const Settings& next) const;
+    /// A new Wi-Fi passphrase, if any, goes in a file of its own.
+    [[nodiscard]] bool apply(const Settings& next, std::string_view wifi_passphrase = {}) const;
 
     /// Runs then at once if Configure is open to everyone, else after
     /// the administrator PIN.
@@ -150,6 +151,7 @@ public:
 [[nodiscard]] std::unique_ptr<Panel> make_hosts_panel(App& app, Configure& configure);
 [[nodiscard]] std::unique_ptr<Panel> make_display_panel(App& app, Configure& configure);
 [[nodiscard]] std::unique_ptr<Panel> make_network_panel(App& app, Configure& configure);
+[[nodiscard]] std::unique_ptr<Panel> make_wifi_panel(App& app, Configure& configure);
 [[nodiscard]] std::unique_ptr<Panel> make_keyboard_panel(App& app, Configure& configure);
 [[nodiscard]] std::unique_ptr<Panel> make_system_panel(App& app, Configure& configure);
 [[nodiscard]] std::unique_ptr<Panel> make_diagnostics_panel(App& app, Configure& configure);
@@ -171,7 +173,9 @@ public:
     [[nodiscard]] Widget dialog();
 
     /// Saves new settings. done runs if they were saved.
-    void commit(const Settings& next, Done done = {});
+    void commit(const Settings& next, Done done = {}, std::string_view wifi_passphrase = {});
+    /// Scans for Wi-Fi networks; done gets them as scan_reply text.
+    void scan_wifi(std::string_view country, Done done);
     /// Sends a request that changes no settings (KEYGEN, RESET, ...).
     void request(chooser::Request request, Done done = {});
     /// Adds a host found on the network.

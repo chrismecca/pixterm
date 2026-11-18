@@ -9,6 +9,7 @@
 
 #include <pixterm/display_modes.hpp>
 #include <pixterm/settings.hpp>
+#include <pixterm/wifi.hpp>
 
 #include <array>
 #include <cstddef>
@@ -128,5 +129,27 @@ struct NetworkForm {
 ///
 /// @return The network settings, or a sentence for the user.
 [[nodiscard]] std::expected<Network, std::string> read_network_form(const NetworkForm& form);
+
+// ---- Wi-Fi ----
+
+/// The Wi-Fi panel's fields, as typed.
+struct WifiForm {
+    bool enabled = false;
+    std::string country;
+    std::string ssid;
+    bool hidden = false;
+};
+
+[[nodiscard]] WifiForm wifi_form(const Wifi& w);
+
+/// Checks the form against the saved Wi-Fi settings: a network needs a
+/// passphrase, unless it is the one already joined.
+///
+/// @return The Wi-Fi settings, or a sentence for the user.
+[[nodiscard]] std::expected<Wifi, std::string>
+read_wifi_form(const WifiForm& form, const Wifi& saved, std::string_view passphrase);
+
+/// A row of the list of networks found: name, signal bars, security.
+[[nodiscard]] std::string wifi_row(const WifiNetwork& n);
 
 } // namespace pixterm::chooser

@@ -64,6 +64,10 @@ std::string start_request(std::string_view host_id, std::string_view username) {
     return std::format("START {} {}", host_id, username.empty() ? "-" : username);
 }
 
+std::string wifi_scan_request(std::string_view country) {
+    return std::format("WIFI_SCAN {}", country);
+}
+
 std::string query_request(std::string_view address, std::string_view name) {
     return std::format("QUERY {} {}", address, escape_line(name));
 }

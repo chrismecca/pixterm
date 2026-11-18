@@ -174,7 +174,9 @@ step "administrator PIN guards Configure"
 mark
 $T/click-rel "pixterm - Network Terminal" 82 83
 wait_win "pixterm Configuration"
-$T/click-rel "pixterm Configuration" 7 374     # System
+$T/click-rel "pixterm Configuration" 7 393     # Wi-Fi
+sleep 1; shot s10b-wifi
+$T/click-rel "pixterm Configuration" 7 355     # System
 sleep 1
 $T/click-rel "pixterm Configuration" 84 136    # Administrator PIN...
 wait_win "Administrator PIN"

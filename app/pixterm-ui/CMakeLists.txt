@@ -15,6 +15,7 @@ add_executable(pixterm-ui
     motif.cpp
     network_panel.cpp
     system_panel.cpp
+    wifi_panel.cpp
 )
 target_link_libraries(pixterm-ui PRIVATE
     pixterm_chooser pixterm_askpass pixterm::x11 pixterm::build_config Motif::Xm pixterm::options)

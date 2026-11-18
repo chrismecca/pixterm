@@ -17,6 +17,7 @@ Configure::Configure(App& app) : app_(app) {
     panels_.push_back(make_hosts_panel(app, *this));
     panels_.push_back(make_display_panel(app, *this));
     panels_.push_back(make_network_panel(app, *this));
+    panels_.push_back(make_wifi_panel(app, *this));
     panels_.push_back(make_keyboard_panel(app, *this));
     panels_.push_back(make_system_panel(app, *this));
     panels_.push_back(make_diagnostics_panel(app, *this));
@@ -118,11 +119,22 @@ void Configure::begin(Done done) {
     XtSetSensitive(dialog(), False);
 }
 
-void Configure::commit(const Settings& next, Done done) {
+void Configure::commit(const Settings& next, Done done, std::string_view wifi_passphrase) {
     if (pending_)
         return;
     begin(std::move(done));
-    if (!app_.apply(next)) {
+    if (!app_.apply(next, wifi_passphrase)) {
+        pending_ = false;
+        done_ = nullptr;
+        XtSetSensitive(dialog_, True);
+    }
+}
+
+void Configure::scan_wifi(std::string_view country, Done done) {
+    if (pending_)
+        return;
+    begin(std::move(done));
+    if (!app_.send(chooser::wifi_scan_request(country))) {
         pending_ = false;
         done_ = nullptr;
         XtSetSensitive(dialog_, True);

@@ -11,11 +11,14 @@
 #include <net/if.h>
 #include <netinet/in.h>
 
+#include <algorithm>
 #include <array>
 #include <charconv>
 #include <cstring>
+#include <filesystem>
 #include <format>
 #include <memory>
+#include <vector>
 
 namespace pixterm::chooser {
 
@@ -30,14 +33,19 @@ constexpr std::size_t max_small_file = std::size_t{64} * 1024;
 
 } // namespace
 
-std::optional<Address> primary_address() {
+namespace {
+
+// The first IPv4 address of an interface that is up and not loopback,
+// on the interface named, or any if the name is empty.
+std::optional<Address> first_address(std::string_view only) {
     ifaddrs* raw = nullptr;
     if (getifaddrs(&raw) != 0)
         return std::nullopt;
     const std::unique_ptr<ifaddrs, FreeIfaddrs> list(raw);
     for (const auto* i = list.get(); i != nullptr; i = i->ifa_next) {
         if (i->ifa_addr == nullptr || i->ifa_addr->sa_family != AF_INET
-            || (i->ifa_flags & IFF_UP) == 0 || (i->ifa_flags & IFF_LOOPBACK) != 0)
+            || (i->ifa_flags & IFF_UP) == 0 || (i->ifa_flags & IFF_LOOPBACK) != 0
+            || (!only.empty() && only != i->ifa_name))
             continue;
         sockaddr_in sin{};
         std::memcpy(&sin, i->ifa_addr, sizeof sin);
@@ -46,6 +54,28 @@ std::optional<Address> primary_address() {
             return Address{.interface = i->ifa_name, .ipv4 = text.data()};
     }
     return std::nullopt;
+}
+
+} // namespace
+
+std::optional<Address> primary_address() {
+    return first_address("");
+}
+
+std::optional<Address> interface_address(std::string_view interface) {
+    return interface.empty() ? std::nullopt : first_address(interface);
+}
+
+std::optional<std::string> wifi_interface() {
+    std::vector<std::string> found;
+    std::error_code ec;
+    for (const auto& entry : std::filesystem::directory_iterator("/sys/class/net", ec))
+        if (std::filesystem::exists(entry.path() / "wireless", ec))
+            found.push_back(entry.path().filename().string());
+    if (found.empty())
+        return std::nullopt;
+    std::ranges::sort(found);
+    return found.front();
 }
 
 std::string network_status(const std::optional<Address>& address) {

@@ -24,6 +24,7 @@ Pixterm*hosts.fontList:   -adobe-helvetica-medium-r-normal--17-*-*-*-p-*-iso8859
 Pixterm*hosts.visibleItemCount: 8
 Pixterm*hostList.fontList: -adobe-courier-medium-r-normal--14-*-*-*-m-*-iso8859-1
 Pixterm*foundList.fontList: -adobe-courier-medium-r-normal--14-*-*-*-m-*-iso8859-1
+Pixterm*wifiList.fontList: -adobe-courier-medium-r-normal--14-*-*-*-m-*-iso8859-1
 Pixterm*keyText.fontList: -adobe-courier-medium-r-normal--12-*-*-*-m-*-iso8859-1
 Pixterm*diagText.fontList: -adobe-courier-medium-r-normal--12-*-*-*-m-*-iso8859-1
 Pixterm*categories.fontList: -adobe-helvetica-bold-r-normal--14-*-*-*-p-*-iso8859-1

@@ -24,6 +24,12 @@ struct Address {
 /// The first IPv4 address of an interface that is up and not loopback.
 [[nodiscard]] std::optional<Address> primary_address();
 
+/// The IPv4 address of one interface, if it has one and is up.
+[[nodiscard]] std::optional<Address> interface_address(std::string_view interface);
+
+/// The built-in Wi-Fi interface (the first wireless one), if any.
+[[nodiscard]] std::optional<std::string> wifi_interface();
+
 /// The status line's network text.
 [[nodiscard]] std::string network_status(const std::optional<Address>& address);
 

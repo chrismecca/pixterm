@@ -56,22 +56,38 @@ bool App::send(std::string_view line) const {
     return true;
 }
 
-bool App::apply(const Settings& next) const {
-    if (paths_.runtime_dir.empty()) {
-        error("Settings cannot be saved: not started by pixtermd.");
-        return false;
-    }
-    // Written whole, then renamed, so pixtermd never reads half a file.
-    const auto path = paths_.runtime_dir / "config.candidate.json";
+namespace {
+
+// Written whole, then renamed, so pixtermd never reads half a file. The
+// runtime directory is the pixterm account's alone, in memory.
+bool write_for_pixtermd(const std::filesystem::path& path, std::string_view text) {
     auto temporary = path;
     temporary += ".tmp";
     const auto written = [&] {
         const UniqueFd fd(
             ::open(temporary.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0600));
-        return fd && write_all(fd.get(), to_json(next)).has_value() && ::fsync(fd.get()) == 0;
+        return fd && write_all(fd.get(), text).has_value() && ::fsync(fd.get()) == 0;
     }();
     if (!written || std::rename(temporary.c_str(), path.c_str()) != 0) {
         (void)::unlink(temporary.c_str());
+        return false;
+    }
+    return true;
+}
+
+} // namespace
+
+bool App::apply(const Settings& next, std::string_view wifi_passphrase) const {
+    if (paths_.runtime_dir.empty()) {
+        error("Settings cannot be saved: not started by pixtermd.");
+        return false;
+    }
+    if (!wifi_passphrase.empty()
+        && !write_for_pixtermd(paths_.runtime_dir / "wifi.passphrase", wifi_passphrase)) {
+        error("The Wi-Fi passphrase could not be handed on.");
+        return false;
+    }
+    if (!write_for_pixtermd(paths_.runtime_dir / "config.candidate.json", to_json(next))) {
         error("The settings could not be written.");
         return false;
     }

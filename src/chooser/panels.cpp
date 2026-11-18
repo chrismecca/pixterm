@@ -3,6 +3,8 @@
 
 #include "panels.hpp"
 
+#include <pixterm/validate.hpp>
+
 #include <algorithm>
 #include <cstdlib>
 #include <format>
@@ -118,6 +120,53 @@ std::expected<Network, std::string> read_network_form(const NetworkForm& form) {
     if (auto problem = network_problem(n))
         return std::unexpected(std::move(*problem));
     return n;
+}
+
+} // namespace pixterm::chooser
+
+namespace pixterm::chooser {
+
+WifiForm wifi_form(const Wifi& w) {
+    return {.enabled = w.enabled, .country = w.country, .ssid = w.ssid, .hidden = w.hidden};
+}
+
+std::expected<Wifi, std::string> read_wifi_form(const WifiForm& form, const Wifi& saved,
+                                                std::string_view passphrase) {
+    Wifi w{.enabled = form.enabled, .ssid = form.ssid, .hidden = form.hidden, .country = {}};
+    w.country = trimmed(form.country);
+    std::ranges::transform(w.country, w.country.begin(), [](char c) {
+        return c >= 'a' && c <= 'z' ? static_cast<char>(c - 'a' + 'A') : c;
+    });
+    if ((w.enabled || !w.country.empty()) && !is_valid_country(w.country))
+        return std::unexpected("Type the country as two letters, for example GB or US. It "
+                               "decides which Wi-Fi channels may be used.");
+    if ((w.enabled || !w.ssid.empty()) && !is_valid_ssid(w.ssid))
+        return std::unexpected("Choose a network from the list, or type its name.");
+    if (!w.enabled)
+        return w;
+    if (!passphrase.empty() && !is_valid_wifi_passphrase(passphrase))
+        return std::unexpected(
+            "The passphrase must be 8 to 63 letters, digits, spaces or punctuation.");
+    if (passphrase.empty() && !(saved.enabled && saved.ssid == w.ssid))
+        return std::unexpected(std::format("Type the passphrase for {}.", w.ssid));
+    return w;
+}
+
+std::string wifi_row(const WifiNetwork& n) {
+    int bars = 1;
+    if (n.signal >= -55)
+        bars = 4;
+    else if (n.signal >= -65)
+        bars = 3;
+    else if (n.signal >= -75)
+        bars = 2;
+    std::string_view security = "WPA2";
+    if (n.wpa2 && n.wpa3)
+        security = "WPA2/WPA3";
+    else if (n.wpa3)
+        security = "WPA3";
+    return std::format("{:<34}{:<4}  {}", n.ssid, std::string(static_cast<std::size_t>(bars), '|'),
+                       security);
 }
 
 } // namespace pixterm::chooser
