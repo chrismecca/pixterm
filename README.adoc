@@ -3,7 +3,7 @@
 
 image::doc/img/pixterm.svg[pixterm,540,34]
 
-= pixterm
+= PIXterm
 
 An X terminal like the NCD terminals of the 1990s.
 
