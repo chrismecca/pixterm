@@ -43,6 +43,8 @@ with an error, within about ten seconds.
 . Change the display mode, and let it revert after 15 seconds, on at
 least two monitors. Keep a new mode, then log in to an XDMCP host: its
 display has the same size.
+. Start with no monitor, then plug one in at the chooser: it lights
+in the saved mode. Unplug it and plug in another.
 . Set the blanking time to 5 minutes and leave the chooser alone: the
 screen blanks, and the monitor sleeps, after 5 minutes.
 . Apply a static network address, then DHCP again.

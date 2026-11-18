@@ -224,6 +224,9 @@ seconds. Xorg starts every display at the chosen size, XDMCP displays
 included, from the Xorg file pixtermd writes before each start: a
 client of pixterm's on a display manager's display could end its
 session when it disconnects.
+* A monitor plugged in while the chooser is up, or after a start with
+none, lights in the saved mode, or the automatic one. One plugged in
+during a session lights when the session ends and Xorg restarts.
 * The screen blanks after an idle time set in Configure > Display (10
 minutes unless changed, or never), and DPMS then turns the monitor off.
 It applies at the chooser and during every session.

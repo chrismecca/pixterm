@@ -173,6 +173,7 @@ int main(int argc, char** argv) {
     launcher.build();
     XtRealizeWidget(shell);
     XtMapWidget(shell);
+    watch_monitors(app);
     if (!app.connected())
         app.error("Not started by pixtermd: logins are disabled.");
     XtAppMainLoop(context);

@@ -11,6 +11,7 @@ add_executable(pixterm-ui
     keyboard_panel.cpp
     launcher.cpp
     main.cpp
+    monitor_watch.cpp
     motif.cpp
     network_panel.cpp
     system_panel.cpp

@@ -70,6 +70,14 @@ step "the screen blanks after 10 minutes"
 saver=$($XDO xset q)
 echo "$saver" | grep -Eq 'timeout: +600 ' && ok "screen saver: 600 s" || bad "screen saver: $saver"
 
+# Xvfb's one output, turned off, stands in for a monitor plugged in
+# after Xorg started: connected, but dark.
+step "the chooser lights a dark monitor"
+$XDO xrandr --output screen --off 2>/dev/null
+$XDO xrandr | grep -q '\*' && bad "output turned off" || ok "output turned off"
+sleep 2
+$XDO xrandr | grep -q '1280x1024 .*\*' && ok "output lit at 1280x1024" || bad "output lit at 1280x1024"
+
 step "ask-for-user: username prompt, host key, password, session"
 mark
 $XDO xdotool key Down Return

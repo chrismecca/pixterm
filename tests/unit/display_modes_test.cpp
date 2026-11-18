@@ -70,6 +70,25 @@ TEST(automatic_is_the_preferred_mode) {
     CHECK(!automatic_mode({}));
 }
 
+TEST(the_wanted_mode_keeps_what_xorg_lit_unless_the_setting_differs) {
+    Monitor m;
+    m.modes = {mode(1920, 1080, 60, true), mode(1280, 1024, 75), mode(1024, 768, 60)};
+    m.current = 2;
+    CHECK(wanted_mode(m, "auto") == 2U);         // Xorg's choice stands
+    CHECK(wanted_mode(m, "1280x1024@75") == 1U); // the saved mode
+    CHECK(wanted_mode(m, "800x600@60") == 2U);   // a monitor without it
+}
+
+TEST(a_dark_monitor_gets_the_saved_or_automatic_mode) {
+    // Plugged in after Xorg started: connected, but lit by nothing.
+    Monitor m;
+    m.modes = {mode(1920, 1080, 60, true), mode(1280, 1024, 75)};
+    CHECK(wanted_mode(m, "auto") == 0U);
+    CHECK(wanted_mode(m, "1280x1024@75") == 1U);
+    CHECK(wanted_mode(m, "800x600@60") == 0U);
+    CHECK(!wanted_mode(Monitor{}, "auto").has_value());
+}
+
 TEST(modes_have_names_and_labels) {
     CHECK_EQ(mode_name(mode(1920, 1080, 60)), "1920x1080@60");
     CHECK_EQ(mode_label(mode(1920, 1080, 60)), "1920 x 1080   60 Hz");

@@ -5,7 +5,8 @@
 //
 //     pixterm-xsetup
 //         Sets the saved display mode, blanking time and keyboard.
-//         "auto" leaves the mode Xorg chose from the monitor's EDID.
+//         "auto" leaves the mode Xorg chose from the monitor's EDID, or
+//         picks one for a monitor Xorg left dark.
 //     pixterm-xsetup --allow-host HOST
 //         The same, then lets HOST open windows over TCP (direct X): adds
 //         its addresses to the server's access list and prints
@@ -78,21 +79,17 @@ bool apply_keyboard(const Settings& s) {
 }
 
 bool apply_display_mode(Display* d, const Settings& s) {
-    if (s.display_mode == "auto")
-        return true;
     auto monitor = x11::query_monitor(d);
     if (!monitor) {
-        std::println(stderr, "pixterm-xsetup: no monitor is connected");
-        return false;
-    }
-    const auto index = find_mode(*monitor, s.display_mode);
-    if (!index) {
-        // The monitor changed: keep Xorg's choice rather than guess.
-        std::println(stderr, "pixterm-xsetup: {} does not offer {}; using automatic",
-                     monitor->output, s.display_mode);
+        // The chooser lights a monitor when one is plugged in.
+        std::println(stderr, "pixterm-xsetup: no monitor is connected yet");
         return true;
     }
-    return index == monitor->current || x11::set_mode(d, *monitor, *index);
+    if (s.display_mode != "auto" && !find_mode(*monitor, s.display_mode))
+        std::println(stderr, "pixterm-xsetup: {} does not offer {}; keeping its mode",
+                     monitor->output, s.display_mode);
+    const auto wanted = wanted_mode(*monitor, s.display_mode);
+    return !wanted || wanted == monitor->current || x11::set_mode(d, *monitor, *wanted);
 }
 
 // What Xorg's -s option set at start (see Supervisor::start_x), again,

@@ -180,6 +180,9 @@ public:
     /// pixtermd's answer to the request in progress.
     void finished(bool ok, const std::string& text);
 
+    /// The screen changed size: keeps the dialog, if open, in its middle.
+    void screen_changed();
+
 private:
     App& app_;
     std::vector<std::unique_ptr<Panel>> panels_;
@@ -195,6 +198,10 @@ private:
     void show_panel(std::size_t index);
     void begin(Done done);
 };
+
+/// Lights a monitor plugged in while the chooser is up, and keeps the
+/// chooser in the middle of the screen when its size changes.
+void watch_monitors(App& app);
 
 /// Find Hosts: the XDMCP search.
 class FindHosts {

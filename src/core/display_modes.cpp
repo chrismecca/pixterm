@@ -116,6 +116,13 @@ std::optional<std::size_t> automatic_mode(const Monitor& m) {
     return best;
 }
 
+std::optional<std::size_t> wanted_mode(const Monitor& m, std::string_view saved) {
+    if (saved != "auto")
+        if (const auto saved_mode = find_mode(m, saved))
+            return saved_mode;
+    return m.current ? m.current : automatic_mode(m);
+}
+
 std::string mode_name(const Mode& m) {
     return std::format("{}x{}@{}", m.width, m.height, m.hz);
 }

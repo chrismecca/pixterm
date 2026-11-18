@@ -65,6 +65,11 @@ struct Timings {
 /// largest nearest the panel's shape.
 [[nodiscard]] std::optional<std::size_t> automatic_mode(const Monitor& m);
 
+/// The mode the monitor should be in for a saved setting: the saved
+/// mode if it offers it, else the mode it is in (Xorg's choice), else,
+/// for a monitor nothing has lit yet, the automatic mode.
+[[nodiscard]] std::optional<std::size_t> wanted_mode(const Monitor& m, std::string_view saved);
+
 /// "1920x1080@60", as the settings store it.
 [[nodiscard]] std::string mode_name(const Mode& m);
 /// "1920 x 1080   60 Hz", as Configure shows it.

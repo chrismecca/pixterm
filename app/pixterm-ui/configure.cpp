@@ -28,6 +28,13 @@ Widget Configure::dialog() {
     return dialog_;
 }
 
+void Configure::screen_changed() {
+    if (dialog_ == nullptr || XtIsManaged(dialog_) == False)
+        return;
+    Screen* screen = XtScreen(dialog_);
+    centre(XtParent(dialog_), WidthOfScreen(screen), HeightOfScreen(screen));
+}
+
 void Configure::open() {
     (void)dialog();
     select_row(categories_, shown_);
