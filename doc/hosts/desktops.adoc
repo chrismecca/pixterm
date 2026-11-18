@@ -54,8 +54,12 @@ pixterm asks for the password in its own dialog, and checks it while
 the chooser is up: a wrong password is reported there. Logging off
 Windows returns the terminal to the chooser.
 
-The host's certificate is trusted the first time the terminal sees it
-after starting, and must not change until the terminal restarts.
+The host's certificate is trusted the first time the terminal sees it,
+and kept on the settings partition, so a host whose certificate changes
+is refused, restarts included. A factory reset forgets the
+certificates. The host's own certificate is often one it made for
+itself; if it is renewed, reset the terminal or ask the host's
+administrator to keep it.
 
 Windows: turn on Settings > System > Remote Desktop. Linux: install
 xrdp.

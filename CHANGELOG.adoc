@@ -10,6 +10,8 @@ section into the release notes.
 
 === Added
 
+* RDP host certificates are kept on the settings partition, like SSH
+host keys, so a changed certificate is refused after a restart too.
 * Wi-Fi: Configure > Wi-Fi scans for networks and joins a WPA2- or
 WPA3-Personal one, hidden ones too, with DHCP. The passphrase is kept
 for root alone and left out of exports.

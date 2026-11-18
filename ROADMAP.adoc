@@ -46,7 +46,6 @@ are kept from the first plan so that issues can refer to them.
 | # | Item | Size
 
 | 28 | drawterm for Plan 9 and 9front CPU servers | S
-| 29 | RDP certificates kept on the settings partition, not trusted until restart | S
 | 31 | TN3270E for IBM mainframes through x3270, with a 3270 key map | M
 | 32 | TN5250E for IBM i through tn5250 | S
 | 33 | LAT for VAX and Alpha OpenVMS and DECservers through latd | M

@@ -51,10 +51,15 @@ int main() {
     }
     const std::filesystem::path state = from_environment("STATE_DIRECTORY", build::state_dir);
     const auto factory = from_environment("PIXTERM_CONFIG", build::factory_settings);
+    // HOME, with the directory FreeRDP keeps host certificates in.
     const auto home = runtime / "home";
-    if (::mkdir(home.c_str(), 0700) != 0 && errno != EEXIST) {
-        std::println(stderr, "pixtermd: cannot make {}: {}", home.string(), std::strerror(errno));
-        return 1;
+    for (const auto& dir :
+         {home, home / ".config", home / ".config/freerdp", home / ".config/freerdp/server"}) {
+        if (::mkdir(dir.c_str(), 0700) != 0 && errno != EEXIST) {
+            std::println(stderr, "pixtermd: cannot make {}: {}", dir.string(),
+                         std::strerror(errno));
+            return 1;
+        }
     }
     const passwd* user = ::getpwuid(::getuid());
     const std::string name = user != nullptr ? user->pw_name : "pixterm";

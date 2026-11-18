@@ -263,6 +263,52 @@ TEST(rdp_checks_the_password_before_handing_over) {
         r.sys.was_sent("ERROR Could not log in to Host.\\n\\nThe user name or password is wrong."));
 }
 
+namespace {
+
+constexpr std::string_view rdp_cert =
+    "-----BEGIN CERTIFICATE-----\nMIIBszCCAVmgAwIBAgIU\n-----END CERTIFICATE-----\n";
+constexpr std::string_view saved_cert = "/var/lib/pixterm/rdp-certs/nt_3389.pem";
+constexpr std::string_view live_cert = "/run/pixterm/home/.config/freerdp/server/nt_3389.pem";
+
+} // namespace
+
+TEST(rdp_trusts_the_certificate_saved_for_the_host) {
+    auto host = make_host(Protocol::rdp, "nt");
+    host.username = "chris";
+    Rig r(host);
+    r.sys.files[std::filesystem::path(saved_cert)] = rdp_cert;
+    r.pick();
+    CHECK_EQ(r.sys.files[std::filesystem::path(live_cert)], rdp_cert);
+}
+
+TEST(rdp_saves_a_certificate_seen_for_the_first_time) {
+    auto host = make_host(Protocol::rdp, "nt");
+    host.username = "chris";
+    Rig r(host);
+    r.sys.files[std::filesystem::path(live_cert)] = "left from before";
+    r.pick();
+    CHECK(!r.sys.files.contains(std::filesystem::path(live_cert))); // asked afresh
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "OK");
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "secret");
+    r.sys.files[std::filesystem::path(live_cert)] = rdp_cert; // FreeRDP accepted it
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "");
+    REQUIRE(r.sys.helper_request.has_value());
+    CHECK(r.sys.helper_request->args == (std::vector<std::string>{"rdp-cert-save", "nt_3389.pem"}));
+    CHECK_EQ(r.sys.helper_request->payload, rdp_cert);
+}
+
+TEST(rdp_saves_nothing_when_the_certificate_was_known) {
+    auto host = make_host(Protocol::rdp, "nt");
+    host.username = "chris";
+    Rig r(host);
+    r.sys.files[std::filesystem::path(saved_cert)] = rdp_cert;
+    r.pick();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "OK");
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "secret");
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "");
+    CHECK(!r.sys.helper_request.has_value());
+}
+
 TEST(rdp_runs_full_screen_with_the_password_on_standard_input) {
     auto host = make_host(Protocol::rdp, "nt");
     host.username = "chris";

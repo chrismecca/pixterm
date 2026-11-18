@@ -13,8 +13,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <array>
 #include <cerrno>
+#include <charconv>
 #include <format>
 #include <system_error>
 
@@ -29,6 +31,8 @@ constexpr std::string_view wpa_cli = "/usr/sbin/wpa_cli";
 constexpr std::string_view wifi_secret = "wifi-passphrase";
 constexpr std::string_view wifi_conf = "wpa_supplicant.conf";
 constexpr std::size_t max_wifi_secret = 256;
+constexpr std::string_view rdp_certs = "rdp-certs";
+constexpr std::size_t max_pem = std::size_t{16} * 1024;
 // A scan of both bands takes a few seconds.
 constexpr std::chrono::milliseconds scan_time{4'000};
 constexpr std::chrono::milliseconds socket_poll{250};
@@ -103,6 +107,47 @@ bool is_valid_known_hosts(std::string_view text) noexcept {
         }
         if (c < 0x20 || c > 0x7e || ++line > max_known_hosts_line)
             return false;
+    }
+    return true;
+}
+
+bool is_valid_rdp_cert_name(std::string_view name) noexcept {
+    constexpr std::string_view suffix = ".pem";
+    if (!name.ends_with(suffix))
+        return false;
+    name.remove_suffix(suffix.size());
+    const auto underscore = name.rfind('_');
+    if (underscore == std::string_view::npos)
+        return false;
+    const auto port = name.substr(underscore + 1);
+    int number = 0;
+    const auto [end, ec] = std::from_chars(port.data(), port.data() + port.size(), number);
+    return is_valid_address(name.substr(0, underscore)) && !port.empty() && ec == std::errc{}
+           && end == port.data() + port.size() && number >= 1 && number <= 65535
+           && port.front() != '0';
+}
+
+bool is_valid_pem_certificate(std::string_view text) noexcept {
+    constexpr std::string_view begin = "-----BEGIN CERTIFICATE-----\n";
+    constexpr std::string_view end = "-----END CERTIFICATE-----\n";
+    if (text.size() > max_pem || !text.starts_with(begin) || !text.ends_with(end)
+        || text.size() < begin.size() + end.size())
+        return false;
+    auto body = text.substr(begin.size(), text.size() - begin.size() - end.size());
+    if (body.empty())
+        return false;
+    // Lines of base64, each ending in a newline.
+    while (!body.empty()) {
+        const auto newline = body.find('\n');
+        if (newline == 0 || newline == std::string_view::npos || newline > 76)
+            return false;
+        const auto base64 = [](char c) {
+            return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
+                   || c == '+' || c == '/' || c == '=';
+        };
+        if (!std::ranges::all_of(body.substr(0, newline), base64))
+            return false;
+        body.remove_prefix(newline + 1);
     }
     return true;
 }
@@ -185,6 +230,8 @@ Result Helper::dispatch(const Request& request) {
         return wifi(args, request.payload);
     if (command == "wifi-scan")
         return wifi_scan(args);
+    if (command == "rdp-cert-save")
+        return save_rdp_cert(args, request.payload);
     if (!args.empty())
         return fail(std::format("{} takes no arguments", command));
     if (command == "config-save")
@@ -252,6 +299,10 @@ std::expected<void, std::string> Helper::reset() const {
         return ok;
     if (auto ok = forget_wifi(); !ok)
         return ok;
+    std::error_code ec;
+    std::filesystem::remove_all(paths_.state_dir / rdp_certs, ec);
+    if (ec)
+        return fail(describe(paths_.state_dir / rdp_certs, ec));
     for (const auto& name :
          {std::string("known_hosts"), std::string(key_name), std::string(key_name) + ".pub"}) {
         const auto path = paths_.state_dir / name;
@@ -476,6 +527,21 @@ Result Helper::wifi(std::span<const std::string> args, std::string_view passphra
         != 0)
         return fail("Wi-Fi could not be started.");
     return std::string();
+}
+
+// Certificates are public: pixtermd reads them to hand to FreeRDP.
+Result Helper::save_rdp_cert(std::span<const std::string> args, std::string_view pem) {
+    if (args.size() != 1 || !is_valid_rdp_cert_name(args[0]))
+        return fail("usage: rdp-cert-save HOST_PORT.pem");
+    if (!is_valid_pem_certificate(pem))
+        return fail("That is not a certificate.");
+    return writing([&]() -> std::expected<void, std::string> {
+               const auto dir = paths_.state_dir / rdp_certs;
+               if (::mkdir(dir.c_str(), 0755) != 0 && errno != EEXIST)
+                   return fail(describe(dir, last_error()));
+               return replace_file(dir, args[0], pem, 0644);
+           })
+        .transform([] { return std::string(); });
 }
 
 Result Helper::wifi_scan(std::span<const std::string> args) {

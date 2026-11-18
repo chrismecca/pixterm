@@ -323,6 +323,8 @@ wait_log "state handoff -> session" 30
 ps -eo user,args | grep -q '^pixterm */usr/bin/xfreerdp3 .*/f' && ok "FreeRDP running" || bad "FreeRDP running"
 ps -u pixterm -o args | grep -q secret && bad "password kept off command lines" || ok "password kept off command lines"
 grep -q secret /tmp/pixtermd.log && bad "password kept out of the log" || ok "password kept out of the log"
+wait_log "RDP certificate saved"
+grep -q "BEGIN CERTIFICATE" /tmp/state/rdp-certs/127.0.0.1_3390.pem && ok "certificate kept" || bad "certificate kept"
 sleep 6; shot s17-rdp
 pkill -x xfreerdp3
 wait_log "on rdp-host ended" 15
@@ -352,7 +354,13 @@ wait_log "state handoff -> session" 15
 ps -eo user,args | grep -q '^pixterm */usr/bin/xterm .*-e /usr/bin/picocom .*--send-cmd  --receive-cmd  /dev/ttyUSB9' && ok "terminal runs picocom" || bad "terminal runs picocom"
 sleep 6; shot s19-serial
 $XDO xdotool mousemove 100 100; sleep 0.3
-$XDO xdotool key --delay 150 ctrl+a ctrl+x
+# Keys sent while xterm is still settling can be lost: send them again
+# while picocom runs.
+for _ in 1 2 3; do
+	$XDO xdotool key --delay 150 ctrl+a ctrl+x
+	sleep 3
+	pgrep -x picocom >/dev/null || break
+done
 wait_log "terminal session on serial-console ended" 15
 wait_log "started pixterm-ui" 15
 sleep 1

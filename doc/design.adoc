@@ -288,7 +288,7 @@ is FAT, so any computer can make the file.
 
 | boot (FAT) | firmware, kernel | read-only
 | root (ext4) | the system | read-only
-| pixterm-data | settings, host keys, terminal key, Wi-Fi passphrase | read-only, except while the helper saves
+| pixterm-data | settings, SSH host keys, RDP certificates, terminal key, Wi-Fi passphrase | read-only, except while the helper saves
 |===
 
 Logs, systemd state and temporary files live in RAM. The machine ID is

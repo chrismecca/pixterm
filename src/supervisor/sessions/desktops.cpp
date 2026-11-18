@@ -9,6 +9,7 @@
 
 #include <pixterm/pin.hpp>
 
+#include <filesystem>
 #include <format>
 
 namespace pixterm::supervisor {
@@ -81,7 +82,9 @@ public:
 // password is reported in the chooser. The password reaches FreeRDP on
 // its standard input, never on a command line, and is forgotten once
 // the session starts. The host's certificate is trusted the first time
-// it is seen after the terminal starts.
+// it is seen (FreeRDP's /cert:tofu), and pixterm-helper keeps it on the
+// settings partition, so a changed certificate is refused after a
+// restart too.
 class RdpSession final : public Session {
 public:
     using Session::Session;
@@ -154,7 +157,48 @@ private:
 
     void check_login();
     void login_checked(ExitStatus status, std::string_view output);
+
+    // FreeRDP's name for the host's certificate, where it looks for it,
+    // and where pixterm keeps it.
+    [[nodiscard]] std::string cert_name() const {
+        return std::format("{}_{}.pem", sup().host().address, sup().host().port);
+    }
+    [[nodiscard]] std::filesystem::path live_cert() const {
+        return sup().environment().runtime_dir / "home/.config/freerdp/server" / cert_name();
+    }
+    [[nodiscard]] std::filesystem::path saved_cert() const {
+        return sup().environment().state_dir / "rdp-certs" / cert_name();
+    }
+    void place_cert();
+    void save_cert();
 };
+
+// FreeRDP sees only the certificate pixterm saved for this host, or none.
+void RdpSession::place_cert() {
+    auto& system = sup().system();
+    if (const auto saved = system.read_file(saved_cert())) {
+        if (!system.write_file(live_cert(), *saved))
+            sup().log(std::format("cannot write {}", live_cert().string()));
+    } else {
+        system.remove_file(live_cert());
+    }
+}
+
+// After a login: a certificate FreeRDP accepted for the first time.
+void RdpSession::save_cert() {
+    auto& system = sup().system();
+    const auto now = system.read_file(live_cert());
+    if (!now || now->empty() || now == system.read_file(saved_cert()))
+        return;
+    const auto done = [this](const helper::Reply& reply) {
+        if (reply.ok)
+            sup().log("RDP certificate saved");
+        else
+            sup().log("RDP certificate not saved: " + reply.message);
+    };
+    if (!system.call_helper({.args = {"rdp-cert-save", cert_name()}, .payload = *now}, done))
+        sup().log("RDP certificate not saved: the helper is busy");
+}
 
 bool RdpSession::begin(std::string_view username) {
     auto name = login_name(sup().host(), username);
@@ -164,6 +208,7 @@ bool RdpSession::begin(std::string_view username) {
     }
     user_ = std::move(*name);
     forget_password();
+    place_cert();
     const bool started = probe_host(sup(), [this](bool reachable) {
         if (!reachable)
             return;
@@ -211,6 +256,7 @@ void RdpSession::login_checked(ExitStatus status, std::string_view output) {
     if (sup().state() != State::probe)
         return;
     if (status.succeeded()) {
+        save_cert();
         sup().start_handoff();
         return;
     }

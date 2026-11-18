@@ -437,3 +437,37 @@ TEST(boot_leaves_wifi_off_without_a_passphrase) {
     CHECK(r.helper.boot(false).has_value());
     CHECK(!fs::exists(r.wifi_conf()));
 }
+
+// ---- RDP certificates ----
+
+namespace {
+
+constexpr std::string_view pem =
+    "-----BEGIN CERTIFICATE-----\nMIIBszCCAVmgAwIBAgIU\nAAAA+/9=\n-----END CERTIFICATE-----\n";
+
+} // namespace
+
+TEST(rdp_certificates_are_checked_then_saved) {
+    Rig r;
+    REQUIRE(r.ask({"rdp-cert-save", "nt.example.org_3389.pem"}, std::string(pem)).ok);
+    CHECK_EQ(read(r.state("rdp-certs/nt.example.org_3389.pem")), pem);
+    REQUIRE(r.ask({"rdp-cert-save", "2001:db8::1_3390.pem"}, std::string(pem)).ok);
+
+    for (const auto* name : {"../x_1.pem", "nt.pem", "nt_3389.crt", "-nt_3389.pem", "nt_0.pem",
+                             "nt_99999.pem", "nt_33a.pem"})
+        CHECK(!r.ask({"rdp-cert-save", name}, std::string(pem)).ok);
+    for (const auto& bad :
+         {std::string("hello\n"), std::string(pem.substr(0, 40)), std::string(pem) + "rm -rf /\n",
+          std::string("-----BEGIN CERTIFICATE-----\nab cd\n-----END CERTIFICATE-----\n"),
+          "-----BEGIN CERTIFICATE-----\n" + std::string(20000, 'A')
+              + "\n-----END CERTIFICATE-----\n"})
+        CHECK(!r.ask({"rdp-cert-save", "nt_3389.pem"}, bad).ok);
+    CHECK(!r.ask({"rdp-cert-save"}, std::string(pem)).ok);
+}
+
+TEST(reset_forgets_rdp_certificates) {
+    Rig r;
+    REQUIRE(r.ask({"rdp-cert-save", "nt_3389.pem"}, std::string(pem)).ok);
+    REQUIRE(r.ask({"config-reset"}).ok);
+    CHECK(!fs::exists(r.state("rdp-certs/nt_3389.pem")));
+}

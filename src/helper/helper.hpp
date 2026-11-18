@@ -17,6 +17,7 @@
 ///                        to keep the one stored for that network
 ///     wifi off           forgets the passphrase
 ///     wifi-scan COUNTRY  reply: the networks found, as scan_reply
+///     rdp-cert-save HOST_PORT.pem   payload: an RDP host's certificate
 ///
 /// Every argument and payload is untrusted and checked here. No shell
 /// is ever involved; the only programs run are fixed paths with fixed
@@ -92,6 +93,13 @@ struct Paths {
 [[nodiscard]] std::expected<Network, std::string>
 parse_network_args(std::span<const std::string> args);
 
+/// FreeRDP's name for a host's certificate: "HOST_PORT.pem", the host
+/// being a valid address.
+[[nodiscard]] bool is_valid_rdp_cert_name(std::string_view name) noexcept;
+
+/// One PEM certificate, and nothing else, of at most 16 KiB.
+[[nodiscard]] bool is_valid_pem_certificate(std::string_view text) noexcept;
+
 /// known_hosts text: lines of printable ASCII, none too long.
 [[nodiscard]] bool is_valid_known_hosts(std::string_view text) noexcept;
 
@@ -127,6 +135,8 @@ private:
     [[nodiscard]] std::expected<std::string, std::string> wifi_off() const;
     [[nodiscard]] std::expected<std::string, std::string>
     wifi_scan(std::span<const std::string> args);
+    [[nodiscard]] std::expected<std::string, std::string>
+    save_rdp_cert(std::span<const std::string> args, std::string_view pem);
     [[nodiscard]] std::expected<void, std::string>
     write_wifi_conf(const Wifi& wifi, std::string_view passphrase) const;
     /// The passphrase stored for ssid, if any.
