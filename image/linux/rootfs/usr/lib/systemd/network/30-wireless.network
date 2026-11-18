@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 Chris Mecca
+# SPDX-License-Identifier: MIT
+#
+# Wi-Fi, once wpa_supplicant has joined the network pixterm-helper
+# configured: an address by DHCP, never a static one.
+[Match]
+Type=wlan
+
+[Network]
+DHCP=ipv4
+LinkLocalAddressing=no
+
+[DHCPv4]
+UseDomains=yes
+ClientIdentifier=mac

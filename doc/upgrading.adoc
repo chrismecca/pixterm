@@ -26,8 +26,10 @@ write it to the card with Raspberry Pi Imager or `+dd+`.
 . Start the terminal from the new card, insert the USB drive, and
 choose Configure > System > Import from USB.
 
-The import brings back the hosts, the display, network and keyboard
-settings, the administrator PIN and the accepted host keys.
+The import brings back the hosts, the display, network, Wi-Fi and
+keyboard settings, the administrator PIN and the accepted host keys.
+The Wi-Fi passphrase is not exported: type it again in Configure >
+Wi-Fi.
 
 == The terminal's SSH key
 

@@ -14,9 +14,10 @@ LOCKFILE=$SRC/image/linux/packages.$ARCH.lock
 export DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8
 
 RUNTIME_PKGS="xserver-xorg-core xserver-xorg-input-libinput xauth mwm libxm4
-	libxrandr2 libc++1 libc++abi1 x11-xkb-utils openssh-client
+	libxext6 libxrandr2 libc++1 libc++abi1 x11-xkb-utils openssh-client
 	xfonts-base xfonts-75dpi xfonts-100dpi
-	xterm inetutils-telnet tigervnc-viewer freerdp3-x11 picocom"
+	xterm inetutils-telnet tigervnc-viewer freerdp3-x11 picocom
+	wpasupplicant wireless-regdb firmware-brcm80211"
 BUILD_PKGS="clang lld cmake ninja-build pkg-config libc++-dev libc++abi-dev libc6-dev
 	libmotif-dev libxt-dev libx11-dev libxext-dev libxrandr-dev libssl-dev"
 DEV_PKGS="sudo x11-utils x11-xserver-utils strace"
@@ -177,6 +178,7 @@ unwanted="getty@tty1.service serial-getty@ttyS0.service serial-getty@ttyAMA0.ser
     apt-daily.timer apt-daily-upgrade.timer dpkg-db-backup.timer man-db.timer
     e2scrub_all.timer e2scrub_reap.service fstrim.timer
     systemd-pstore.service systemd-rfkill.service systemd-rfkill.socket
+    wpa_supplicant.service
     keyboard-setup.service console-setup.service sshswitch.service
     alsa-restore.service alsa-state.service
     regenerate_ssh_host_keys.service sshd-keygen.service systemd-growfs-root.service
@@ -185,6 +187,11 @@ unwanted="getty@tty1.service serial-getty@ttyS0.service serial-getty@ttyAMA0.ser
 systemctl disable $unwanted 2>/dev/null || true
 systemctl mask $unwanted
 systemctl disable remote-fs.target
+# Wi-Fi: wpa_supplicant reads the configuration pixterm-helper writes to
+# /run; without one it does not start (see its drop-in in rootfs).
+install -d -m 755 /etc/wpa_supplicant
+ln -sf /run/pixterm-wifi/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
+systemctl enable wpa_supplicant@wlan0.service
 if [ "$DEV" = 1 ]; then
 	systemctl enable ssh.service pixterm-debuglog.service
 fi
@@ -196,9 +203,8 @@ sed -i -e 's/^dtparam=audio=on/dtparam=audio=off/' \
 cat >> "$cfg" <<'EOF'
 
 [all]
-# pixterm appliance: Ethernet only, no radios, no rainbow splash.
+# pixterm appliance: no Bluetooth, no rainbow splash.
 dtoverlay=disable-bt
-dtoverlay=disable-wifi
 disable_splash=1
 EOF
 cmd=/boot/firmware/cmdline.txt

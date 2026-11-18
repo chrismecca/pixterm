@@ -17,10 +17,10 @@ image recipe (`+image/linux/+`) and the Xorg configuration
 | Raspberry Pi 3 B | armhf | Works | 32-bit image
 | Raspberry Pi 3 B+ | arm64 | Not tested | Same display hardware as the 3 B
 | Raspberry Pi 4 B | arm64 | Not tested | Gigabit Ethernet, two HDMI ports
-| Raspberry Pi 400 | arm64 | Not tested | Pi 4 inside a keyboard; Ethernet only
+| Raspberry Pi 400 | arm64 | Not tested | Pi 4 inside a keyboard
 | Raspberry Pi 5 and 500 | arm64 | Not tested | New display hardware: test the colour fix first
 | x86 thin clients |  | No image yet | Dell Wyse 5070, HP t630 and t640, Fujitsu Futro
-| Raspberry Pi Zero 2 W |  | Not planned | Wi-Fi only and 512 MB of memory
+| Raspberry Pi Zero 2 W |  | Not planned | 512 MB of memory, and no Ethernet
 |===
 
 == Known board faults
@@ -55,6 +55,11 @@ in the saved mode. Unplug it and plug in another.
 . Set the blanking time to 5 minutes and leave the chooser alone: the
 screen blanks, and the monitor sleeps, after 5 minutes.
 . Apply a static network address, then DHCP again.
+. In Configure > Wi-Fi, type the country and scan: the nearby networks
+are listed. Join a WPA2 network, then a WPA3 one, and a hidden one by
+name. Take out the Ethernet cable: sessions keep working over Wi-Fi.
+. Restart: the terminal joins the same network again. Turn Wi-Fi off,
+and after a restart wpa_supplicant does not run.
 . Export to and import from a FAT USB drive.
 . Set an administrator PIN, then clear it with `+pixterm-reset+` on the
 boot partition.

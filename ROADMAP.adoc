@@ -39,15 +39,6 @@ are kept from the first plan so that issues can refer to them.
 | 18 | Test that a release image, booted in QEMU, accepts no connections unless a setting allows them | M
 |===
 
-== Gaps users would meet
-
-[cols="1,8,1",options="header"]
-|===
-| # | Item | Size
-
-| 24 | Wi-Fi: scan and join WPA2 and WPA3-Personal networks from Configure > Network | L
-|===
-
 == Connections
 
 [cols="1,8,1",options="header"]

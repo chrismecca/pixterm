@@ -3,7 +3,8 @@
 #
 # Packages purged from the stock Raspberry Pi OS Lite image.
 # pixterm is an appliance: anything not needed to boot, network over
-# Ethernet, run Xorg/mwm/Motif and make outgoing SSH connections goes.
+# Ethernet or Wi-Fi, run Xorg/mwm/Motif and make outgoing SSH
+# connections goes.
 
 # Provisioning / network stacks (replaced by systemd-networkd)
 cloud-init rpi-cloud-init-mods cloud-guest-utils
@@ -12,9 +13,11 @@ network-manager network-manager-l10n dhcpcd-base isc-dhcp-client isc-dhcp-common
 dnsmasq-base ppp
 avahi-daemon libnss-mdns
 
-# Radios (Ethernet only in v1; also disabled in config.txt)
-bluez bluez-firmware wpasupplicant wireless-tools iw wireless-regdb rfkill
-firmware-atheros firmware-brcm80211 firmware-libertas firmware-mediatek
+# Bluetooth (also disabled in config.txt), and Wi-Fi tools pixterm does
+# not use. Kept for Wi-Fi: wpasupplicant, wireless-regdb and the Pi's
+# firmware-brcm80211.
+bluez bluez-firmware wireless-tools iw rfkill
+firmware-atheros firmware-libertas firmware-mediatek
 
 # Security frameworks / desktop plumbing we do not use
 apparmor polkitd udisks2

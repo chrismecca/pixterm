@@ -130,8 +130,8 @@ before each start.
 
 * A session that ends within five seconds counts as one that failed to
 start; the user sees what the host printed.
-* If the Ethernet link stays down for ten seconds during a session, the
-session ends with an error.
+* If the network link, Ethernet or Wi-Fi, stays down for ten seconds
+during a session, the session ends with an error.
 * Ctrl+Alt+Backspace kills the X server at any time; `pixtermd` starts a
 new one and the chooser returns. This does not log out of the host.
 * Programs that keep failing are restarted with growing delays, not in a
@@ -204,7 +204,8 @@ See the guides in `doc/hosts/` for each kind of host.
 
 === Not supported
 
-Network boot and settings kept on a central server. Wi-Fi. DECnet,
+Network boot and settings kept on a central server. Open and
+enterprise (802.1X) Wi-Fi networks, and static addresses on Wi-Fi. DECnet,
 since Linux no longer has it. The PEX, XIE, Display PostScript and LBX
 extensions, which X.org removed.
 
@@ -217,8 +218,8 @@ start other programs.
 
 * The chooser lists the configured hosts; a double click or Return logs
 in. Find Hosts lists XDMCP hosts that answer a broadcast query.
-* Configure has six panels: Hosts, Display, Network, Keyboard, System
-and Diagnostics.
+* Configure has seven panels: Hosts, Display, Network, Wi-Fi, Keyboard,
+System and Diagnostics.
 * A new display mode stays only if the user confirms it within 15
 seconds. Xorg starts every display at the chosen size, XDMCP displays
 included, from the Xorg file pixtermd writes before each start: a
@@ -273,7 +274,8 @@ then the previous one, then the factory file, then built-in defaults.
 === Moving and resetting settings
 
 * Export and Import copy the settings, saved host keys and the
-terminal's public key to and from a FAT or exFAT USB drive.
+terminal's public key to and from a FAT or exFAT USB drive. The Wi-Fi
+passphrase stays behind: after an import it is typed again.
 * An empty file named `pixterm-reset` on the boot partition resets the
 terminal to its factory settings at the next boot. The boot partition
 is FAT, so any computer can make the file.
@@ -286,13 +288,27 @@ is FAT, so any computer can make the file.
 
 | boot (FAT) | firmware, kernel | read-only
 | root (ext4) | the system | read-only
-| pixterm-data | settings, host keys, terminal key | read-only, except while the helper saves
+| pixterm-data | settings, host keys, terminal key, Wi-Fi passphrase | read-only, except while the helper saves
 |===
 
 Logs, systemd state and temporary files live in RAM. The machine ID is
 made fresh at each boot, so DHCP knows the terminal by its MAC address.
 At boot, the helper writes the network settings into `/run` from the
-saved settings.
+saved settings, and wpa_supplicant's configuration if Wi-Fi is on.
+
+=== Wi-Fi
+
+Configure > Wi-Fi takes a country, which decides the legal channels,
+scans, and joins a WPA2- or WPA3-Personal network, hidden ones too.
+wpa_supplicant offers the network both kinds of key and uses the one it
+accepts. Wi-Fi gets its address by DHCP.
+
+The passphrase is not part of the settings. The chooser hands it to
+pixtermd in a file in its own memory-backed directory, which pixtermd
+removes as it reads it, and the helper keeps it on the settings
+partition beside the network it is for, readable by root alone.
+Turning Wi-Fi off, or a reset, forgets it. wpa_supplicant runs only
+while Wi-Fi is on, or for the few seconds of a scan.
 
 No storage can promise safety against every failure: SD cards wear out,
 and a power cut during a save loses that one change. The design removes
@@ -317,13 +333,16 @@ lines. XDMCP, Telnet and rexec hosts send the password across the
 network in clear text.
 * *Terminal key:* hosts set to key login accept anyone sitting at the
 terminal. Only the public key leaves the terminal.
+* *Wi-Fi passphrase:* readable by root alone on the running terminal,
+never in the settings or an export, but on the SD card like everything
+else.
 * *Privilege:* only `pixterm-helper` runs as root. systemd starts one
 copy per request on a socket that only the pixterm account can open;
 the helper checks the caller's identity and every argument again. No
 shell is ever involved. `pixterm-rexec` has one capability, to bind a
 port below 1024, and drops it once it has.
-* *Untrusted input:* settings files, XDMCP replies and the helper's
-requests are fuzzed.
+* *Untrusted input:* settings files, XDMCP replies, Wi-Fi scan results
+and the helper's requests are fuzzed.
 
 == Code
 

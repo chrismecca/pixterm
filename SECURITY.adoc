@@ -31,3 +31,5 @@ included, in clear text.
 during its session.
 * The administrator PIN keeps passers-by out of the settings. It does
 not protect the SD card, which anyone holding the terminal can read.
+That includes the Wi-Fi passphrase, which only root can read on the
+running terminal and which Export to USB leaves out.

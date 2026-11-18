@@ -10,6 +10,9 @@ section into the release notes.
 
 === Added
 
+* Wi-Fi: Configure > Wi-Fi scans for networks and joins a WPA2- or
+WPA3-Personal one, hidden ones too, with DHCP. The passphrase is kept
+for root alone and left out of exports.
 * A blanking time in Configure > Display: the screen blanks, and the
 monitor sleeps, after 5 to 60 minutes idle, or never. It used to be
 fixed at 10 minutes, which stays the default.
