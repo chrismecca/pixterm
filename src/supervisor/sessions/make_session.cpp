@@ -29,6 +29,8 @@ std::unique_ptr<Session> make_session(Supervisor& sup, const Host& host) {
         return make_tn3270_session(sup);
     case Protocol::tn5250:
         return make_tn5250_session(sup);
+    case Protocol::drawterm:
+        return make_drawterm_session(sup);
     }
     return make_ssh_session(sup);
 }

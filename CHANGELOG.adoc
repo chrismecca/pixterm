@@ -12,6 +12,8 @@ section into the release notes.
 
 * IBM mainframes: TN3270E sessions in x3270, with the PC 3270 keys, in
 the largest 3270 font that fits the screen. Port 992 uses TLS.
+* Plan 9 and 9front: drawterm sessions, with 9front's drawterm (dp9ik
+logins), built from a pinned commit.
 * IBM i: TN5250E sessions in tn5250, built from a pinned upstream
 release, with the PC 5250 keys. Port 992 uses TLS. Releases carry the
 source of what the image builds from upstream.

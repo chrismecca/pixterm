@@ -204,6 +204,10 @@ tn5250, in a terminal, an IBM i's 5250 screens, each centred in the
 largest font that fits, with the keys of PC emulators. tn5250, which
 Debian no longer packages, is built from a pinned upstream release
 (`image/linux/sources.txt`), and each release carries its source.
+* *drawterm:* 9front's drawterm, built from a pinned commit, fills the
+screen with a Plan 9 or 9front CPU server's rio and asks for the
+password itself. pixterm changes one line of it: after a failed login
+it shows the error for ten seconds and exits, instead of waiting.
 
 See the guides in `doc/hosts/` for each kind of host.
 

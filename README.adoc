@@ -35,6 +35,7 @@ and rsh start a command on hosts too old for SSH.
 * *Remote desktops:* VNC (macOS Screen Sharing among them) and RDP.
 * *IBM mainframes and IBM i:* 3270 screens over TN3270E in x3270, and
 5250 screens over TN5250E in tn5250.
+* *Plan 9 and 9front:* CPU servers through 9front's drawterm.
 * *Serial consoles:* a USB serial adapter in the terminal reaches a
 machine's console port.
 
@@ -166,8 +167,8 @@ Other protocols: `xdmcp` (with `xdmcp_mode` `query` or `indirect`),
 `ssh-terminal` (`username` and `auth` as above), `telnet`, `direct-x`,
 `rexec` and `rsh` (`username` and `command`, where `%D` stands for the
 terminal's display), `vnc`, `rdp` (`username`, and `domain` if needed),
-`serial` (`device` and `speed`, with no address), and `tn3270` and
-`tn5250` (port 992 for TLS). Terminal hosts
+`serial` (`device` and `speed`, with no address), `tn3270` and
+`tn5250` (port 992 for TLS), and `drawterm` (`username`). Terminal hosts
 with `"allow_x": true` let the host's X programs open windows on the
 terminal.
 

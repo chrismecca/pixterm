@@ -31,6 +31,7 @@ inline constexpr std::string_view vncviewer = "/usr/bin/xtigervncviewer";
 inline constexpr std::string_view xfreerdp = "/usr/bin/xfreerdp3";
 inline constexpr std::string_view x3270 = "/usr/bin/x3270";
 inline constexpr std::string_view tn5250 = "/usr/local/bin/tn5250";
+inline constexpr std::string_view drawterm = "/usr/local/bin/drawterm";
 } // namespace programs
 
 /// The largest 3270 font ("3270gt8" to "3270gt32") that shows a whole

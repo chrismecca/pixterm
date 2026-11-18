@@ -49,6 +49,11 @@ TEST(fields_follow_the_protocol) {
     CHECK(!enabled_fields(Protocol::telnet, SessionType::xsession).username);
     CHECK(enabled_fields(Protocol::rexec, SessionType::xsession).command);
     CHECK(!enabled_fields(Protocol::vnc, SessionType::xsession).font_server);
+    const auto plan9 = enabled_fields(Protocol::drawterm, SessionType::xsession);
+    CHECK(plan9.address && plan9.port && plan9.username);
+    CHECK(!plan9.key_auth);
+    CHECK(!plan9.domain);
+    CHECK(!plan9.command);
 }
 
 TEST(command_is_asked_for_only_when_the_session_runs_one) {
@@ -64,6 +69,7 @@ TEST(port_follows_the_protocol_unless_chosen) {
     CHECK_EQ(port_after_change("", Protocol::vnc), "5900");
     CHECK_EQ(port_after_change("", Protocol::tn3270), "23");
     CHECK_EQ(port_after_change("", Protocol::tn5250), "23");
+    CHECK_EQ(port_after_change("", Protocol::drawterm), "17019");
     CHECK_EQ(port_after_change("177", Protocol::rdp), "3389");
     CHECK_EQ(port_after_change("2222", Protocol::telnet), "2222");
     CHECK_EQ(port_after_change("x", Protocol::telnet), "x");
@@ -231,6 +237,7 @@ TEST(protocols_have_menu_and_list_labels) {
     CHECK_EQ(protocol_list_label(Protocol::ssh_terminal), "Terminal");
     CHECK_EQ(protocol_list_label(Protocol::tn3270), "TN3270");
     CHECK_EQ(protocol_list_label(Protocol::tn5250), "TN5250");
+    CHECK_EQ(protocol_list_label(Protocol::drawterm), "Plan 9");
 }
 
 TEST(login_asks_for_a_user_name_only_when_needed) {

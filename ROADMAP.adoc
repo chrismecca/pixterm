@@ -39,15 +39,6 @@ are kept from the first plan so that issues can refer to them.
 | 18 | Test that a release image, booted in QEMU, accepts no connections unless a setting allows them | M
 |===
 
-== Connections
-
-[cols="1,8,1",options="header"]
-|===
-| # | Item | Size
-
-| 28 | drawterm for Plan 9 and 9front CPU servers, built from pinned 9front source | S
-|===
-
 == The X server
 
 [cols="1,8,1",options="header"]

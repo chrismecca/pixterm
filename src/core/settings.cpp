@@ -33,6 +33,7 @@ constexpr std::array<ProtocolInfo, all_protocols.size()> protocols{{
     {.protocol = Protocol::serial, .name = "serial", .port = 0},
     {.protocol = Protocol::tn3270, .name = "tn3270", .port = 23},
     {.protocol = Protocol::tn5250, .name = "tn5250", .port = 23},
+    {.protocol = Protocol::drawterm, .name = "drawterm", .port = 17019},
 }};
 
 const ProtocolInfo& info(Protocol p) noexcept {
@@ -411,7 +412,8 @@ bool is_ssh(Protocol p) noexcept {
 }
 
 bool wants_user(Protocol p) noexcept {
-    return is_ssh(p) || p == Protocol::rexec || p == Protocol::rsh || p == Protocol::rdp;
+    return is_ssh(p) || p == Protocol::rexec || p == Protocol::rsh || p == Protocol::rdp
+           || p == Protocol::drawterm;
 }
 
 bool is_terminal(Protocol p) noexcept {

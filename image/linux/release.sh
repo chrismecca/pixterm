@@ -75,7 +75,7 @@ fi
 # licences ask, fetched and checked as the image build does.
 "$here/third-party.sh" fetch "$src/sources"
 tar -czf "$dist/pixterm-$VERSION-third-party-src.tar.gz" --exclude=.git \
-    -C "$here" sources.txt -C "$src/sources" .
+    -C "$here" sources.txt third-party.sh -C "$src/sources" .
 
 cd "$dist"
 sha256() {

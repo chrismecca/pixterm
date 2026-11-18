@@ -1,0 +1,31 @@
+// SPDX-FileCopyrightText: 2026 Chris Mecca
+// SPDX-License-Identifier: MIT
+
+= Plan 9 and 9front
+
+pixterm reaches a Plan 9 or 9front CPU server with drawterm, which
+fills the screen with the server's rio. It runs 9front's drawterm, which
+logs in with dp9ik, 9front's default, and with the older p9sk1. Debian
+has only a drawterm from 2017, so the image builds 9front's from a
+pinned commit, and each pixterm release carries that source.
+
+== Host entry
+
+[cols="1,1",options="header"]
+|===
+| Field | Value
+
+| Protocol | Plan 9 or 9front (drawterm)
+| Port | 17019, the rcpu port
+| Username | the Plan 9 user, such as glenda; empty to ask
+|===
+
+drawterm asks for the password in its own window. The CPU server is
+also the authentication server, as on most 9front systems.
+
+== Ending
+
+The session ends when the remote rc exits, for example when you close
+rio's last window or type `+exit+`. If the login fails, drawterm shows
+why for ten seconds, and the chooser comes back. pixterm makes that one
+change to drawterm, which otherwise waits there for good.

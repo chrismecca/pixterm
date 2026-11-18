@@ -413,6 +413,38 @@ TEST(tn5250_uses_tls_on_port_992) {
     CHECK_EQ(xterm->argv.back(), "ssl:as400:992");
 }
 
+TEST(drawterm_fills_the_screen_and_asks_for_the_password_itself) {
+    auto host = make_host(Protocol::drawterm, "cpu.example.org");
+    host.username = "glenda";
+    Rig r(host);
+    r.pick();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "OK");
+    r.hand_over();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "1920 1080");
+    const auto* drawterm = r.sys.program(Slot::client);
+    REQUIRE(drawterm != nullptr);
+    CHECK_EQ(drawterm->argv.front(), "/usr/local/bin/drawterm");
+    CHECK(has_sequence(drawterm->argv, {"-h", "cpu.example.org"}));
+    CHECK(has_sequence(drawterm->argv, {"-a", "cpu.example.org"}));
+    CHECK(has_sequence(drawterm->argv, {"-u", "glenda"}));
+    CHECK(has_sequence(drawterm->argv, {"-g", "1920x1080+0+0"}));
+    CHECK(drawterm->input.empty()); // no password from pixterm
+}
+
+TEST(drawterm_dials_another_port) {
+    auto host = make_host(Protocol::drawterm, "cpu");
+    host.username = "glenda";
+    host.port = 17020;
+    Rig r(host);
+    r.pick();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "OK");
+    r.hand_over();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "1024 768");
+    const auto* drawterm = r.sys.program(Slot::client);
+    REQUIRE(drawterm != nullptr);
+    CHECK(has_sequence(drawterm->argv, {"-h", "tcp!cpu!17020"}));
+}
+
 TEST(the_3270_font_is_the_largest_that_fits) {
     CHECK_EQ(x3270_font(1920, 1080), "3270gt32");
     CHECK_EQ(x3270_font(1280, 1024), "3270gt24");

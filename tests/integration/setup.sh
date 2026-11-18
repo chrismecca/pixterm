@@ -57,6 +57,8 @@ cat > /tmp/config.json <<'JSON'
       "port": 2325 },
     { "id": "h17", "name": "as400", "address": "127.0.0.1", "protocol": "tn5250",
       "port": 2326 },
+    { "id": "h18", "name": "plan9", "address": "127.0.0.1", "protocol": "drawterm",
+      "port": 17019, "username": "glenda" },
     { "id": "h14", "name": "serial-console", "protocol": "serial", "device": "/dev/ttyUSB9",
       "speed": 9600 },
     { "id": "h15", "name": "missing-serial", "protocol": "serial", "device": "/dev/ttyUSB8" }
@@ -82,6 +84,8 @@ socat pty,raw,echo=0,link=/dev/ttyUSB9,mode=666 \
 # A mainframe that answers and, eight seconds later, hangs up.
 socat TCP-LISTEN:2325,bind=127.0.0.1,reuseaddr,fork SYSTEM:'sleep 8' >/tmp/tn3270.log 2>&1 &
 socat TCP-LISTEN:2326,bind=127.0.0.1,reuseaddr,fork SYSTEM:'sleep 8' >/tmp/tn5250.log 2>&1 &
+# A Plan 9 CPU server that never answers drawterm's login, then hangs up.
+socat TCP-LISTEN:17019,bind=127.0.0.1,reuseaddr,fork SYSTEM:'sleep 8' >/tmp/rcpu.log 2>&1 &
 # xdm as an XDMCP host (no local server; queries from anyone).
 sed -i 's/^DisplayManager.requestPort/!DisplayManager.requestPort/' /etc/X11/xdm/xdm-config
 sed -i 's/^:0 local/#:0 local/' /etc/X11/xdm/Xservers

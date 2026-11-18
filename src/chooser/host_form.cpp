@@ -26,11 +26,12 @@ constexpr std::array<std::string_view, all_protocols.size()> menu_labels{
     "Serial console",
     "TN3270 (IBM mainframe)",
     "TN5250 (IBM i)",
+    "Plan 9 or 9front (drawterm)",
 };
 
 constexpr std::array<std::string_view, all_protocols.size()> list_labels{
-    "SSH", "XDMCP", "Terminal", "Telnet", "Direct X", "rexec",
-    "rsh", "VNC",   "RDP",      "Serial", "TN3270",   "TN5250",
+    "SSH", "XDMCP", "Terminal", "Telnet", "Direct X", "rexec",  "rsh",
+    "VNC", "RDP",   "Serial",   "TN3270", "TN5250",   "Plan 9",
 };
 
 std::size_t index(Protocol p) noexcept {

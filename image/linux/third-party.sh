@@ -9,7 +9,8 @@
 #                                       build NAME from DIR, install under PREFIX
 #
 # A tarball must match its SHA-256 and a git checkout its commit; a
-# source that does not is refused, and nothing is built from it.
+# source that does not is refused, and nothing is built from it. Changes
+# pixterm makes to a program are in its build below.
 set -eu
 
 here=$(cd "$(dirname "$0")" && pwd)
@@ -75,6 +76,15 @@ build() {
 		;;
 	drawterm)
 		cp -R "$dir/drawterm/." "$work/"
+		# pixterm's one change: after a fatal error, drawterm leaves it on
+		# the screen for ten seconds and exits, instead of hanging there,
+		# so the terminal returns to its chooser.
+		sed -i 's/^\tif(screenputs) hang();$/\tif(screenputs) osmsleep(10*1000);/' \
+		    "$work/kern/devcons.c"
+		grep -q 'osmsleep(10\*1000)' "$work/kern/devcons.c" || {
+			echo "drawterm: kern/devcons.c changed upstream; check pixterm's change" >&2
+			exit 1
+		}
 		# X11 graphics, no sound, with the system's C compiler.
 		make -C "$work" -s CONF=unix CC=cc X11=/usr AUDIO=none >/dev/null
 		install -D -m 755 "$work/drawterm" "$prefix/bin/drawterm"
