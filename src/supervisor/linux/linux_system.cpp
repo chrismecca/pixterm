@@ -16,6 +16,7 @@
 #include <sys/stat.h>
 #include <sys/un.h>
 #include <sys/wait.h>
+#include <termios.h>
 #include <unistd.h>
 
 #include <algorithm>
@@ -110,6 +111,62 @@ LinuxSystem::LinuxSystem(EventLoop& loop, LinuxPaths paths)
     : loop_(loop), paths_(std::move(paths)) {}
 
 LinuxSystem::~LinuxSystem() = default;
+
+// ---- the text console -----------------------------------------------
+
+void LinuxSystem::use_console(int fd) {
+    console_ = fd;
+    // One read for each wakeup: the tty stays blocking, as Xorg, which
+    // shares it, expects.
+    console_watch_ = loop_.watch(console_, POLLIN, [this](short) {
+        std::array<char, 256> buffer{};
+        const auto n = ::read(console_, buffer.data(), buffer.size());
+        if (n == 0 || (n < 0 && errno != EINTR && errno != EAGAIN)) {
+            loop_.unwatch(console_watch_);
+            console_watch_ = -1;
+            return;
+        }
+        if (n < 0)
+            return;
+        auto lines = console_lines_.feed({buffer.data(), static_cast<std::size_t>(n)});
+        // A line may be the administrator PIN.
+        wipe(buffer);
+        for (auto& line : lines) {
+            if (line.ends_with('\r'))
+                line.pop_back();
+            events_->console_line(line);
+            wipe(line);
+        }
+    });
+}
+
+void LinuxSystem::show_console(std::string_view text) {
+    if (console_ < 0)
+        return;
+    // Clear the screen, cursor to the top left.
+    std::string out = "\033[H\033[2J";
+    out += text;
+    std::string_view rest = out;
+    while (!rest.empty()) {
+        const auto n = ::write(console_, rest.data(), rest.size());
+        if (n < 0 && errno == EINTR)
+            continue;
+        if (n <= 0)
+            return;
+        rest.remove_prefix(static_cast<std::size_t>(n));
+    }
+}
+
+void LinuxSystem::console_echo(bool on) {
+    termios t{};
+    if (console_ < 0 || ::tcgetattr(console_, &t) != 0)
+        return;
+    if (on)
+        t.c_lflag |= ECHO;
+    else
+        t.c_lflag &= ~static_cast<tcflag_t>(ECHO);
+    (void)::tcsetattr(console_, TCSANOW, &t);
+}
 
 // ---- the log --------------------------------------------------------
 

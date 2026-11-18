@@ -84,6 +84,7 @@ inline constexpr int quick_failure_limit = 5;
 
 class Supervisor;
 class SettingsRequests;
+class FailureConsole;
 
 /// What one kind of host does differently. The supervisor calls these
 /// at fixed points; the defaults do nothing.
@@ -152,6 +153,8 @@ public:
     void child_exited(Slot slot, ExitStatus status, std::string_view output) override;
     /// The chooser sent a line.
     void chooser_line(std::string_view line) override;
+    /// A line was typed on the text console.
+    void console_line(std::string_view line) override;
     /// Called after anything happens, and at next_deadline: acts on
     /// whatever is due.
     void tick();
@@ -185,6 +188,8 @@ public:
     void session_running(State s);
     /// End everything and restart the X server.
     void teardown();
+    /// Waiting to start the X server again after a failure: start it now.
+    void retry_x_now();
 
     /// Shows an error in the chooser now if it is up, else when it
     /// next starts.
@@ -214,6 +219,7 @@ private:
     State state_ = State::x_start;
     std::unique_ptr<Session> session_;
     std::unique_ptr<SettingsRequests> requests_;
+    std::unique_ptr<FailureConsole> console_;
     bool own_display_ = false; ///< the X server is the session's own
     std::array<Child, slot_count> children_{};
     int xstart_failures_ = 0;

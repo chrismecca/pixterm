@@ -29,12 +29,14 @@ struct Recorder final : Events {
     bool ready = false;
     std::optional<std::tuple<Slot, ExitStatus, std::string>> exit;
     std::vector<std::string> lines;
+    std::vector<std::string> console_lines;
 
     void x_ready() override { ready = true; }
     void child_exited(Slot slot, ExitStatus status, std::string_view output) override {
         exit = {slot, status, std::string(output)};
     }
     void chooser_line(std::string_view line) override { lines.emplace_back(line); }
+    void console_line(std::string_view line) override { console_lines.emplace_back(line); }
 };
 
 struct Rig {
@@ -303,4 +305,26 @@ TEST(xorg_picks_the_size_itself_when_the_mode_is_automatic) {
     const auto conf = r.sys->read_file(r.dir.path() / "xorg.conf").value_or("");
     CHECK(conf.contains("XkbLayout"));
     CHECK(!conf.contains("Monitor"));
+}
+
+TEST(the_console_shows_text_and_reads_typed_lines) {
+    Rig r;
+    std::array<int, 2> fds{};
+    REQUIRE(::socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, fds.data()) == 0);
+    const UniqueFd ours(fds[0]);
+    const UniqueFd tty(fds[1]);
+    r.sys->use_console(tty.get());
+
+    r.sys->show_console("Hello");
+    std::array<char, 64> shown{};
+    const auto n = ::read(ours.get(), shown.data(), shown.size());
+    REQUIRE(n > 0);
+    CHECK_EQ(std::string_view(shown.data(), static_cast<std::size_t>(n)), "\033[H\033[2JHello");
+    r.sys->console_echo(false); // not a tty: ignored
+
+    const std::string_view typed = "rese";
+    REQUIRE(::write(ours.get(), typed.data(), typed.size()) == 4);
+    REQUIRE(::write(ours.get(), "t\r\n\n", 4) == 4);
+    REQUIRE(r.run_until([&] { return r.events.console_lines.size() == 2; }));
+    CHECK(r.events.console_lines == (std::vector<std::string>{"reset", ""}));
 }

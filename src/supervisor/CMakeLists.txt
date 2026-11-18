@@ -5,6 +5,7 @@
 # operating system only through System, so the unit tests can drive it
 # on any platform.
 add_library(pixterm_supervisor STATIC
+    failure_console.cpp
     settings_requests.cpp
     supervisor.cpp
     sessions/desktops.cpp

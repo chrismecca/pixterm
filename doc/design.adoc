@@ -224,6 +224,11 @@ seconds. Xorg starts every display at the chosen size, XDMCP displays
 included, from the Xorg file pixtermd writes before each start: a
 client of pixterm's on a display manager's display could end its
 session when it disconnects.
+* If the X server fails to start three times in a row, the text
+console says why, from the errors in Xorg's log. pixterm keeps trying;
+Enter tries again at once, and typing `+reset+` restores the factory
+settings and restarts the terminal, after the administrator PIN if one
+is set. A wrong PIN blocks the reset for 30 seconds.
 * A monitor plugged in while the chooser is up, or after a start with
 none, lights in the saved mode, or the automatic one. One plugged in
 during a session lights when the session ends and Xorg restarts.

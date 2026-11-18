@@ -43,6 +43,8 @@ public:
     std::map<std::filesystem::path, std::error_code> devices;
     std::optional<bool> carrier = true;
     std::optional<int> clients = 0;
+    std::string console; ///< what tty1 shows
+    bool console_echoes = true;
     std::optional<int> tcp_clients = 0;
 
     // ---- System ----
@@ -130,6 +132,9 @@ public:
         return true;
     }
     void remove_file(const std::filesystem::path& path) override { files.erase(path); }
+
+    void show_console(std::string_view text) override { console = text; }
+    void console_echo(bool on) override { console_echoes = on; }
 
     [[nodiscard]] std::optional<bool> ethernet_carrier() const override { return carrier; }
     [[nodiscard]] std::optional<int> display_clients(bool tcp_only) const override {

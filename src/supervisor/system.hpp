@@ -114,6 +114,8 @@ public:
     virtual void child_exited(Slot slot, ExitStatus status, std::string_view output) = 0;
     /// The chooser sent a line.
     virtual void chooser_line(std::string_view line) = 0;
+    /// A line was typed on the text console.
+    virtual void console_line(std::string_view line) = 0;
 };
 
 class System {
@@ -173,6 +175,11 @@ public:
     [[nodiscard]] virtual bool write_file(const std::filesystem::path& path,
                                           std::string_view data) = 0;
     virtual void remove_file(const std::filesystem::path& path) = 0;
+
+    /// Clears the text console and shows text on it.
+    virtual void show_console(std::string_view text) = 0;
+    /// Turns the echo of what is typed on the console on or off.
+    virtual void console_echo(bool on) = 0;
 
     [[nodiscard]] virtual std::optional<bool> ethernet_carrier() const = 0;
     /// Clients of the X display: TCP ones only, or all.

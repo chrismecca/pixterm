@@ -13,6 +13,10 @@ section into the release notes.
 * A blanking time in Configure > Display: the screen blanks, and the
 monitor sleeps, after 5 to 60 minutes idle, or never. It used to be
 fixed at 10 minutes, which stays the default.
+* A text screen when the X server fails to start three times in a
+row: it shows Xorg's errors, and offers to try again or to restore the
+factory settings (after the administrator PIN, if one is set). The
+screen used to stay blank.
 * A monitor plugged in at the chooser lights up, also after a start
 with no monitor. It used to stay dark until the next session ended.
 * XDMCP displays start at the display size chosen in Configure. They

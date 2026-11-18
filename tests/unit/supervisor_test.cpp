@@ -4,6 +4,10 @@
 #include "fake_system.hpp"
 #include "test.hpp"
 
+#include <pixterm/pin.hpp>
+
+#include <failure_console.hpp>
+
 #include <csignal>
 #include <memory>
 
@@ -92,6 +96,112 @@ TEST(an_x_server_that_never_gets_ready_is_restarted) {
     CHECK(r.state() == State::x_start);
     r.sys.advance(*r.sup, std::chrono::seconds(2)); // waits after a failure
     CHECK_EQ(r.sys.xorg_starts.size(), 2U);
+}
+
+namespace {
+
+constexpr std::string_view failing_log = R"([    1.000] (II) Loading the modesetting driver
+[    1.200] (EE) no screens found(EE)
+[    1.201] (EE)
+[    1.202] (EE) Please also check the log file at "/run/pixterm/Xorg.log" for additional information.
+[    1.203] (EE) Server terminated with error (1). Closing log file.
+)";
+
+// Xorg exits before it is ready; then the wait before the next try
+// passes, unless last.
+void fail_x_start(Rig& r, bool last = false) {
+    r.sys.exit(*r.sup, Slot::xorg, ExitStatus::exited(1));
+    if (!last)
+        r.sys.advance(*r.sup, std::chrono::seconds(64));
+}
+
+// Three failed starts in a row, which bring up the console.
+void fail_x_three_times(Rig& r) {
+    r.sys.files["/run/pixterm/Xorg.log"] = failing_log;
+    r.sup->start();
+    fail_x_start(r);
+    fail_x_start(r);
+    fail_x_start(r, true);
+}
+
+} // namespace
+
+TEST(the_console_explains_an_x_server_that_keeps_failing) {
+    Rig r;
+    r.sys.files["/run/pixterm/Xorg.log"] = failing_log;
+    r.sup->start();
+    fail_x_start(r);
+    fail_x_start(r);
+    CHECK(r.sys.console.empty()); // two failures may be bad luck
+    fail_x_start(r, true);
+    CHECK(r.sys.console.contains("cannot start its display"));
+    CHECK(r.sys.console.contains("no screens found"));
+    CHECK(!r.sys.console.contains("Please also check"));
+    CHECK(r.sys.console.contains("type reset"));
+}
+
+TEST(enter_on_the_console_starts_x_again_at_once) {
+    Rig r;
+    fail_x_three_times(r);
+    const auto starts = r.sys.xorg_starts.size();
+    r.sup->console_line("");
+    CHECK_EQ(r.sys.xorg_starts.size(), starts + 1);
+    r.sup->x_ready();
+    CHECK(r.sys.console.empty()); // cleared behind the X screen
+    r.sup->console_line("reset"); // no longer offered
+    CHECK(!r.sys.helper_request.has_value());
+}
+
+TEST(reset_on_the_console_restores_the_factory_settings_and_restarts) {
+    Rig r;
+    fail_x_three_times(r);
+    r.sup->console_line("rest"); // a typo changes nothing
+    CHECK(!r.sys.helper_request.has_value());
+    r.sup->console_line(" reset ");
+    REQUIRE(r.sys.helper_request.has_value());
+    CHECK(r.sys.helper_request->args == std::vector<std::string>{"config-reset"});
+    r.sys.answer_helper(*r.sup, {.ok = true, .message = {}, .payload = {}});
+    REQUIRE(r.sys.helper_request.has_value());
+    CHECK(r.sys.helper_request->args == std::vector<std::string>{"reboot"});
+}
+
+TEST(a_failed_reset_is_explained_on_the_console) {
+    Rig r;
+    fail_x_three_times(r);
+    r.sup->console_line("reset");
+    r.sys.answer_helper(*r.sup, {.ok = false, .message = "disk full", .payload = {}});
+    CHECK(r.sys.console.contains("disk full"));
+    CHECK(r.sys.console.contains("type reset")); // offered again
+}
+
+TEST(the_console_asks_for_the_administrator_pin_before_a_reset) {
+    Rig r;
+    r.sys.settings.admin_pin = make_pin_hash("1234").value_or("");
+    fail_x_three_times(r);
+    r.sup->console_line("reset");
+    CHECK(r.sys.console.contains("PIN"));
+    CHECK(!r.sys.console_echoes);
+    r.sup->console_line("9999");
+    CHECK(!r.sys.helper_request.has_value());
+    CHECK(r.sys.console_echoes);
+    CHECK(r.sys.console.contains("wrong"));
+
+    // Locked for a while after a wrong PIN.
+    r.sup->console_line("reset");
+    CHECK(r.sys.console_echoes);
+    r.sys.clock += std::chrono::seconds(30);
+    r.sup->console_line("reset");
+    CHECK(!r.sys.console_echoes);
+    r.sup->console_line("1234");
+    REQUIRE(r.sys.helper_request.has_value());
+    CHECK(r.sys.helper_request->args == std::vector<std::string>{"config-reset"});
+}
+
+TEST(xorg_errors_leave_out_the_boilerplate) {
+    CHECK(xorg_errors(failing_log, 5) == std::vector<std::string>{"no screens found"});
+    CHECK(xorg_errors("[ 1.0] (EE) a\n[ 1.1] (EE) b\n[ 1.2] (EE) c\n", 2)
+          == (std::vector<std::string>{"b", "c"}));
+    CHECK(xorg_errors("", 5).empty());
 }
 
 TEST(a_crashed_chooser_comes_back) {

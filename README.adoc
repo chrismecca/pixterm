@@ -48,6 +48,8 @@ and import, and a log viewer. An optional PIN guards it.
 * To reset a terminal, or recover from a forgotten PIN, make an empty
 file named `pixterm-reset` on the SD card's boot partition. Any
 computer can write to it. The next boot restores the factory settings.
+* If the display cannot start, the screen says why in plain text, and
+offers to try again or to restore the factory settings.
 
 == Building an image
 

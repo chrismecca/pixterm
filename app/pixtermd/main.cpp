@@ -91,6 +91,10 @@ int main() {
                                    .libexec_dir = std::string(build::libexec_dir),
                                    .base_env = env});
     system.set_events(supervisor);
+    // systemd gives pixtermd tty1 as its input; it is the text console
+    // that explains an X server that cannot start.
+    if (::isatty(STDIN_FILENO) == 1)
+        system.use_console(STDIN_FILENO);
 
     bool stopping = false;
     loop.on_signal = [&](int signal) {

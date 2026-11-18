@@ -3,6 +3,7 @@
 
 #include "supervisor.hpp"
 
+#include "failure_console.hpp"
 #include "settings_requests.hpp"
 
 #include <pixterm/lines.hpp>
@@ -50,7 +51,8 @@ ExitStatus ExitStatus::from_wait(int status) noexcept {
 
 Supervisor::Supervisor(System& system, Environment environment)
     : system_(system), env_(std::move(environment)),
-      requests_(std::make_unique<SettingsRequests>(*this)) {}
+      requests_(std::make_unique<SettingsRequests>(*this)),
+      console_(std::make_unique<FailureConsole>(*this)) {}
 
 Supervisor::~Supervisor() = default;
 
@@ -114,6 +116,7 @@ void Supervisor::x_ready() {
         return;
     log("X server ready");
     xstart_failures_ = 0;
+    console_->x_ready();
     set_state(State::x_setup);
     // Not on the session's own display: its display manager may already
     // own it, and a client of ours disconnecting could reset the server
@@ -345,9 +348,23 @@ void Supervisor::teardown_check() {
         const auto wait = std::chrono::seconds(1) * (1 << std::min(xstart_failures_, 5));
         log(std::format("restarting X in {} s", wait.count()));
         deadline_ = system_.now() + wait;
+        console_->x_failed(xstart_failures_);
     } else {
         deadline_ = system_.now();
     }
+}
+
+void Supervisor::retry_x_now() {
+    if (state_ != State::x_start || system_.running(Slot::xorg))
+        return;
+    log("X restart requested on the console");
+    deadline_ = system_.now();
+    tick();
+}
+
+void Supervisor::console_line(std::string_view line) {
+    console_->line(line);
+    tick();
 }
 
 void Supervisor::watch_session(Time now) {

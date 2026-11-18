@@ -48,6 +48,9 @@ public:
 
     /// Where to report what happens. Must be set before anything starts.
     void set_events(Events& events) { events_ = &events; }
+    /// Uses fd, open for reading and writing (pixtermd's tty), as the text
+    /// console. Without one, the console shows and reads nothing.
+    void use_console(int fd);
 
     /// Collects every child that has exited. Call on SIGCHLD.
     void reap();
@@ -90,6 +93,8 @@ public:
                                   std::string_view data) override;
     void remove_file(const std::filesystem::path& path) override;
 
+    void show_console(std::string_view text) override;
+    void console_echo(bool on) override;
     [[nodiscard]] std::optional<bool> ethernet_carrier() const override;
     [[nodiscard]] std::optional<int> display_clients(bool tcp_only) const override;
 
@@ -135,6 +140,9 @@ private:
     UniqueFd chooser_;
     int chooser_watch_ = -1;
     LineSplitter chooser_lines_;
+    int console_ = -1;
+    int console_watch_ = -1;
+    LineSplitter console_lines_;
     RunningJob job_;
     HelperCall helper_;
     std::deque<std::string> recent_log_;
