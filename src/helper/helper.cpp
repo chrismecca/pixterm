@@ -6,6 +6,8 @@
 #include <pixterm/fd.hpp>
 #include <pixterm/pin.hpp>
 #include <pixterm/settings_store.hpp>
+#include <pixterm/validate.hpp>
+#include <pixterm/wifi.hpp>
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -23,6 +25,14 @@ namespace {
 constexpr std::string_view networkctl = "/usr/bin/networkctl";
 constexpr std::string_view systemctl = "/usr/bin/systemctl";
 constexpr std::string_view ssh_keygen = "/usr/bin/ssh-keygen";
+constexpr std::string_view wpa_cli = "/usr/sbin/wpa_cli";
+constexpr std::string_view wifi_secret = "wifi-passphrase";
+constexpr std::string_view wifi_conf = "wpa_supplicant.conf";
+constexpr std::size_t max_wifi_secret = 256;
+// A scan of both bands takes a few seconds.
+constexpr std::chrono::milliseconds scan_time{4'000};
+constexpr std::chrono::milliseconds socket_poll{250};
+constexpr int socket_polls = 20;
 constexpr std::string_view key_name = "id_ed25519";
 constexpr std::string_view usb_settings = "pixterm-config.json";
 constexpr std::string_view usb_known_hosts = "pixterm-known_hosts";
@@ -171,6 +181,10 @@ Result Helper::dispatch(const Request& request) {
     const auto args = std::span(request.args).subspan(1);
     if (command == "network")
         return apply_network(args);
+    if (command == "wifi")
+        return wifi(args, request.payload);
+    if (command == "wifi-scan")
+        return wifi_scan(args);
     if (!args.empty())
         return fail(std::format("{} takes no arguments", command));
     if (command == "config-save")
@@ -235,6 +249,8 @@ Result Helper::save_known_hosts(std::string_view text) {
 
 std::expected<void, std::string> Helper::reset() const {
     if (auto ok = SettingsStore(paths_.state_dir, paths_.factory_settings).reset(); !ok)
+        return ok;
+    if (auto ok = forget_wifi(); !ok)
         return ok;
     for (const auto& name :
          {std::string("known_hosts"), std::string(key_name), std::string(key_name) + ".pub"}) {
@@ -360,8 +376,144 @@ std::expected<void, std::string> Helper::boot(bool reset_requested) {
         if (auto ok = writing([this] { return reset(); }); !ok)
             return ok;
     }
-    return write_network(
-        SettingsStore(paths_.state_dir, paths_.factory_settings).load().settings.network);
+    const auto settings = SettingsStore(paths_.state_dir, paths_.factory_settings).load().settings;
+    if (auto ok = write_network(settings.network); !ok)
+        return ok;
+    // wpa_supplicant starts after this, if its configuration exists.
+    if (settings.wifi.enabled) {
+        if (auto passphrase = stored_passphrase(settings.wifi.ssid)) {
+            auto ok = write_wifi_conf(settings.wifi, *passphrase);
+            wipe(*passphrase);
+            return ok;
+        }
+    }
+    return {};
+}
+
+// ---- Wi-Fi ------------------------------------------------------------
+//
+// The passphrase is kept on the settings partition, readable by root
+// alone, beside the network it is for: "SSIDHEX\nPASSPHRASE\n". The
+// configuration wpa_supplicant reads is written to /run from it, at boot
+// and whenever it changes.
+
+std::optional<std::string> Helper::stored_passphrase(std::string_view ssid) const {
+    auto text = read_regular_file(paths_.state_dir / wifi_secret, max_wifi_secret);
+    if (!text)
+        return std::nullopt;
+    std::optional<std::string> found;
+    const auto newline = text->find('\n');
+    if (newline != std::string::npos && text->ends_with('\n')
+        && std::string_view(*text).substr(0, newline) == to_hex(ssid)) {
+        auto passphrase = text->substr(newline + 1, text->size() - newline - 2);
+        if (is_valid_wifi_passphrase(passphrase))
+            found = std::move(passphrase);
+    }
+    wipe(*text);
+    return found;
+}
+
+std::expected<void, std::string> Helper::write_wifi_conf(const Wifi& wifi,
+                                                         std::string_view passphrase) const {
+    if (::mkdir(paths_.wifi_dir.c_str(), 0700) != 0 && errno != EEXIST)
+        return fail(describe(paths_.wifi_dir, last_error()));
+    auto text = wpa_supplicant_conf(wifi, passphrase);
+    auto ok = replace_file(paths_.wifi_dir, wifi_conf, text, 0600);
+    wipe(text);
+    return ok;
+}
+
+std::expected<void, std::string> Helper::forget_wifi() const {
+    for (const auto& path : {paths_.state_dir / wifi_secret, paths_.wifi_dir / wifi_conf}) {
+        if (::unlink(path.c_str()) != 0 && errno != ENOENT)
+            return fail(describe(path, last_error()));
+    }
+    if (const auto link = privileged_.wifi_interface())
+        (void)privileged_.run(
+            {std::string(systemctl), "stop", std::format("wpa_supplicant@{}.service", *link)});
+    return {};
+}
+
+Result Helper::wifi(std::span<const std::string> args, std::string_view passphrase) {
+    if (args.size() == 1 && args[0] == "off")
+        return writing([this] { return forget_wifi(); }).transform([] { return std::string(); });
+    if (args.size() != 4 || args[0] != "on")
+        return fail("usage: wifi on COUNTRY SSIDHEX 0|1 | wifi off");
+    auto ssid = from_hex(args[2]);
+    if (!is_valid_country(args[1]) || !ssid || !is_valid_ssid(*ssid)
+        || (args[3] != "0" && args[3] != "1"))
+        return fail("wifi: invalid arguments");
+    const Wifi wifi{.enabled = true, .ssid = *ssid, .hidden = args[3] == "1", .country = args[1]};
+    const auto link = privileged_.wifi_interface();
+    if (!link)
+        return fail("This terminal has no Wi-Fi.");
+
+    std::string secret(passphrase);
+    if (secret.empty()) {
+        auto stored = stored_passphrase(wifi.ssid);
+        if (!stored)
+            return fail(std::format("Type the passphrase for {}.", wifi.ssid));
+        secret = std::move(*stored);
+    } else if (!is_valid_wifi_passphrase(secret)) {
+        wipe(secret);
+        return fail("The passphrase must be 8 to 63 letters, digits, spaces or punctuation.");
+    } else {
+        auto line = std::format("{}\n{}\n", args[2], secret);
+        auto stored =
+            writing([&] { return replace_file(paths_.state_dir, wifi_secret, line, 0600); });
+        wipe(line);
+        if (!stored) {
+            wipe(secret);
+            return fail(stored.error());
+        }
+    }
+    auto written = write_wifi_conf(wifi, secret);
+    wipe(secret);
+    if (!written)
+        return fail(written.error());
+    if (privileged_.run(
+            {std::string(systemctl), "restart", std::format("wpa_supplicant@{}.service", *link)})
+        != 0)
+        return fail("Wi-Fi could not be started.");
+    return std::string();
+}
+
+Result Helper::wifi_scan(std::span<const std::string> args) {
+    if (args.size() != 1 || !is_valid_country(args[0]))
+        return fail("usage: wifi-scan COUNTRY");
+    const auto link = privileged_.wifi_interface();
+    if (!link)
+        return fail("This terminal has no Wi-Fi.");
+    const auto unit = std::format("wpa_supplicant@{}.service", *link);
+    const auto cli = [&](std::string_view command) {
+        return privileged_.run_output({std::string(wpa_cli), "-i", *link, std::string(command)});
+    };
+
+    // Joined or joining, wpa_supplicant already runs; otherwise it runs
+    // for the scan alone, with no network to join.
+    const bool running = std::filesystem::exists(paths_.wifi_dir / wifi_conf);
+    if (!running) {
+        if (auto ok = write_wifi_conf(
+                {.enabled = false, .ssid = {}, .hidden = false, .country = args[0]}, "");
+            !ok)
+            return fail(ok.error());
+        if (privileged_.run({std::string(systemctl), "start", unit}) != 0)
+            return fail("Wi-Fi could not be started.");
+    }
+    for (int i = 0; i < socket_polls && cli("ping") != "PONG\n"; ++i)
+        privileged_.pause(socket_poll);
+    std::optional<std::string> results;
+    if (cli("scan") == "OK\n") {
+        privileged_.pause(scan_time);
+        results = cli("scan_results");
+    }
+    if (!running) {
+        (void)privileged_.run({std::string(systemctl), "stop", unit});
+        ::unlink((paths_.wifi_dir / wifi_conf).c_str());
+    }
+    if (!results)
+        return fail("The Wi-Fi scan failed.");
+    return scan_reply(parse_scan_results(*results));
 }
 
 } // namespace pixterm::helper

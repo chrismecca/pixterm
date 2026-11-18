@@ -14,6 +14,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <array>
 #include <cerrno>
 #include <format>
@@ -145,6 +146,28 @@ std::vector<std::string> LinuxPrivileged::ethernet_interfaces() {
             links.push_back(name);
     }
     return links;
+}
+
+std::optional<std::string> LinuxPrivileged::wifi_interface() {
+    std::vector<std::string> found;
+    std::error_code ec;
+    for (const auto& entry : std::filesystem::directory_iterator("/sys/class/net", ec))
+        if (std::filesystem::exists(entry.path() / "wireless", ec))
+            found.push_back(entry.path().filename().string());
+    if (found.empty())
+        return std::nullopt;
+    // The Pi's own is wlan0; a USB adapter comes after it.
+    std::ranges::sort(found);
+    return found.front();
+}
+
+std::optional<std::string> LinuxPrivileged::run_output(const std::vector<std::string>& argv) {
+    constexpr std::size_t limit = std::size_t{256} * 1024;
+    return run_for_output(argv, {"PATH=/usr/sbin:/usr/bin:/sbin:/bin", "LANG=C"}, limit);
+}
+
+void LinuxPrivileged::pause(std::chrono::milliseconds time) {
+    std::this_thread::sleep_for(time);
 }
 
 bool LinuxPrivileged::hand_to_service(const std::filesystem::path& path) {

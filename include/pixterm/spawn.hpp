@@ -10,6 +10,7 @@
 
 #include <expected>
 #include <functional>
+#include <optional>
 #include <string>
 #include <system_error>
 #include <vector>
@@ -41,6 +42,13 @@ struct SpawnOptions {
 /// @return Its exit status, or -1 if it could not run or was killed.
 [[nodiscard]] int run_and_wait(const std::vector<std::string>& argv,
                                const std::vector<std::string>& env);
+
+/// Runs a program to its end and returns the first limit bytes of what
+/// it wrote to its standard output, or nothing if it could not run or
+/// did not exit with 0. Its standard error goes to pixterm's.
+[[nodiscard]] std::optional<std::string> run_for_output(const std::vector<std::string>& argv,
+                                                        const std::vector<std::string>& env,
+                                                        std::size_t limit);
 
 /// Runs task in a child process in a session of its own, writing what
 /// it returns, and a newline, to out.

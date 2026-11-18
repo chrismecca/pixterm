@@ -106,6 +106,7 @@ int main(int argc, char** argv) {
         .network_dir = from_environment("PIXTERM_NETWORK_DIR", "/run/systemd/network"),
         .usb_dir = "/run/pixterm-usb",
         .keygen_dir = "/run/pixterm-keygen",
+        .wifi_dir = "/run/pixterm-wifi",
     };
     const uid_t service = uid_of(service_user);
     LinuxPrivileged privileged(paths, service);

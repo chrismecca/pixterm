@@ -24,6 +24,9 @@ public:
     void unmount_usb() override;
     std::vector<std::string> ethernet_interfaces() override;
     bool hand_to_service(const std::filesystem::path& path) override;
+    std::optional<std::string> wifi_interface() override;
+    std::optional<std::string> run_output(const std::vector<std::string>& argv) override;
+    void pause(std::chrono::milliseconds time) override;
 
 private:
     Paths paths_;

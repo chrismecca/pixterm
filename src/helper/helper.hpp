@@ -13,6 +13,10 @@
 ///     usb-export         reply: a message for the user
 ///     usb-import
 ///     keygen             reply: the terminal's public key
+///     wifi on COUNTRY SSIDHEX 0|1   payload: the passphrase, or nothing
+///                        to keep the one stored for that network
+///     wifi off           forgets the passphrase
+///     wifi-scan COUNTRY  reply: the networks found, as scan_reply
 ///
 /// Every argument and payload is untrusted and checked here. No shell
 /// is ever involved; the only programs run are fixed paths with fixed
@@ -24,8 +28,10 @@
 #include <pixterm/helper_protocol.hpp>
 #include <pixterm/settings.hpp>
 
+#include <chrono>
 #include <expected>
 #include <filesystem>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -60,6 +66,14 @@ public:
     [[nodiscard]] virtual std::vector<std::string> ethernet_interfaces() = 0;
     /// Gives a file to the pixterm account, which runs ssh.
     [[nodiscard]] virtual bool hand_to_service(const std::filesystem::path& path) = 0;
+    /// The built-in Wi-Fi interface, if there is one.
+    [[nodiscard]] virtual std::optional<std::string> wifi_interface() = 0;
+    /// Runs a program with a clean environment and returns what it wrote,
+    /// or nothing if it failed.
+    [[nodiscard]] virtual std::optional<std::string>
+    run_output(const std::vector<std::string>& argv) = 0;
+    /// Waits.
+    virtual void pause(std::chrono::milliseconds time) = 0;
 };
 
 struct Paths {
@@ -68,6 +82,7 @@ struct Paths {
     std::filesystem::path network_dir; ///< systemd-networkd's, in /run
     std::filesystem::path usb_dir;     ///< where mount_usb mounts the drive
     std::filesystem::path keygen_dir;  ///< private scratch space for ssh-keygen
+    std::filesystem::path wifi_dir;    ///< wpa_supplicant's configuration, in /run
 };
 
 /// The systemd-networkd file for a network setting.
@@ -107,6 +122,17 @@ private:
     [[nodiscard]] std::expected<std::string, std::string> usb_export();
     [[nodiscard]] std::expected<std::string, std::string> usb_import();
     [[nodiscard]] std::expected<std::string, std::string> reboot();
+    [[nodiscard]] std::expected<std::string, std::string> wifi(std::span<const std::string> args,
+                                                               std::string_view passphrase);
+    [[nodiscard]] std::expected<std::string, std::string> wifi_off() const;
+    [[nodiscard]] std::expected<std::string, std::string>
+    wifi_scan(std::span<const std::string> args);
+    [[nodiscard]] std::expected<void, std::string>
+    write_wifi_conf(const Wifi& wifi, std::string_view passphrase) const;
+    /// The passphrase stored for ssid, if any.
+    [[nodiscard]] std::optional<std::string> stored_passphrase(std::string_view ssid) const;
+    /// Forgets the passphrase and stops wpa_supplicant.
+    [[nodiscard]] std::expected<void, std::string> forget_wifi() const;
 
     /// Runs body with the settings partition writable.
     template <typename Body>

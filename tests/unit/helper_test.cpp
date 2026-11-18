@@ -5,11 +5,15 @@
 #include "test.hpp"
 
 #include <pixterm/settings_store.hpp>
+#include <pixterm/wifi.hpp>
 
 #include <helper.hpp>
 
+#include <algorithm>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <optional>
 
 using namespace pixterm;
 using namespace pixterm::helper;
@@ -63,6 +67,20 @@ public:
     }
 
     std::vector<std::string> ethernet_interfaces() override { return {"eth0"}; }
+
+    std::string wifi = "wlan0";
+    std::string scan_output;
+    int pauses = 0;
+    std::optional<std::string> wifi_interface() override {
+        return wifi.empty() ? std::nullopt : std::optional(wifi);
+    }
+    std::optional<std::string> run_output(const std::vector<std::string>& argv) override {
+        ran.push_back(argv);
+        if (argv.back() == "scan_results")
+            return scan_output;
+        return argv.back() == "ping" ? "PONG\n" : "OK\n";
+    }
+    void pause(std::chrono::milliseconds /*time*/) override { ++pauses; }
     bool hand_to_service(const fs::path& path) override {
         handed_over.push_back(path);
         return true;
@@ -74,7 +92,8 @@ Paths paths_in(const fs::path& dir) {
             .factory_settings = dir / "factory.json",
             .network_dir = dir / "network",
             .usb_dir = dir / "usb",
-            .keygen_dir = dir / "keygen"};
+            .keygen_dir = dir / "keygen",
+            .wifi_dir = dir / "wifi"};
 }
 
 struct Rig {
@@ -94,6 +113,12 @@ struct Rig {
 
     [[nodiscard]] fs::path state(std::string_view name) const {
         return dir.path() / "state" / name;
+    }
+
+    [[nodiscard]] fs::path wifi_conf() const { return dir.path() / "wifi/wpa_supplicant.conf"; }
+
+    [[nodiscard]] bool ran(const std::vector<std::string>& argv) const {
+        return std::ranges::find(privileged.ran, argv) != privileged.ran.end();
     }
 
     [[nodiscard]] Settings saved() const {
@@ -287,4 +312,128 @@ TEST(boot_applies_the_saved_network) {
     CHECK(r.helper.boot(true).has_value()); // a factory reset first
     CHECK(read(r.dir.path() / "network/20-wired.network").contains("DHCP=ipv4"));
     CHECK(!fs::exists(r.state("config.json")));
+}
+
+// ---- Wi-Fi ----
+
+namespace {
+
+const std::vector<std::string> restart_wifi{"/usr/bin/systemctl", "restart",
+                                            "wpa_supplicant@wlan0.service"};
+const std::vector<std::string> start_wifi{"/usr/bin/systemctl", "start",
+                                          "wpa_supplicant@wlan0.service"};
+const std::vector<std::string> stop_wifi{"/usr/bin/systemctl", "stop",
+                                         "wpa_supplicant@wlan0.service"};
+
+} // namespace
+
+TEST(joining_wifi_keeps_the_passphrase_for_root_alone) {
+    Rig r;
+    const auto ssid = to_hex("home");
+    REQUIRE(r.ask({"wifi", "on", "GB", ssid, "0"}, "correct horse").ok);
+    const auto secret = r.state("wifi-passphrase");
+    CHECK_EQ(read(secret), ssid + "\ncorrect horse\n");
+    CHECK((fs::status(secret).permissions() & fs::perms::all)
+          == (fs::perms::owner_read | fs::perms::owner_write));
+    CHECK((fs::status(r.wifi_conf()).permissions() & fs::perms::all)
+          == (fs::perms::owner_read | fs::perms::owner_write));
+    const auto conf = read(r.wifi_conf());
+    CHECK(conf.contains("country=GB\n"));
+    CHECK(conf.contains("sae_password=\"correct horse\"\n"));
+    CHECK(r.ran(restart_wifi));
+}
+
+TEST(wifi_keeps_the_stored_passphrase_for_the_same_network) {
+    Rig r;
+    REQUIRE(r.ask({"wifi", "on", "GB", to_hex("home"), "0"}, "correct horse").ok);
+    REQUIRE(r.ask({"wifi", "on", "FR", to_hex("home"), "1"}).ok);
+    const auto conf = read(r.wifi_conf());
+    CHECK(conf.contains("country=FR\n"));
+    CHECK(conf.contains("scan_ssid=1\n"));
+    CHECK(conf.contains("psk=\"correct horse\"\n"));
+    const auto other = r.ask({"wifi", "on", "GB", to_hex("cafe"), "0"});
+    CHECK(!other.ok);
+    CHECK(other.message.contains("passphrase"));
+}
+
+TEST(wifi_arguments_are_checked) {
+    Rig r;
+    const auto ssid = to_hex("home");
+    CHECK(!r.ask({"wifi", "on", "gb", ssid, "0"}, "correct horse").ok);
+    CHECK(!r.ask({"wifi", "on", "GB", "zz", "0"}, "correct horse").ok);
+    CHECK(!r.ask({"wifi", "on", "GB", to_hex("a\nb"), "0"}, "correct horse").ok);
+    CHECK(!r.ask({"wifi", "on", "GB", ssid, "2"}, "correct horse").ok);
+    CHECK(!r.ask({"wifi", "on", "GB", ssid, "0"}, "short").ok);
+    CHECK(!r.ask({"wifi", "on", "GB", ssid, "0"}, "two\nlines here").ok);
+    CHECK(!r.ask({"wifi", "on", "GB", ssid}, "correct horse").ok);
+    CHECK(!r.ask({"wifi", "sideways"}).ok);
+    CHECK(!r.ask({"wifi-scan"}).ok);
+    CHECK(!fs::exists(r.state("wifi-passphrase")));
+}
+
+TEST(a_terminal_without_wifi_says_so) {
+    Rig r;
+    r.privileged.wifi.clear();
+    const auto reply = r.ask({"wifi", "on", "GB", to_hex("home"), "0"}, "correct horse");
+    CHECK(!reply.ok);
+    CHECK(reply.message.contains("no Wi-Fi"));
+    CHECK(!r.ask({"wifi-scan", "GB"}).ok);
+}
+
+TEST(turning_wifi_off_forgets_the_passphrase) {
+    Rig r;
+    REQUIRE(r.ask({"wifi", "on", "GB", to_hex("home"), "0"}, "correct horse").ok);
+    REQUIRE(r.ask({"wifi", "off"}).ok);
+    CHECK(!fs::exists(r.state("wifi-passphrase")));
+    CHECK(!fs::exists(r.wifi_conf()));
+    CHECK(r.privileged.ran.back() == stop_wifi);
+}
+
+TEST(a_scan_runs_wpa_supplicant_only_while_it_lasts) {
+    Rig r;
+    r.privileged.scan_output = "bssid / frequency / signal level / flags / ssid\n"
+                               "aa:bb:cc:dd:ee:01\t2437\t-48\t[WPA2-PSK-CCMP][ESS]\thome\n";
+    const auto reply = r.ask({"wifi-scan", "GB"});
+    REQUIRE(reply.ok);
+    CHECK_EQ(reply.payload, "-48 wpa2 686f6d65\n");
+    CHECK(r.ran(start_wifi));
+    CHECK(r.ran({"/usr/sbin/wpa_cli", "-i", "wlan0", "scan"}));
+    CHECK(r.privileged.ran.back() == stop_wifi);
+    CHECK(!fs::exists(r.wifi_conf()));
+}
+
+TEST(a_scan_while_joined_leaves_wpa_supplicant_running) {
+    Rig r;
+    REQUIRE(r.ask({"wifi", "on", "GB", to_hex("home"), "0"}, "correct horse").ok);
+    REQUIRE(r.ask({"wifi-scan", "GB"}).ok);
+    CHECK(!r.ran(stop_wifi));
+    CHECK(read(r.wifi_conf()).contains("network="));
+}
+
+TEST(reset_forgets_wifi) {
+    Rig r;
+    REQUIRE(r.ask({"wifi", "on", "GB", to_hex("home"), "0"}, "correct horse").ok);
+    REQUIRE(r.ask({"config-reset"}).ok);
+    CHECK(!fs::exists(r.state("wifi-passphrase")));
+    CHECK(!fs::exists(r.wifi_conf()));
+}
+
+TEST(boot_joins_the_saved_wifi_network) {
+    Rig r;
+    REQUIRE(r.ask({"wifi", "on", "GB", to_hex("home"), "0"}, "correct horse").ok);
+    REQUIRE(r.ask({"config-save"}, R"({"schema_version":1,"device":{"wifi":{
+                  "enabled":true,"ssid":"home","country":"GB"}}})")
+                .ok);
+    fs::remove(r.wifi_conf()); // /run is empty at boot
+    CHECK(r.helper.boot(false).has_value());
+    CHECK(read(r.wifi_conf()).contains("psk=\"correct horse\""));
+}
+
+TEST(boot_leaves_wifi_off_without_a_passphrase) {
+    Rig r;
+    REQUIRE(r.ask({"config-save"}, R"({"schema_version":1,"device":{"wifi":{
+                  "enabled":true,"ssid":"home","country":"GB"}}})")
+                .ok);
+    CHECK(r.helper.boot(false).has_value());
+    CHECK(!fs::exists(r.wifi_conf()));
 }
