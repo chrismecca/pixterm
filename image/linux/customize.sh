@@ -18,7 +18,7 @@ RUNTIME_PKGS="xserver-xorg-core xserver-xorg-input-libinput xauth mwm libxm4
 	xfonts-base xfonts-75dpi xfonts-100dpi
 	xterm inetutils-telnet tigervnc-viewer freerdp3-x11 picocom
 	wpasupplicant wireless-regdb firmware-brcm80211 x3270 xfonts-x3270-misc
-	libform6"
+	libncurses6"
 BUILD_PKGS="clang lld cmake ninja-build make pkg-config libc++-dev libc++abi-dev libc6-dev
 	libncurses-dev
 	libmotif-dev libxt-dev libx11-dev libxext-dev libxrandr-dev libssl-dev"
