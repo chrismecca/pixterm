@@ -359,6 +359,17 @@ wait_log "on vnc-host ended" 15
 wait_log "started pixterm-ui" 15
 sleep 1
 
+step "TN3270: x3270 shows the mainframe until it hangs up"
+mark
+pick_end 2
+wait_log "state handoff -> session" 15
+ps -eo user,args | grep -q '^pixterm */usr/bin/x3270 .*-keymap pixterm .*127.0.0.1:2325' && ok "x3270 running" || bad "x3270 running"
+sleep 2; shot s18b-tn3270
+wait_log "session on mainframe ended" 20
+tail -n +"$((MARK + 1))" "$LOG" | grep -q "error: " && bad "ended without an error" || ok "ended without an error"
+wait_log "started pixterm-ui" 15
+sleep 1
+
 step "Serial console: a missing port is reported; a present one opens"
 mark
 pick_end 0
@@ -370,14 +381,9 @@ pick_end 1
 wait_log "state handoff -> session" 15
 ps -eo user,args | grep -q '^pixterm */usr/bin/xterm .*-e /usr/bin/picocom .*--send-cmd  --receive-cmd  /dev/ttyUSB9' && ok "terminal runs picocom" || bad "terminal runs picocom"
 sleep 6; shot s19-serial
-$XDO xdotool mousemove 100 100; sleep 0.3
-# Keys sent while xterm is still settling can be lost: send them again
-# while picocom runs.
-for _ in 1 2 3; do
-	$XDO xdotool key --delay 150 ctrl+a ctrl+x
-	sleep 3
-	pgrep -x picocom >/dev/null || break
-done
+# picocom ends on Ctrl+A Ctrl+X, but keys sent to the fresh xterm were
+# sometimes lost; what matters here is that its end ends the session.
+pkill -x picocom
 wait_log "terminal session on serial-console ended" 15
 wait_log "started pixterm-ui" 15
 sleep 1

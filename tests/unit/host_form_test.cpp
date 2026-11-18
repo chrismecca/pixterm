@@ -62,6 +62,7 @@ TEST(command_is_asked_for_only_when_the_session_runs_one) {
 TEST(port_follows_the_protocol_unless_chosen) {
     CHECK_EQ(port_after_change("22", Protocol::telnet), "23");
     CHECK_EQ(port_after_change("", Protocol::vnc), "5900");
+    CHECK_EQ(port_after_change("", Protocol::tn3270), "23");
     CHECK_EQ(port_after_change("177", Protocol::rdp), "3389");
     CHECK_EQ(port_after_change("2222", Protocol::telnet), "2222");
     CHECK_EQ(port_after_change("x", Protocol::telnet), "x");
@@ -227,6 +228,7 @@ TEST(protocols_have_menu_and_list_labels) {
     }
     CHECK_EQ(protocol_menu_label(Protocol::direct_x), "Direct X (the host opens windows)");
     CHECK_EQ(protocol_list_label(Protocol::ssh_terminal), "Terminal");
+    CHECK_EQ(protocol_list_label(Protocol::tn3270), "TN3270");
 }
 
 TEST(login_asks_for_a_user_name_only_when_needed) {

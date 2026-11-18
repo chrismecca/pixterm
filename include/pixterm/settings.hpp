@@ -49,12 +49,13 @@ enum class Protocol {
     vnc,          ///< a remote desktop over RFB
     rdp,          ///< a Windows remote desktop
     serial,       ///< a console on one of the terminal's serial ports
+    tn3270,       ///< an IBM mainframe's 3270 screens (TN3270E)
 };
 
 inline constexpr std::array all_protocols{
     Protocol::ssh_x11,  Protocol::xdmcp,  Protocol::ssh_terminal, Protocol::telnet,
     Protocol::direct_x, Protocol::rexec,  Protocol::rsh,          Protocol::vnc,
-    Protocol::rdp,      Protocol::serial,
+    Protocol::rdp,      Protocol::serial, Protocol::tn3270,
 };
 
 /// The protocol's name in the settings file, such as "ssh-x11".

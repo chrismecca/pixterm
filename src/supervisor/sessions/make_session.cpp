@@ -25,6 +25,8 @@ std::unique_ptr<Session> make_session(Supervisor& sup, const Host& host) {
         return make_rdp_session(sup);
     case Protocol::serial:
         return make_serial_session(sup);
+    case Protocol::tn3270:
+        return make_tn3270_session(sup);
     }
     return make_ssh_session(sup);
 }

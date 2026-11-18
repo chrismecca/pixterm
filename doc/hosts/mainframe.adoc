@@ -1,0 +1,51 @@
+// SPDX-FileCopyrightText: 2026 Chris Mecca
+// SPDX-License-Identifier: MIT
+
+= IBM mainframes (TN3270E)
+
+pixterm reaches z/OS, z/VM and z/VSE, and the Hercules emulator, as an
+IBM 3279 model 2 display: 80 columns by 24 rows, in colour. It runs
+x3270, which speaks TN3270E, the form of TN3270 that carries the
+device type and the host's choice of LU.
+
+== Host entry
+
+[cols="1,1",options="header"]
+|===
+| Field | Value
+
+| Protocol | TN3270 (IBM mainframe)
+| Port | 23; 992 for TN3270 over TLS
+|===
+
+There is no user name: the mainframe's own logon screen asks for it.
+On port 992 the connection uses TLS. On other ports everything,
+passwords included, crosses the network in clear text.
+
+== The screen
+
+The 3270 screen sits in the middle of a white screen, in the largest
+3270 font that fits, with x3270's status line under it. pixterm runs
+x3270 without its menus and keypad. The session ends when the host
+disconnects, for example after LOGOFF; Alt+Q leaves at any time.
+
+== Keys
+
+pixterm keeps x3270's keys and adds those of PC 3270 emulators.
+
+[cols="1,1",options="header"]
+|===
+| 3270 key | Key
+
+| Enter | Return, Right Ctrl or keypad Enter
+| PF1 to PF12 | F1 to F12
+| PF13 to PF24 | Shift+F1 to Shift+F12
+| PF7, PF8 | Page Up, Page Down
+| PA1, PA2, PA3 | Alt+1, Alt+2, Alt+3
+| Clear | Pause, or Alt+C
+| Reset | Escape, or Alt+R
+| Attn | Shift+Escape, or Alt+A
+| New line | Shift+Return
+| Erase EOF | Alt+E
+| Insert | Insert
+|===

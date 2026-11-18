@@ -46,6 +46,8 @@ cat > /tmp/config.json <<'JSON'
     { "id": "h12", "name": "vnc-host", "address": "127.0.0.1", "protocol": "vnc", "port": 5905 },
     { "id": "h13", "name": "rdp-host", "address": "127.0.0.1", "protocol": "rdp", "port": 3390,
       "username": "alice" },
+    { "id": "h16", "name": "mainframe", "address": "127.0.0.1", "protocol": "tn3270",
+      "port": 2325 },
     { "id": "h14", "name": "serial-console", "protocol": "serial", "device": "/dev/ttyUSB9",
       "speed": 9600 },
     { "id": "h15", "name": "missing-serial", "protocol": "serial", "device": "/dev/ttyUSB8" }
@@ -68,6 +70,8 @@ DISPLAY=:5 freerdp-shadow-cli3 /port:3390 /sam-file:/tmp/sam /bind-address:127.0
 pkill -x socat || true
 socat pty,raw,echo=0,link=/dev/ttyUSB9,mode=666 \
     SYSTEM:'printf "\\r\\nok "; cat' >/tmp/serial.log 2>&1 &
+# A mainframe that answers and, eight seconds later, hangs up.
+socat TCP-LISTEN:2325,bind=127.0.0.1,reuseaddr,fork SYSTEM:'sleep 8' >/tmp/tn3270.log 2>&1 &
 # xdm as an XDMCP host (no local server; queries from anyone).
 sed -i 's/^DisplayManager.requestPort/!DisplayManager.requestPort/' /etc/X11/xdm/xdm-config
 sed -i 's/^:0 local/#:0 local/' /etc/X11/xdm/Xservers

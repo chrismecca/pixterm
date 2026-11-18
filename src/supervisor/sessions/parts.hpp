@@ -27,7 +27,12 @@ inline constexpr std::string_view xterm = "/usr/bin/xterm";
 inline constexpr std::string_view picocom = "/usr/bin/picocom";
 inline constexpr std::string_view vncviewer = "/usr/bin/xtigervncviewer";
 inline constexpr std::string_view xfreerdp = "/usr/bin/xfreerdp3";
+inline constexpr std::string_view x3270 = "/usr/bin/x3270";
 } // namespace programs
+
+/// The largest 3270 font ("3270gt8" to "3270gt32") that shows a whole
+/// 3270 model 2 screen on a screen this size.
+[[nodiscard]] std::string x3270_font(int width, int height);
 
 /// The text after "E " in a TCP probe's failure, or a general reason.
 [[nodiscard]] std::string probe_reason(std::string_view output);

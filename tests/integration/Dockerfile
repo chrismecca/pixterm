@@ -30,12 +30,14 @@ RUN apt-get update \
       x11-utils \
       x11-xkb-utils \
       x11-xserver-utils \
+      x3270 \
       xauth \
       xdm \
       xdotool \
       xfonts-100dpi \
       xfonts-75dpi \
       xfonts-base \
+      xfonts-x3270-misc \
       xterm \
       xvfb \
  && rm -rf /var/lib/apt/lists/*

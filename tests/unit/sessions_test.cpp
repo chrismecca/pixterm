@@ -352,6 +352,49 @@ TEST(vnc_treats_being_told_to_stop_as_ordinary) {
     CHECK(!mentions(r.sys.logs, "error: "));
 }
 
+TEST(tn3270_runs_x3270_centred_with_a_font_for_the_screen) {
+    Rig r(make_host(Protocol::tn3270, "mvs"));
+    r.pick();
+    REQUIRE(r.sys.job.has_value()); // the host must answer first
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "OK");
+    r.hand_over();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "1920 1080");
+    const auto* x3270 = r.sys.program(Slot::client);
+    REQUIRE(x3270 != nullptr);
+    CHECK_EQ(x3270->argv.front(), "/usr/bin/x3270");
+    CHECK(has_sequence(x3270->argv, {"-once", "-secure"}));
+    CHECK(has_sequence(x3270->argv, {"-model", "3279-2"}));
+    CHECK(has_sequence(x3270->argv, {"-efont", "3270gt32"}));
+    CHECK(has_sequence(x3270->argv, {"-keymap", "pixterm"}));
+    CHECK(has_sequence(x3270->argv, {"-geometry", "+232+128"}));
+    CHECK_EQ(x3270->argv.back(), "mvs:23");
+    r.sys.clock += std::chrono::minutes(10);
+    r.sys.exit(*r.sup, Slot::client, ExitStatus::exited(0)); // the host logged off
+    CHECK(r.state() == State::teardown);
+    CHECK(!mentions(r.sys.logs, "error: "));
+}
+
+TEST(tn3270_uses_tls_on_port_992) {
+    auto host = make_host(Protocol::tn3270, "mvs");
+    host.port = 992;
+    Rig r(host);
+    r.pick();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "OK");
+    r.hand_over();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "1024 768");
+    const auto* x3270 = r.sys.program(Slot::client);
+    REQUIRE(x3270 != nullptr);
+    CHECK_EQ(x3270->argv.back(), "L:mvs:992");
+}
+
+TEST(the_3270_font_is_the_largest_that_fits) {
+    CHECK_EQ(x3270_font(1920, 1080), "3270gt32");
+    CHECK_EQ(x3270_font(1280, 1024), "3270gt24");
+    CHECK_EQ(x3270_font(1024, 768), "3270gt16");
+    CHECK_EQ(x3270_font(800, 600), "3270gt16");
+    CHECK_EQ(x3270_font(320, 200), "3270gt8");
+}
+
 TEST(serial_checks_the_port_before_closing_the_chooser) {
     auto host = make_host(Protocol::serial, "");
     host.device = "/dev/ttyUSB0";

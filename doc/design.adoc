@@ -199,6 +199,8 @@ windows on the terminal the same way.
 * *VNC and RDP:* TigerVNC's viewer or FreeRDP shows a whole remote
 desktop. The chooser first checks that the host accepts connections,
 and for RDP that the password is right.
+* *TN3270:* x3270 shows an IBM mainframe's 3270 screens, centred in the
+largest 3270 font that fits, with the keys of PC 3270 emulators.
 
 See the guides in `doc/hosts/` for each kind of host.
 

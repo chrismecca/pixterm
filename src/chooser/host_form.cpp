@@ -14,12 +14,22 @@ namespace pixterm::chooser {
 namespace {
 
 constexpr std::array<std::string_view, all_protocols.size()> menu_labels{
-    "SSH / X11", "XDMCP", "SSH terminal", "Telnet", "Direct X (the host opens windows)",
-    "rexec",     "rsh",   "VNC",          "RDP",    "Serial console",
+    "SSH / X11",
+    "XDMCP",
+    "SSH terminal",
+    "Telnet",
+    "Direct X (the host opens windows)",
+    "rexec",
+    "rsh",
+    "VNC",
+    "RDP",
+    "Serial console",
+    "TN3270 (IBM mainframe)",
 };
 
 constexpr std::array<std::string_view, all_protocols.size()> list_labels{
-    "SSH", "XDMCP", "Terminal", "Telnet", "Direct X", "rexec", "rsh", "VNC", "RDP", "Serial",
+    "SSH", "XDMCP", "Terminal", "Telnet", "Direct X", "rexec",
+    "rsh", "VNC",   "RDP",      "Serial", "TN3270",
 };
 
 std::size_t index(Protocol p) noexcept {

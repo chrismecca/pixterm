@@ -73,6 +73,22 @@ Mwm*client*activeForeground:      #ffffff
 Mwm*client*activeTopShadowColor:  #6a6a6a
 Mwm*client*activeBottomShadowColor: #000000
 
+! ---- IBM mainframe sessions (x3270)
+! No menu bar or scroll bar (and no keypad, x3270's default): the screen
+! is the 3270's. The key map adds PC keys
+! to x3270's own: Right Ctrl and keypad Enter are Enter, Escape is Reset,
+! Shift+Escape is Attn, Pause is Clear, Page Up and Down are PF7 and PF8.
+x3270.menuBar:            false
+x3270.scrollBar:          false
+x3270.keymap.pixterm:     #override \n\
+	Shift<Key>Escape: Attn()\n\
+	:<Key>Escape: Reset()\n\
+	:<Key>Control_R: Enter()\n\
+	:<Key>KP_Enter: Enter()\n\
+	:<Key>Pause: Clear()\n\
+	:<Key>Prior: PF(7)\n\
+	:<Key>Next: PF(8)
+
 ! ---- terminal sessions
 ! The xterm of SSH terminal and Telnet hosts: black on white, and the
 ! host may not move, resize or retitle it or change its font.
