@@ -60,17 +60,21 @@ TEST(counts_connected_x_sockets) {
     CHECK_EQ(count_connected_x_sockets(proc_net_unix, 2), 0);
 }
 
-TEST(carrier_comes_from_wired_physical_interfaces) {
+TEST(carrier_comes_from_physical_wired_and_wireless_interfaces) {
     const TempDir dir;
-    CHECK(!ethernet_carrier(dir.path() / "missing"));
+    CHECK(!link_carrier(dir.path() / "missing"));
     make_interface(dir.path(), "lo", "772", "1", false, false);
     make_interface(dir.path(), "br0", "1", "1", false, false);
-    make_interface(dir.path(), "wlan0", "1", "1", true, true);
-    CHECK(!ethernet_carrier(dir.path())); // no wired physical interface
+    CHECK(!link_carrier(dir.path())); // no physical interface
     make_interface(dir.path(), "eth0", "1", "0", true, false);
-    CHECK(ethernet_carrier(dir.path()) == false);
+    make_interface(dir.path(), "wlan0", "1", "0", true, true);
+    CHECK(link_carrier(dir.path()) == false);
+    // Joined to a Wi-Fi network, with the cable out.
+    make_interface(dir.path(), "wlan0", "1", "1", true, true);
+    CHECK(link_carrier(dir.path()) == true);
+    make_interface(dir.path(), "wlan0", "1", "0", true, true);
     make_interface(dir.path(), "eth1", "1", "1", true, false);
-    CHECK(ethernet_carrier(dir.path()) == true);
+    CHECK(link_carrier(dir.path()) == true);
 }
 
 TEST(display_connections_read_proc) {

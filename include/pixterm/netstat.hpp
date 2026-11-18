@@ -22,10 +22,11 @@ namespace pixterm {
 /// of /proc/net/unix.
 [[nodiscard]] int count_connected_x_sockets(std::string_view proc_net_unix, int display);
 
-/// Whether any wired, physical Ethernet interface has a carrier.
-/// Wireless, virtual and loopback interfaces are ignored.
+/// Whether any physical network interface, wired or Wi-Fi, has a link
+/// (Wi-Fi: is joined to a network). Virtual and loopback interfaces are
+/// ignored; nothing if there is no physical one.
 [[nodiscard]] std::optional<bool>
-ethernet_carrier(const std::filesystem::path& sys_class_net = "/sys/class/net");
+link_carrier(const std::filesystem::path& sys_class_net = "/sys/class/net");
 
 /// Clients of X display number display: TCP connections to its port
 /// and connected local sockets.

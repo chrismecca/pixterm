@@ -730,8 +730,8 @@ void LinuxSystem::remove_file(const std::filesystem::path& path) {
     ::unlink(path.c_str());
 }
 
-std::optional<bool> LinuxSystem::ethernet_carrier() const {
-    return pixterm::ethernet_carrier();
+std::optional<bool> LinuxSystem::link_carrier() const {
+    return pixterm::link_carrier();
 }
 
 std::optional<int> LinuxSystem::display_clients(bool tcp_only) const {

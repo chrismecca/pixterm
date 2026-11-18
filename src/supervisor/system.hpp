@@ -181,7 +181,8 @@ public:
     /// Turns the echo of what is typed on the console on or off.
     virtual void console_echo(bool on) = 0;
 
-    [[nodiscard]] virtual std::optional<bool> ethernet_carrier() const = 0;
+    /// Whether any network link, wired or Wi-Fi, is up; see link_carrier.
+    [[nodiscard]] virtual std::optional<bool> link_carrier() const = 0;
     /// Clients of the X display: TCP ones only, or all.
     [[nodiscard]] virtual std::optional<int> display_clients(bool tcp_only) const = 0;
 };

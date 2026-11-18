@@ -102,7 +102,7 @@ int count_connected_x_sockets(std::string_view proc_net_unix, int display) {
     return n;
 }
 
-std::optional<bool> ethernet_carrier(const std::filesystem::path& sys_class_net) {
+std::optional<bool> link_carrier(const std::filesystem::path& sys_class_net) {
     std::error_code ec;
     const std::filesystem::directory_iterator it(sys_class_net, ec);
     if (ec)
@@ -111,9 +111,9 @@ std::optional<bool> ethernet_carrier(const std::filesystem::path& sys_class_net)
     for (const auto& entry : it) {
         const auto& dir = entry.path();
         // Physical devices only: bridges, tunnels and virtual pairs have
-        // no device link. Type 1 is Ethernet.
-        if (dir.filename() == "lo" || std::filesystem::exists(dir / "wireless", ec)
-            || !std::filesystem::exists(dir / "device", ec))
+        // no device link. Type 1 is Ethernet, and Wi-Fi too. A Wi-Fi
+        // interface that is down has no carrier file to read.
+        if (dir.filename() == "lo" || !std::filesystem::exists(dir / "device", ec))
             continue;
         const auto type = read_text(dir / "type");
         if (!type || *type != "1\n")

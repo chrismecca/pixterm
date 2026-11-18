@@ -392,14 +392,16 @@ void Supervisor::watch_session(Time now) {
         watch_at_.reset();
         return;
     }
-    // During a session, the Ethernet link must not stay down.
-    if (system_.ethernet_carrier() == false) {
+    // During a session, the network link, wired or Wi-Fi, must not stay
+    // down.
+    if (system_.link_carrier() == false) {
         if (!link_down_since_) {
             link_down_since_ = now;
         } else if (now - *link_down_since_ >= timeouts::link_loss) {
-            report_error(std::format("The network connection was lost (no Ethernet link).\n\n"
-                                     "The session on {} has ended.",
-                                     host_.name));
+            report_error(
+                std::format("The network connection was lost (no Ethernet or Wi-Fi link).\n\n"
+                            "The session on {} has ended.",
+                            host_.name));
             teardown();
             return;
         }

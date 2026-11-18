@@ -136,7 +136,7 @@ public:
     void show_console(std::string_view text) override { console = text; }
     void console_echo(bool on) override { console_echoes = on; }
 
-    [[nodiscard]] std::optional<bool> ethernet_carrier() const override { return carrier; }
+    [[nodiscard]] std::optional<bool> link_carrier() const override { return carrier; }
     [[nodiscard]] std::optional<int> display_clients(bool tcp_only) const override {
         return tcp_only ? tcp_clients : clients;
     }
