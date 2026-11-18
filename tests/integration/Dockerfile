@@ -11,6 +11,7 @@ FROM pixterm-ci
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
+      curl \
       freerdp3-shadow-x11 \
       freerdp3-x11 \
       imagemagick \
