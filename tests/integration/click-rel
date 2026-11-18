@@ -4,6 +4,6 @@
 #
 # click-rel WINDOW-NAME XPERCENT YOFFSET-FROM-BOTTOM: click inside a window.
 XDO=/src/tests/integration/x
-w=$($XDO xdotool search --name "$1" | tail -1)
+w=$(/src/tests/integration/search --name "$1" | tail -1)
 eval "$($XDO xdotool getwindowgeometry --shell "$w")"
 $XDO xdotool mousemove $((X + WIDTH * $2 / 100)) $((Y + HEIGHT - $3)) click 1

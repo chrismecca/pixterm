@@ -1,0 +1,16 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2026 Chris Mecca
+# SPDX-License-Identifier: MIT
+#
+# search --name|--classname PATTERN: the ids of the matching windows, as
+# "xdotool search" prints them. xdotool dies with BadWindow when a window
+# closes while it walks the window tree, so a failed search is tried
+# again; one that finds nothing fails after half a second.
+for _ in 1 2 3 4 5; do
+	if ids=$(/src/tests/integration/x xdotool search "$@" 2>/dev/null); then
+		printf '%s\n' "$ids"
+		exit 0
+	fi
+	sleep 0.1
+done
+exit 1

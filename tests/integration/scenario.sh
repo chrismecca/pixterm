@@ -25,12 +25,20 @@ wait_log() {
 	done
 	bad "log: $1"; tail -n +"$((MARK + 1))" "$LOG" | sed 's/^/     | /'; return 1
 }
-wait_win() { timeout "${2:-10}" $XDO xdotool search --sync --name "$1" >/dev/null 2>&1 && ok "window: $1" || bad "window: $1"; }
-wait_class() { timeout "${2:-10}" $XDO xdotool search --sync --classname "$1" >/dev/null 2>&1 && ok "dialog: $1" || bad "dialog: $1"; }
+# wait_x --name|--classname PATTERN [SECONDS]: wait until a window matches.
+wait_x() {
+	end=$(( $(date +%s) + ${3:-10} ))
+	until $T/search "$1" "$2" >/dev/null; do
+		[ "$(date +%s)" -lt $end ] || return 1
+		sleep 0.2
+	done
+}
+wait_win() { wait_x --name "$1" "${2:-10}" && ok "window: $1" || bad "window: $1"; }
+wait_class() { wait_x --classname "$1" "${2:-10}" && ok "dialog: $1" || bad "dialog: $1"; }
 
 # Click the left ("Yes") button of the askpass question dialog.
 click_yes() {
-	w=$($XDO xdotool search --name "Login to" | head -1)
+	w=$($T/search --name "Login to" | head -1)
 	eval "$($XDO xdotool getwindowgeometry --shell "$w")"
 	$XDO xdotool mousemove $((X + 40)) $((Y + HEIGHT - 33)) click 1
 }
@@ -194,7 +202,7 @@ mark
 $T/click-rel "pixterm - Network Terminal" 12 367
 $XDO xdotool key Return
 wait_log "state handoff -> session" 15
-$XDO xdotool search --name "Login to" >/dev/null 2>&1 && bad "no password prompt" || ok "no password prompt"
+$T/search --name "Login to" >/dev/null && bad "no password prompt" || ok "no password prompt"
 sleep 6; pkill -u alice -x xterm
 wait_log "session on alice-by-key ended" 15
 wait_log "started pixterm-ui" 15
@@ -329,7 +337,7 @@ wait_log "state handoff -> session" 15
 ps -eo user,args | grep -q '^pixterm */usr/bin/xterm .*-e /usr/bin/picocom .*--send-cmd  --receive-cmd  /dev/ttyUSB9' && ok "terminal runs picocom" || bad "terminal runs picocom"
 sleep 6; shot s19-serial
 $XDO xdotool mousemove 100 100; sleep 0.3
-$XDO xdotool key ctrl+a ctrl+x
+$XDO xdotool key --delay 150 ctrl+a ctrl+x
 wait_log "terminal session on serial-console ended" 15
 wait_log "started pixterm-ui" 15
 sleep 1
