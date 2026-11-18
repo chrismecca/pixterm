@@ -11,6 +11,8 @@
 
 #include <csignal>
 #include <format>
+#include <string>
+#include <vector>
 
 namespace pixterm::supervisor {
 
@@ -90,9 +92,14 @@ void Supervisor::start() {
 void Supervisor::start_x() {
     set_state(State::x_start);
     reload_settings();
-    const auto args = own_display_ && session_
-                          ? session_->xorg_args()
-                          : std::vector<std::string>{"-nolisten", "tcp", "-noreset"};
+    auto args = own_display_ && session_ ? session_->xorg_args()
+                                         : std::vector<std::string>{"-nolisten", "tcp", "-noreset"};
+    // The screen saver blanks the screen after the idle time, and DPMS
+    // then turns the monitor off; Xorg gives DPMS the same time.
+    if (settings_.blank_minutes > 0)
+        args.insert(args.end(), {"-s", std::to_string(settings_.blank_minutes)});
+    else
+        args.insert(args.end(), {"-s", "0", "-dpms"});
     if (!system_.start_xorg(settings_, args)) {
         ++xstart_failures_;
         teardown();

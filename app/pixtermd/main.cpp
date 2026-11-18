@@ -80,7 +80,7 @@ int main() {
                .xauth = "/usr/bin/xauth",
                .xauthority = runtime / "Xauthority",
                .xorg_log = runtime / "Xorg.log",
-               .keyboard_conf = runtime / "xorg-keyboard.conf",
+               .xorg_conf = runtime / "xorg-settings.conf",
                .log_file = runtime / "pixtermd.log",
                .helper_socket = from_environment("PIXTERM_HELPER_SOCKET", helper::socket_path),
                .state_dir = state,

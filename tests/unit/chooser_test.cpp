@@ -247,6 +247,23 @@ TEST(the_mode_question_counts_down) {
     CHECK(keep_mode_question(1).contains("in 1 second."));
 }
 
+TEST(blanking_times_are_offered_from_never_to_an_hour) {
+    CHECK_EQ(blank_choices.front(), 0);
+    CHECK_EQ(blank_choices.back(), 60);
+    CHECK_EQ(blank_label(0), "Never");
+    CHECK_EQ(blank_label(1), "1 minute");
+    CHECK_EQ(blank_label(10), "10 minutes");
+}
+
+TEST(a_saved_blanking_time_shows_as_the_nearest_choice) {
+    for (std::size_t i = 0; i < blank_choices.size(); ++i)
+        CHECK_EQ(blank_row(blank_choices.at(i)), i);
+    CHECK_EQ(blank_choices.at(blank_row(20)), 15); // edited by hand
+    CHECK_EQ(blank_choices.at(blank_row(120)), 60);
+    CHECK_EQ(blank_choices.at(blank_row(1)), 0);
+    CHECK_EQ(blank_choices.at(blank_row(3)), 5);
+}
+
 TEST(keyboard_layouts_are_listed_by_code) {
     REQUIRE(!keyboard_layouts.empty());
     CHECK_EQ(keyboard_layouts[0].code, "us");

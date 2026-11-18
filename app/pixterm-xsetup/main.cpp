@@ -4,8 +4,8 @@
 // pixterm-xsetup: readies a freshly started X server.
 //
 //     pixterm-xsetup
-//         Sets the saved display mode and keyboard. "auto" leaves the
-//         mode Xorg chose from the monitor's EDID.
+//         Sets the saved display mode, blanking time and keyboard.
+//         "auto" leaves the mode Xorg chose from the monitor's EDID.
 //     pixterm-xsetup --allow-host HOST
 //         The same, then lets HOST open windows over TCP (direct X): adds
 //         its addresses to the server's access list and prints
@@ -34,6 +34,7 @@
 
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
+#include <X11/extensions/dpms.h>
 
 #include <algorithm>
 #include <array>
@@ -92,6 +93,24 @@ bool apply_display_mode(Display* d, const Settings& s) {
         return true;
     }
     return index == monitor->current || x11::set_mode(d, *monitor, *index);
+}
+
+// What Xorg's -s option set at start (see Supervisor::start_x), again,
+// for a time changed while the server runs.
+void apply_blanking(Display* d, const Settings& s) {
+    const int seconds = s.blank_minutes * 60;
+    XSetScreenSaver(d, seconds, 0, DefaultBlanking, DefaultExposures);
+    int event_base = 0;
+    int error_base = 0;
+    if (DPMSQueryExtension(d, &event_base, &error_base) == False)
+        return;
+    if (seconds > 0) {
+        const auto timeout = static_cast<CARD16>(seconds);
+        DPMSSetTimeouts(d, timeout, timeout, timeout);
+        DPMSEnable(d);
+    } else {
+        DPMSDisable(d);
+    }
 }
 
 struct FreeAddrinfo {
@@ -229,6 +248,7 @@ int main(int argc, char** argv) {
 
     const auto settings = load_settings();
     int status = apply_display_mode(display.get(), settings) ? 0 : exit_failed;
+    apply_blanking(display.get(), settings);
     if (arg(0) == "--allow-host" && !allow_host(display.get(), std::string(arg(1))))
         status = exit_not_allowed;
     if (!apply_keyboard(settings) && status == 0)

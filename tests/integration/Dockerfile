@@ -29,6 +29,7 @@ RUN apt-get update \
       x11-apps \
       x11-utils \
       x11-xkb-utils \
+      x11-xserver-utils \
       xauth \
       xdm \
       xdotool \

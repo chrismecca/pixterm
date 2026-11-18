@@ -29,8 +29,8 @@ struct LinuxPaths {
     std::filesystem::path xauth;      ///< the xauth program
     std::filesystem::path xauthority; ///< the X server's cookie file
     std::filesystem::path xorg_log;
-    std::filesystem::path keyboard_conf; ///< read by Xorg at start
-    std::filesystem::path log_file;      ///< recent log lines, for Diagnostics
+    std::filesystem::path xorg_conf; ///< read by Xorg at start
+    std::filesystem::path log_file;  ///< recent log lines, for Diagnostics
     std::filesystem::path helper_socket;
     std::filesystem::path state_dir; ///< saved settings
     std::filesystem::path factory_settings;
@@ -144,7 +144,7 @@ private:
         return children_.at(static_cast<std::size_t>(slot));
     }
     [[nodiscard]] bool write_xauthority();
-    void write_keyboard_conf(const Settings& settings);
+    void write_xorg_conf(const Settings& settings);
     void capture(Child& c, int read_end);
     void read_output(Child& c);
     void child_reaped(Slot slot, int status);

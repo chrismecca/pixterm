@@ -18,7 +18,7 @@ RUNTIME_PKGS="xserver-xorg-core xserver-xorg-input-libinput xauth mwm libxm4
 	xfonts-base xfonts-75dpi xfonts-100dpi
 	xterm inetutils-telnet tigervnc-viewer freerdp3-x11 picocom"
 BUILD_PKGS="clang lld cmake ninja-build pkg-config libc++-dev libc++abi-dev libc6-dev
-	libmotif-dev libxt-dev libx11-dev libxrandr-dev libssl-dev"
+	libmotif-dev libxt-dev libx11-dev libxext-dev libxrandr-dev libssl-dev"
 DEV_PKGS="sudo x11-utils x11-xserver-utils strace"
 
 say() { printf '\n=== %s\n' "$*"; }

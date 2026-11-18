@@ -42,7 +42,7 @@ add_library(pixterm::build_config ALIAS pixterm_build_config)
 target_include_directories(pixterm_build_config INTERFACE "${PROJECT_BINARY_DIR}/include")
 
 if(PIXTERM_X11)
-    find_package(X11 REQUIRED COMPONENTS Xrandr Xt)
+    find_package(X11 REQUIRED COMPONENTS Xext Xrandr Xt)
     # Motif has no CMake or pkg-config file on most systems.
     find_library(MOTIF_LIBRARY Xm REQUIRED)
     find_path(MOTIF_INCLUDE_DIR Xm/Xm.h REQUIRED)

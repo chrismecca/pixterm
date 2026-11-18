@@ -49,7 +49,7 @@ struct Rig {
                              .xauth = "/bin/true",
                              .xauthority = dir.path() / "Xauthority",
                              .xorg_log = dir.path() / "Xorg.log",
-                             .keyboard_conf = dir.path() / "keyboard.conf",
+                             .xorg_conf = dir.path() / "xorg.conf",
                              .log_file = dir.path() / "pixtermd.log",
                              .helper_socket = dir.path() / "helper.sock",
                              .state_dir = dir.path(),
@@ -281,4 +281,26 @@ TEST(files_are_read_and_written) {
     CHECK(!r.sys->is_socket(path));
     r.sys->remove_file(path);
     CHECK(r.sys->can_open(path) == std::errc::no_such_file_or_directory);
+}
+
+TEST(xorg_reads_the_keyboard_and_display_size_from_the_settings) {
+    Rig r;
+    Settings s;
+    s.keyboard_layout = "de";
+    s.display_mode = "1280x1024@75";
+    CHECK(r.sys->start_xorg(s, {}));
+    const auto conf = r.sys->read_file(r.dir.path() / "xorg.conf").value_or("");
+    CHECK(conf.contains(R"(Option "XkbLayout" "de")"));
+    // Xorg starts every display, XDMCP ones too, at the chosen size.
+    CHECK(conf.contains(R"(Identifier "HDMI-1")"));
+    CHECK(conf.contains(R"(Identifier "HDMI-2")"));
+    CHECK(conf.contains(R"(Option "PreferredMode" "1280x1024")"));
+}
+
+TEST(xorg_picks_the_size_itself_when_the_mode_is_automatic) {
+    Rig r;
+    CHECK(r.sys->start_xorg(Settings{}, {}));
+    const auto conf = r.sys->read_file(r.dir.path() / "xorg.conf").value_or("");
+    CHECK(conf.contains("XkbLayout"));
+    CHECK(!conf.contains("Monitor"));
 }

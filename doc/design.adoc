@@ -220,14 +220,20 @@ in. Find Hosts lists XDMCP hosts that answer a broadcast query.
 * Configure has six panels: Hosts, Display, Network, Keyboard, System
 and Diagnostics.
 * A new display mode stays only if the user confirms it within 15
-seconds.
+seconds. Xorg starts every display at the chosen size, XDMCP displays
+included, from the Xorg file pixtermd writes before each start: a
+client of pixterm's on a display manager's display could end its
+session when it disconnects.
+* The screen blanks after an idle time set in Configure > Display (10
+minutes unless changed, or never), and DPMS then turns the monitor off.
+It applies at the chooser and during every session.
 * An optional administrator PIN guards Configure. It keeps passers-by
 out of the settings; it does not protect the SD card.
 
 == Settings
 
-The settings are a small JSON file: device settings (display mode,
-keyboard, network, PIN hash) and a list of hosts. Each host has a
+The settings are a small JSON file: device settings (display mode and
+blanking time, keyboard, network, PIN hash) and a list of hosts. Each host has a
 random, stable identifier, so names and addresses can change.
 Passwords are never stored.
 

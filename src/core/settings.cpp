@@ -281,6 +281,12 @@ std::expected<Settings, std::string> parse_document(const json::Value& root) {
     s.keyboard_variant = std::move(*variant);
     if (!mode->empty())
         s.display_mode = std::move(*mode);
+    if (display != nullptr) {
+        const auto blank = integer_member(*display, "blank_minutes", s.blank_minutes);
+        if (!blank || *blank < 0 || *blank > max_blank_minutes)
+            return error("invalid blank_minutes");
+        s.blank_minutes = static_cast<int>(*blank);
+    }
     s.admin_pin = std::move(*pin);
 
     if (const auto* network = device != nullptr ? device->find("network") : nullptr) {
@@ -433,7 +439,9 @@ std::string to_json(const Settings& s) {
     }
 
     json::Object device{
-        {.key = "display", .value = json::Object{{.key = "mode", .value = s.display_mode}}},
+        {.key = "display",
+         .value = json::Object{{.key = "mode", .value = s.display_mode},
+                               {.key = "blank_minutes", .value = s.blank_minutes}}},
         {.key = "keyboard", .value = std::move(keyboard)},
         {.key = "network", .value = std::move(network)},
     };

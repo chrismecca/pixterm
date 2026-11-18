@@ -22,10 +22,11 @@ install(FILES systemd/pixterm-helper.socket DESTINATION ${PIXTERM_SYSTEMD_UNIT_D
 
 set(xorg_conf_dir "${CMAKE_INSTALL_FULL_SYSCONFDIR}/X11/xorg.conf.d")
 install(FILES xorg/10-pixterm.conf DESTINATION ${xorg_conf_dir})
-# pixtermd writes the keyboard layout to /run before each X start, so
+# pixtermd writes the keyboard and display size to /run before each X
+# start, so
 # the link's target does not exist at install time.
 install(CODE "
     file(MAKE_DIRECTORY \"\$ENV{DESTDIR}${xorg_conf_dir}\")
-    file(CREATE_LINK /run/pixterm/xorg-keyboard.conf
-         \"\$ENV{DESTDIR}${xorg_conf_dir}/20-pixterm-keyboard.conf\" SYMBOLIC)
+    file(CREATE_LINK /run/pixterm/xorg-settings.conf
+         \"\$ENV{DESTDIR}${xorg_conf_dir}/20-pixterm-settings.conf\" SYMBOLIC)
 ")

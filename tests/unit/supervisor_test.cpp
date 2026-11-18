@@ -67,6 +67,8 @@ TEST(boots_to_the_chooser) {
     CHECK(r.state() == State::x_start);
     REQUIRE_EQ(r.sys.xorg_starts.size(), 1U);
     CHECK(has_sequence(r.sys.xorg_starts[0], {"-nolisten", "tcp", "-noreset"}));
+    CHECK(has_sequence(r.sys.xorg_starts[0], {"-s", "10"})); // blank after 10 minutes
+    CHECK(!mentions(r.sys.xorg_starts[0], "-dpms"));
 
     r.sup->x_ready();
     CHECK(r.state() == State::x_setup);
@@ -307,6 +309,27 @@ TEST(applying_settings_saves_them_through_the_helper) {
     REQUIRE(r.sys.job_program() != nullptr);
     r.sys.finish_job(*r.sup, ExitStatus::exited(0), "");
     CHECK(r.sys.was_sent("APPLIED"));
+}
+
+TEST(xorg_never_blanks_the_screen_when_told_not_to) {
+    Rig r;
+    r.sys.settings.blank_minutes = 0;
+    r.sup->start();
+    REQUIRE_EQ(r.sys.xorg_starts.size(), 1U);
+    CHECK(has_sequence(r.sys.xorg_starts[0], {"-s", "0", "-dpms"}));
+}
+
+TEST(a_new_blanking_time_is_applied_at_once) {
+    Rig r;
+    r.boot();
+    r.sys.files["/run/pixterm/config.candidate.json"] =
+        R"({"schema_version":1,"device":{"display":{"blank_minutes":30}}})";
+    r.sup->chooser_line("APPLY");
+    REQUIRE(r.sys.helper_request.has_value());
+    r.sys.settings.blank_minutes = 30; // what the helper saved
+    r.sys.answer_helper(*r.sup, {.ok = true, .message = {}, .payload = {}});
+    REQUIRE(r.sys.job_program() != nullptr);
+    CHECK_EQ(r.sys.job_program()->name, "pixterm-xsetup");
 }
 
 TEST(new_network_settings_are_applied_before_saving) {

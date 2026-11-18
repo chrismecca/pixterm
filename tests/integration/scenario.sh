@@ -65,6 +65,11 @@ i=0; until $XDO xdpyinfo >/dev/null 2>&1 || [ $i -ge 30 ]; do sleep 0.5; i=$((i 
 wait_win "pixterm - Network Terminal" 15
 sleep 1
 
+# Xvfb has no DPMS; the unit tests check the arguments that set it.
+step "the screen blanks after 10 minutes"
+saver=$($XDO xset q)
+echo "$saver" | grep -Eq 'timeout: +600 ' && ok "screen saver: 600 s" || bad "screen saver: $saver"
+
 step "ask-for-user: username prompt, host key, password, session"
 mark
 $XDO xdotool key Down Return

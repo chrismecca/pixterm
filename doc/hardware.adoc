@@ -41,7 +41,10 @@ Run every step on a board before listing it as working.
 . Pull the Ethernet cable during a session. The chooser should return,
 with an error, within about ten seconds.
 . Change the display mode, and let it revert after 15 seconds, on at
-least two monitors.
+least two monitors. Keep a new mode, then log in to an XDMCP host: its
+display has the same size.
+. Set the blanking time to 5 minutes and leave the chooser alone: the
+screen blanks, and the monitor sleeps, after 5 minutes.
 . Apply a static network address, then DHCP again.
 . Export to and import from a FAT USB drive.
 . Set an administrator PIN, then clear it with `+pixterm-reset+` on the

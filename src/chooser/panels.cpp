@@ -4,6 +4,7 @@
 #include "panels.hpp"
 
 #include <algorithm>
+#include <cstdlib>
 #include <format>
 
 namespace pixterm::chooser {
@@ -61,6 +62,18 @@ std::string current_mode_text(const Monitor& m) {
 std::string keep_mode_question(int seconds_left) {
     return std::format("Keep this display mode?\n\nThe previous mode returns in {} second{}.",
                        seconds_left, seconds_left == 1 ? "" : "s");
+}
+
+std::string blank_label(int minutes) {
+    if (minutes <= 0)
+        return "Never";
+    return std::format("{} minute{}", minutes, minutes == 1 ? "" : "s");
+}
+
+std::size_t blank_row(int minutes) {
+    const auto* const nearest = std::ranges::min_element(
+        blank_choices, {}, [minutes](int choice) { return std::abs(choice - minutes); });
+    return static_cast<std::size_t>(nearest - blank_choices.begin());
 }
 
 std::optional<std::size_t> layout_row(std::string_view code) {

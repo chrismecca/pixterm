@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2026 Chris Mecca
 // SPDX-License-Identifier: MIT
 
-// Configure > Display: the monitor's modes. A new mode is tried at
-// once and kept only if the user confirms it in time, so a mode the
-// monitor cannot show undoes itself.
+// Configure > Display: the monitor's modes, and when the screen blanks.
+// A new mode is tried at once and kept only if the user confirms it in
+// time, so a mode the monitor cannot show undoes itself.
 
 #include "ui.hpp"
 
@@ -14,6 +14,9 @@
 #include <Xm/MessageB.h>
 
 #include <format>
+#include <string>
+#include <string_view>
+#include <vector>
 
 namespace pixterm::ui {
 
@@ -39,6 +42,7 @@ private:
     Widget current_label_ = nullptr;
     Widget modes_ = nullptr;
     Widget question_ = nullptr;
+    OptionMenu blank_menu_;
     std::optional<Monitor> monitor_;
     std::optional<std::size_t> previous_;
     std::string setting_;
@@ -47,6 +51,7 @@ private:
 
     void apply();
     void save(const std::string& setting);
+    void save_blank(std::size_t choice);
     void try_mode(std::size_t mode);
     void ask();
     void tick();
@@ -75,15 +80,27 @@ Widget DisplayPanel::build(Widget parent) {
                                chooser::mode_trial_seconds));
     XtVaSetValues(note, XmNbottomAttachment, XmATTACH_FORM, XmNleftAttachment, XmATTACH_FORM,
                   XmNrightAttachment, XmATTACH_WIDGET, XmNrightWidget, apply_button, nullptr);
+    Widget blank_row = XtVaCreateManagedWidget(
+        "blankRow", xmFormWidgetClass, form, XmNbottomAttachment, XmATTACH_WIDGET, XmNbottomWidget,
+        apply_button, XmNleftAttachment, XmATTACH_FORM, XmNrightAttachment, XmATTACH_FORM, nullptr);
+    std::vector<std::string> labels;
+    labels.reserve(chooser::blank_choices.size());
+    for (const int minutes : chooser::blank_choices)
+        labels.push_back(chooser::blank_label(minutes));
+    const std::vector<std::string_view> views(labels.begin(), labels.end());
+    blank_menu_ =
+        make_option_menu(blank_row, "blank", views, [this](std::size_t i) { save_blank(i); });
+    place_row(blank_row, nullptr, "Blank the screen after:", blank_menu_.menu);
     modes_ = make_list(form, "modeList");
     XtVaSetValues(XtParent(modes_), XmNtopAttachment, XmATTACH_WIDGET, XmNtopWidget, current_label_,
-                  XmNbottomAttachment, XmATTACH_WIDGET, XmNbottomWidget, apply_button,
+                  XmNbottomAttachment, XmATTACH_WIDGET, XmNbottomWidget, blank_row,
                   XmNleftAttachment, XmATTACH_FORM, XmNrightAttachment, XmATTACH_FORM, nullptr);
     on(modes_, XmNdefaultActionCallback, [this] { apply(); });
     return form;
 }
 
 void DisplayPanel::refresh() {
+    blank_menu_.show(chooser::blank_row(app_.settings().blank_minutes));
     monitor_ = x11::query_monitor(XtDisplay(app_.shell));
     set_label(monitor_label_, chooser::monitor_text(monitor_));
     if (!monitor_) {
@@ -99,6 +116,15 @@ void DisplayPanel::refresh() {
 void DisplayPanel::save(const std::string& setting) {
     Settings next = app_.settings();
     next.display_mode = setting;
+    configure_.commit(next);
+}
+
+void DisplayPanel::save_blank(std::size_t choice) {
+    const int minutes = chooser::blank_choices.at(choice);
+    if (minutes == app_.settings().blank_minutes)
+        return;
+    Settings next = app_.settings();
+    next.blank_minutes = minutes;
     configure_.commit(next);
 }
 

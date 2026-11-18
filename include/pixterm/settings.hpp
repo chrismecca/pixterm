@@ -28,6 +28,9 @@ namespace pixterm {
 /// The version of the JSON layout this code reads and writes.
 inline constexpr int schema_version = 1;
 
+/// The longest wait before the screen blanks, in minutes.
+inline constexpr int max_blank_minutes = 120;
+
 /// The most hosts a settings document may hold.
 inline constexpr std::size_t max_hosts = 64;
 
@@ -135,6 +138,7 @@ struct Network {
 struct Settings {
     std::uint64_t generation = 0; ///< from the saved file's header; 0 if none
     std::string display_mode = "auto";
+    int blank_minutes = 10; ///< idle time before the screen blanks; 0 is never
     std::string keyboard_layout = "us";
     std::string keyboard_variant;
     Network network;

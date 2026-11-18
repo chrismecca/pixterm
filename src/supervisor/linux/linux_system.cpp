@@ -175,14 +175,14 @@ bool LinuxSystem::write_xauthority() {
     return ok;
 }
 
-// The keyboard as an Xorg configuration file, linked from
-// /etc/X11/xorg.conf.d, so that every X server starts with it: a
+// The keyboard and display size as an Xorg configuration file, linked
+// from /etc/X11/xorg.conf.d, so that every X server starts with them: a
 // session's own display must never get a client of ours, whose
 // disconnecting could reset the server and end the session.
-void LinuxSystem::write_keyboard_conf(const Settings& settings) {
+void LinuxSystem::write_xorg_conf(const Settings& settings) {
     // The layout and variant were checked: lower-case letters, digits,
     // '_' and '-'.
-    const auto text = std::format(R"(# Written by pixtermd from the terminal's settings.
+    auto text = std::format(R"(# Written by pixtermd from the terminal's settings.
 Section "InputClass"
 	Identifier "pixterm-keyboard"
 	MatchIsKeyboard "on"
@@ -191,14 +191,29 @@ Section "InputClass"
 	Option "XkbOptions" "terminate:ctrl_alt_bksp"
 EndSection
 )",
-                                  settings.keyboard_layout, settings.keyboard_variant);
-    const auto tmp = paths_.keyboard_conf.string() + ".tmp";
-    if (!write_file(tmp, text) || ::rename(tmp.c_str(), paths_.keyboard_conf.c_str()) != 0)
-        log(std::format("cannot write {}", paths_.keyboard_conf.string()));
+                            settings.keyboard_layout, settings.keyboard_variant);
+    // A Monitor section named after an output applies to it. Xorg picks
+    // the first mode of that size, whatever its rate, and ignores a size
+    // the monitor does not offer; pixterm-xsetup sets the exact mode on
+    // the chooser's display. The Pi's outputs are HDMI-1 and HDMI-2.
+    if (settings.display_mode != "auto") {
+        const std::string_view mode = settings.display_mode;
+        const auto size = mode.substr(0, mode.find('@'));
+        for (const std::string_view output : {"HDMI-1", "HDMI-2"})
+            text += std::format(R"(Section "Monitor"
+	Identifier "{}"
+	Option "PreferredMode" "{}"
+EndSection
+)",
+                                output, size);
+    }
+    const auto tmp = paths_.xorg_conf.string() + ".tmp";
+    if (!write_file(tmp, text) || ::rename(tmp.c_str(), paths_.xorg_conf.c_str()) != 0)
+        log(std::format("cannot write {}", paths_.xorg_conf.string()));
 }
 
 bool LinuxSystem::start_xorg(const Settings& settings, const std::vector<std::string>& extra_args) {
-    write_keyboard_conf(settings);
+    write_xorg_conf(settings);
     auto ready = make_pipe();
     if (!write_xauthority() || !ready)
         return false;

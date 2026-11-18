@@ -10,6 +10,11 @@ section into the release notes.
 
 === Added
 
+* A blanking time in Configure > Display: the screen blanks, and the
+monitor sleeps, after 5 to 60 minutes idle, or never. It used to be
+fixed at 10 minutes, which stays the default.
+* XDMCP displays start at the display size chosen in Configure. They
+used to start at the monitor's preferred size.
 * Release files carry a signed record of the GitHub workflow and commit
 that built them. `gh attestation verify` checks it.
 

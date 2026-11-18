@@ -46,6 +46,16 @@ struct ModePick {
 /// How long the user has to keep a new mode before it is undone.
 inline constexpr int mode_trial_seconds = 15;
 
+/// The idle times after which the screen may blank, in minutes; 0 is
+/// never.
+inline constexpr std::array<int, 6> blank_choices{0, 5, 10, 15, 30, 60};
+
+/// "Never", "1 minute", "10 minutes".
+[[nodiscard]] std::string blank_label(int minutes);
+
+/// The choice nearest a saved idle time (the shorter one on a tie).
+[[nodiscard]] std::size_t blank_row(int minutes);
+
 // ---- Keyboard ----
 
 struct KeyboardLayout {

@@ -2,8 +2,8 @@
 # SPDX-FileCopyrightText: 2026 Chris Mecca
 # SPDX-License-Identifier: MIT
 #
-# Accepts pixtermd's Xorg arguments and runs Xvfb instead (XDMCP options
-# and -noreset pass through).
+# Accepts pixtermd's Xorg arguments and runs Xvfb instead (XDMCP options,
+# blanking and -noreset pass through).
 auth='' fd='' disp='' extra=''
 while [ $# -gt 0 ]; do
 	case $1 in
@@ -11,8 +11,8 @@ while [ $# -gt 0 ]; do
 	-auth) auth=$2; shift ;;
 	-displayfd) fd=$2; shift ;;
 	-logfile) shift ;;
-	-query|-indirect|-port|-fp) extra="$extra $1 $2"; shift ;;
-	-once|-noreset) extra="$extra $1" ;;
+	-query|-indirect|-port|-fp|-s) extra="$extra $1 $2"; shift ;;
+	-once|-noreset|-dpms) extra="$extra $1" ;;
 	-listen) extra="$extra -listen $2"; shift ;;
 	esac
 	shift

@@ -20,6 +20,7 @@ RUN apt-get update \
       libmotif-dev \
       libssl-dev \
       libx11-dev \
+      libxext-dev \
       libxrandr-dev \
       libxt-dev \
       lld \

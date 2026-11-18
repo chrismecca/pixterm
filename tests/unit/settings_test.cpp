@@ -39,6 +39,7 @@ TEST(defaults_when_only_the_version_is_given) {
     const auto s = parse_ok(R"({"schema_version":1})");
     CHECK(s.hosts.empty());
     CHECK_EQ(s.display_mode, "auto");
+    CHECK_EQ(s.blank_minutes, 10);
     CHECK_EQ(s.keyboard_layout, "us");
     CHECK_EQ(s.keyboard_variant, "");
     CHECK(!s.network.is_static);
@@ -47,11 +48,12 @@ TEST(defaults_when_only_the_version_is_given) {
 
 TEST(reads_device_settings) {
     const auto s = parse_ok(R"({"schema_version":1,"device":{
-        "display":{"mode":"1920x1080@60"},
+        "display":{"mode":"1920x1080@60","blank_minutes":0},
         "keyboard":{"layout":"de","variant":"nodeadkeys"},
         "network":{"method":"static","address":"192.0.2.250/24",
                    "gateway":"192.0.2.1","dns":["192.0.2.1","1.1.1.1"]}}})");
     CHECK_EQ(s.display_mode, "1920x1080@60");
+    CHECK_EQ(s.blank_minutes, 0);
     CHECK_EQ(s.keyboard_layout, "de");
     CHECK_EQ(s.keyboard_variant, "nodeadkeys");
     CHECK(s.network.is_static);
@@ -163,7 +165,8 @@ TEST(serial_hosts_have_a_device_instead_of_an_address) {
 
 TEST(round_trips_through_json) {
     const auto first = parse_ok(R"({"schema_version":1,
-        "device":{"keyboard":{"layout":"de","variant":"nodeadkeys"},
+        "device":{"display":{"mode":"1280x1024@75","blank_minutes":30},
+                  "keyboard":{"layout":"de","variant":"nodeadkeys"},
                   "network":{"method":"static","address":"10.0.0.2/24","dns":["10.0.0.1"]}},
         "hosts":[
         {"id":"a","name":"xdmhost","address":"i","protocol":"xdmcp","xdmcp_mode":"indirect",
@@ -191,6 +194,9 @@ TEST(rejects_bad_settings_whole) {
     CHECK(rejects(R"({"schema_version":1,"device":{"network":{"method":"static",
                      "address":"10.0.0.1/24","dns":["a","b","c"]}}})"));
     CHECK(rejects(R"({"schema_version":1,"device":{"display":{"mode":"99999x1"}}})"));
+    CHECK(rejects(R"({"schema_version":1,"device":{"display":{"blank_minutes":-1}}})"));
+    CHECK(rejects(R"({"schema_version":1,"device":{"display":{"blank_minutes":121}}})"));
+    CHECK(rejects(R"({"schema_version":1,"device":{"display":{"blank_minutes":"10"}}})"));
     CHECK(rejects(R"({"schema_version":1,"device":{"keyboard":{"layout":"us;rm"}}})"));
 }
 
