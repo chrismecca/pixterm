@@ -7,13 +7,14 @@
 #
 #   tools/ci.sh            all checks
 #   tools/ci.sh build      only the named steps: format, ascii, reuse,
-#                          build, sanitize, analysis, fuzz, sessions
+#                          scripts, build, sanitize, analysis, fuzz,
+#                          sessions
 #   FUZZ_SECONDS=300 tools/ci.sh fuzz    fuzz each parser for longer
 set -eu
 
 root=$(cd "$(dirname "$0")/.." && pwd)
 cd "$root"
-steps=${*:-format ascii reuse build sanitize analysis fuzz sessions}
+steps=${*:-format ascii reuse scripts build sanitize analysis fuzz sessions}
 fuzz_seconds=${FUZZ_SECONDS:-30}
 fail=0
 
@@ -53,6 +54,12 @@ for step in $steps; do
 		;;
 	reuse)
 		run_step "licence headers (REUSE)" 'reuse lint --lines'
+		;;
+	scripts)
+		run_step "shell scripts and workflows" \
+			'git ls-files -z |
+			 xargs -0 awk "FNR == 1 && /^#!\/bin\/.*sh/ { print FILENAME } { nextfile }" |
+			 xargs shellcheck -S warning && actionlint'
 		;;
 	build)
 		run_step "build with warnings as errors, and unit tests" \

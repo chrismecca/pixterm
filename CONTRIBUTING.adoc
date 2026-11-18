@@ -40,6 +40,8 @@ image uses:
 * `format`: clang-format finds no change to make
 * `ascii`: every file is plain ASCII
 * `reuse`: every file states its copyright and licence
+* `scripts`: shellcheck finds no warnings in the shell scripts, and
+actionlint none in the GitHub workflows
 * `build`: warnings as errors, then the unit tests
 * `sanitize`: the unit tests under ASan and UBSan
 * `analysis`: clang-tidy, warnings as errors

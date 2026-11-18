@@ -4,7 +4,7 @@
 #
 # Accepts pixtermd's Xorg arguments and runs Xvfb instead (XDMCP options
 # and -noreset pass through).
-auth= fd= disp= extra=
+auth='' fd='' disp='' extra=''
 while [ $# -gt 0 ]; do
 	case $1 in
 	:*) disp=$1 ;;

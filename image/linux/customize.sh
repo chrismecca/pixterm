@@ -40,9 +40,11 @@ remove="$remove $(installed 'linux-headers-*')"
 # Only names that are installed: purging an unknown package is an error.
 # sudo refuses to go while root has no password; release images want no
 # root login at all.
+# shellcheck disable=SC2046 # package names never hold spaces
 SUDO_FORCE_REMOVE=yes apt-get purge -y --auto-remove $(installed $remove)
 
 # Update the kernel and firmware only on purpose, after testing on hardware.
+# shellcheck disable=SC2046 # package names never hold spaces
 apt-mark hold raspi-firmware $(installed 'linux-image-*') >/dev/null
 
 say "Package sources"
@@ -84,6 +86,7 @@ dpkg-query -W -f '${binary:Package}=${Version}\n' | sort > /tmp/pixterm-build-pa
 say "Removing build tools"
 # Name the compilers' own packages too: autoremove alone leaves some
 # behind. Not libllvm: the X server's Mesa may need it.
+# shellcheck disable=SC2046 # package names never hold spaces
 apt-get purge -y --auto-remove $(installed $BUILD_PKGS 'clang-[0-9]*' 'lld-[0-9]*' \
     'libclang-cpp[0-9]*' 'libc++-[0-9]*-dev' 'libc++abi-[0-9]*-dev' cmake-data \
     cpp cpp-14 gcc-14 libgcc-14-dev make patch dpkg-dev fakeroot)

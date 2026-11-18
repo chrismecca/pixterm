@@ -23,7 +23,7 @@ dump() {
 	cp /run/pixterm/Xorg.log "$out/Xorg.log" 2>/dev/null
 	sync
 }
-for i in $(seq 10); do
+for _ in $(seq 10); do
 	sleep 30
 	dump
 done

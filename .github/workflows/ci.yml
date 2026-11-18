@@ -27,7 +27,7 @@ jobs:
           persist-credentials: false
 
       - name: Run tools/ci.sh
-        run: tools/ci.sh format ascii reuse build sanitize analysis fuzz
+        run: tools/ci.sh format ascii reuse scripts build sanitize analysis fuzz
 
   sessions:
     runs-on: ubuntu-24.04

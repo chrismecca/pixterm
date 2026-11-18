@@ -106,6 +106,7 @@ Linux.
 containers, as GitHub Actions does:
 
 * format, plain ASCII and licence headers;
+* shellcheck on the shell scripts and actionlint on the workflows;
 * a build with warnings as errors, and the unit tests;
 * the unit tests under the address and undefined behaviour sanitizers;
 * clang-tidy;
