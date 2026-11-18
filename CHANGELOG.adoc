@@ -12,6 +12,8 @@ section into the release notes.
 
 * IBM mainframes: TN3270E sessions in x3270, with the PC 3270 keys, in
 the largest 3270 font that fits the screen. Port 992 uses TLS.
+* Indirect GLX: OpenGL programs on IRIX, Solaris and other hosts draw
+on the terminal, in software.
 * Plan 9 and 9front: drawterm sessions, with 9front's drawterm (dp9ik
 logins), built from a pinned commit.
 * IBM i: TN5250E sessions in tn5250, built from a pinned upstream

@@ -84,6 +84,7 @@ TEST(xdmcp_asks_the_host_then_gives_it_the_display) {
     CHECK(has_sequence(args, {"-query", "xdmhost", "-once"}));
     CHECK(mentions(args, ",tcp/xdmhost:7100"));
     CHECK(!mentions(args, "-noreset"));
+    CHECK(mentions(args, "+iglx"));
     CHECK(r.state() == State::remote); // no pixterm-xsetup on its display
     CHECK(!r.sys.job.has_value());
 }

@@ -28,7 +28,8 @@ sessions the X server accepts connections on TCP port 6000.
 * XDMCP, Telnet, rexec, rsh and direct X send everything, passwords
 included, in clear text.
 * A host reached with trusted X11 forwarding controls the display
-during its session.
+during its session. The X server allows indirect GLX, for the OpenGL
+programs of older hosts.
 * The administrator PIN keeps passers-by out of the settings. It does
 not protect the SD card, which anyone holding the terminal can read.
 That includes the Wi-Fi passphrase, which only root can read on the

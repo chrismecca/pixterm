@@ -45,7 +45,6 @@ are kept from the first plan so that issues can refer to them.
 |===
 | # | Item | Size
 
-| 35 | Indirect GLX for IRIX and Solaris OpenGL programs | S
 | 36 | 8-bit PseudoColor displays, per host, for programs that need a colour map | M
 | 37 | More fonts: DEC terminal fonts and IBM 3270 fonts | S
 |===

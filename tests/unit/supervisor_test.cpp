@@ -74,6 +74,7 @@ TEST(boots_to_the_chooser) {
     REQUIRE_EQ(r.sys.xorg_starts.size(), 1U);
     CHECK(has_sequence(r.sys.xorg_starts[0], {"-nolisten", "tcp", "-noreset"}));
     CHECK(has_sequence(r.sys.xorg_starts[0], {"-s", "10"})); // blank after 10 minutes
+    CHECK(mentions(r.sys.xorg_starts[0], "+iglx"));          // OpenGL from old hosts
     CHECK(!mentions(r.sys.xorg_starts[0], "-dpms"));
 
     r.sup->x_ready();

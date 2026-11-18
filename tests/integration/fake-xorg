@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 #
 # Accepts pixtermd's Xorg arguments and runs Xvfb instead (XDMCP options,
-# blanking and -noreset pass through).
+# blanking, indirect GLX and -noreset pass through).
 auth='' fd='' disp='' extra=''
 while [ $# -gt 0 ]; do
 	case $1 in
@@ -12,7 +12,7 @@ while [ $# -gt 0 ]; do
 	-displayfd) fd=$2; shift ;;
 	-logfile) shift ;;
 	-query|-indirect|-port|-fp|-s) extra="$extra $1 $2"; shift ;;
-	-once|-noreset|-dpms) extra="$extra $1" ;;
+	-once|-noreset|-dpms|+iglx) extra="$extra $1" ;;
 	-listen) extra="$extra -listen $2"; shift ;;
 	esac
 	shift

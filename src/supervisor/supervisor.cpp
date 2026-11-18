@@ -99,6 +99,10 @@ void Supervisor::start_x() {
     reload_settings();
     auto args = own_display_ && session_ ? session_->xorg_args()
                                          : std::vector<std::string>{"-nolisten", "tcp", "-noreset"};
+    // Indirect GLX: OpenGL programs on IRIX, Solaris and other hosts draw
+    // through the X protocol. Xorg turns it off by default; a host here
+    // already controls the display during its session.
+    args.emplace_back("+iglx");
     // The screen saver blanks the screen after the idle time, and DPMS
     // then turns the monitor off; Xorg gives DPMS the same time.
     if (settings_.blank_minutes > 0)

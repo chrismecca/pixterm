@@ -338,7 +338,10 @@ open internet. `SECURITY.adoc` says how to report a problem.
 direct X session, the X server accepts connections on TCP port 6000,
 from that session's host alone where the host is known in advance.
 * *Remote hosts:* a host with trusted X11 forwarding controls the
-display during its session. Connect only to hosts you trust.
+display during its session. Connect only to hosts you trust. The X
+server allows indirect GLX, which Xorg turns off by default, so that
+OpenGL programs on IRIX, Solaris and other hosts can draw; it lets those
+same trusted hosts reach more of the X server's code.
 * *Passwords:* typed into a dialog that keeps them in a fixed buffer,
 passed on through a pipe, and never written to disk, logs or command
 lines. XDMCP, Telnet and rexec hosts send the password across the
