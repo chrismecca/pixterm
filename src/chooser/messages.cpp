@@ -64,6 +64,10 @@ std::string start_request(std::string_view host_id, std::string_view username) {
     return std::format("START {} {}", host_id, username.empty() ? "-" : username);
 }
 
+std::string forget_key_request(std::string_view host_id) {
+    return std::format("FORGET_KEY {}", host_id);
+}
+
 std::string wifi_scan_request(std::string_view country) {
     return std::format("WIFI_SCAN {}", country);
 }

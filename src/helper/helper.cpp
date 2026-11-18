@@ -111,6 +111,28 @@ bool is_valid_known_hosts(std::string_view text) noexcept {
     return true;
 }
 
+std::string known_hosts_without(std::string_view text, std::string_view host, int port) {
+    const auto pattern = port == 22 ? std::string(host) : std::format("[{}]:{}", host, port);
+    std::string out;
+    while (!text.empty()) {
+        const auto newline = text.find('\n');
+        const auto line =
+            text.substr(0, newline == std::string_view::npos ? text.size() : newline + 1);
+        text.remove_prefix(line.size());
+        // The first field is a comma-separated list of names.
+        const auto names = line.substr(0, line.find(' '));
+        bool match = false;
+        for (std::string_view rest = names; !rest.empty() && !match;) {
+            const auto comma = rest.find(',');
+            match = rest.substr(0, comma) == pattern;
+            rest = comma == std::string_view::npos ? std::string_view() : rest.substr(comma + 1);
+        }
+        if (!match)
+            out += line;
+    }
+    return out;
+}
+
 bool is_valid_rdp_cert_name(std::string_view name) noexcept {
     constexpr std::string_view suffix = ".pem";
     if (!name.ends_with(suffix))
@@ -232,6 +254,8 @@ Result Helper::dispatch(const Request& request) {
         return wifi_scan(args);
     if (command == "rdp-cert-save")
         return save_rdp_cert(args, request.payload);
+    if (command == "host-key-forget")
+        return forget_host_key(args);
     if (!args.empty())
         return fail(std::format("{} takes no arguments", command));
     if (command == "config-save")
@@ -540,6 +564,32 @@ Result Helper::save_rdp_cert(std::span<const std::string> args, std::string_view
                if (::mkdir(dir.c_str(), 0755) != 0 && errno != EEXIST)
                    return fail(describe(dir, last_error()));
                return replace_file(dir, args[0], pem, 0644);
+           })
+        .transform([] { return std::string(); });
+}
+
+Result Helper::forget_host_key(std::span<const std::string> args) {
+    int port = 0;
+    if (args.size() == 2) {
+        const auto& p = args[1];
+        const auto [end, ec] = std::from_chars(p.data(), p.data() + p.size(), port);
+        if (ec != std::errc{} || end != p.data() + p.size())
+            port = 0;
+    }
+    if (args.size() != 2 || !is_valid_address(args[0]) || port < 1 || port > 65535)
+        return fail("usage: host-key-forget ADDRESS PORT");
+    const auto known = read_regular_file(paths_.state_dir / "known_hosts", max_payload);
+    if (!known && !known.error().missing)
+        return fail(known.error().message);
+    const auto kept = known ? known_hosts_without(*known, args[0], port) : std::string();
+    const auto cert = paths_.state_dir / rdp_certs / std::format("{}_{}.pem", args[0], port);
+    return writing([&]() -> std::expected<void, std::string> {
+               if (known && kept != *known)
+                   if (auto ok = replace_file(paths_.state_dir, "known_hosts", kept, 0644); !ok)
+                       return ok;
+               if (::unlink(cert.c_str()) != 0 && errno != ENOENT)
+                   return fail(describe(cert, last_error()));
+               return {};
            })
         .transform([] { return std::string(); });
 }

@@ -42,6 +42,12 @@ click_yes() {
 	eval "$($XDO xdotool getwindowgeometry --shell "$w")"
 	$XDO xdotool mousemove $((X + 40)) $((Y + HEIGHT - 33)) click 1
 }
+# Click the left (OK) button of a dialog found by its class.
+click_ok() {
+	w=$($T/search --classname "$1" | head -1)
+	eval "$($XDO xdotool getwindowgeometry --shell "$w")"
+	$XDO xdotool mousemove $((X + 40)) $((Y + HEIGHT - 33)) click 1
+}
 password() { wait_win "Login to" && sleep 0.5 && $XDO xdotool type --delay 20 "$1" && $XDO xdotool key Return; }
 shot() { $T/shot "$1"; }
 # pick N: open the Nth host after the first. Keys pressed quickly while the
@@ -174,6 +180,17 @@ step "administrator PIN guards Configure"
 mark
 $T/click-rel "pixterm - Network Terminal" 82 83
 wait_win "pixterm Configuration"
+sleep 1; shot s10a-hosts
+# localhost-xterm, selected, has had its host key saved since the first step.
+grep -q '^127.0.0.1 ' /tmp/state/known_hosts && ok "host key saved" || bad "host key saved"
+cp -p /tmp/state/known_hosts /tmp/known_hosts.kept   # every stand-in host is 127.0.0.1
+$T/click-rel "pixterm Configuration" 85 242     # Forget Host Key...
+wait_class confirmDialog_popup
+sleep 0.5; click_ok confirmDialog_popup
+wait_class infoDialog_popup
+grep -q '^127.0.0.1 ' /tmp/state/known_hosts && bad "host key forgotten" || ok "host key forgotten"
+cp -p /tmp/known_hosts.kept /tmp/state/known_hosts
+$XDO xdotool key Return; sleep 0.5
 $T/click-rel "pixterm Configuration" 7 393     # Wi-Fi
 sleep 1; shot s10b-wifi
 $T/click-rel "pixterm Configuration" 7 355     # System

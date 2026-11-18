@@ -18,6 +18,7 @@
 ///     wifi off           forgets the passphrase
 ///     wifi-scan COUNTRY  reply: the networks found, as scan_reply
 ///     rdp-cert-save HOST_PORT.pem   payload: an RDP host's certificate
+///     host-key-forget ADDRESS PORT  forgets its SSH key and RDP certificate
 ///
 /// Every argument and payload is untrusted and checked here. No shell
 /// is ever involved; the only programs run are fixed paths with fixed
@@ -100,6 +101,11 @@ parse_network_args(std::span<const std::string> args);
 /// One PEM certificate, and nothing else, of at most 16 KiB.
 [[nodiscard]] bool is_valid_pem_certificate(std::string_view text) noexcept;
 
+/// known_hosts text without the lines for one host ("host" on port 22,
+/// "[host]:port" on others). ssh writes them unhashed for pixterm.
+[[nodiscard]] std::string known_hosts_without(std::string_view text, std::string_view host,
+                                              int port);
+
 /// known_hosts text: lines of printable ASCII, none too long.
 [[nodiscard]] bool is_valid_known_hosts(std::string_view text) noexcept;
 
@@ -137,6 +143,8 @@ private:
     wifi_scan(std::span<const std::string> args);
     [[nodiscard]] std::expected<std::string, std::string>
     save_rdp_cert(std::span<const std::string> args, std::string_view pem);
+    [[nodiscard]] std::expected<std::string, std::string>
+    forget_host_key(std::span<const std::string> args);
     [[nodiscard]] std::expected<void, std::string>
     write_wifi_conf(const Wifi& wifi, std::string_view passphrase) const;
     /// The passphrase stored for ssid, if any.

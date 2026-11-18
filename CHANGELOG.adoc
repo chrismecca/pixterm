@@ -12,6 +12,9 @@ section into the release notes.
 
 * RDP host certificates are kept on the settings partition, like SSH
 host keys, so a changed certificate is refused after a restart too.
+* Configure > Hosts > Forget Host Key, for a host whose SSH key or RDP
+certificate changed for a known reason. A factory reset was the only
+way before.
 * Wi-Fi: Configure > Wi-Fi scans for networks and joins a WPA2- or
 WPA3-Personal one, hidden ones too, with DHCP. The passphrase is kept
 for root alone and left out of exports.

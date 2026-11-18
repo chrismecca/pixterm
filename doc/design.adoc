@@ -220,6 +220,9 @@ start other programs.
 in. Find Hosts lists XDMCP hosts that answer a broadcast query.
 * Configure has seven panels: Hosts, Display, Network, Wi-Fi, Keyboard,
 System and Diagnostics.
+* Configure > Hosts > Forget Host Key forgets the SSH host key and RDP
+certificate kept for a host, for one that was reinstalled or renewed
+its certificate.
 * A new display mode stays only if the user confirms it within 15
 seconds. Xorg starts every display at the chosen size, XDMCP displays
 included, from the Xorg file pixtermd writes before each start: a

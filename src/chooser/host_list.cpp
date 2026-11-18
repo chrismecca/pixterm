@@ -48,6 +48,11 @@ ListButtons list_buttons(std::size_t count, std::optional<std::size_t> selected)
     return {.edit = true, .remove = true, .up = *selected > 0, .down = *selected + 1 < count};
 }
 
+bool has_saved_key(const Host& host) noexcept {
+    return host.protocol == Protocol::ssh_x11 || host.protocol == Protocol::ssh_terminal
+           || host.protocol == Protocol::rdp;
+}
+
 bool has_xdmcp_host(const Settings& settings, std::string_view address) {
     return std::ranges::any_of(settings.hosts, [&](const Host& h) {
         return h.protocol == Protocol::xdmcp && h.address == address;

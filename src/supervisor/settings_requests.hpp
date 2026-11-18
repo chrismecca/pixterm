@@ -34,6 +34,8 @@ public:
     /// Scans for Wi-Fi networks; the chooser hears "APPLIED" and what
     /// was found, as scan_reply.
     void scan(std::string_view country);
+    /// Forgets the SSH host key and RDP certificate kept for a saved host.
+    void forget_key(std::string_view host_id);
 
 private:
     Supervisor& sup_;

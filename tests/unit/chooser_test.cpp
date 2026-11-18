@@ -327,6 +327,19 @@ TEST(a_wifi_scan_names_the_country) {
     CHECK_EQ(wifi_scan_request("GB"), "WIFI_SCAN GB");
 }
 
+TEST(ssh_and_rdp_hosts_have_a_key_to_forget) {
+    Host h;
+    for (const auto p : {Protocol::ssh_x11, Protocol::ssh_terminal, Protocol::rdp}) {
+        h.protocol = p;
+        CHECK(has_saved_key(h));
+    }
+    for (const auto p : {Protocol::xdmcp, Protocol::telnet, Protocol::vnc, Protocol::serial}) {
+        h.protocol = p;
+        CHECK(!has_saved_key(h));
+    }
+    CHECK_EQ(forget_key_request("h1"), "FORGET_KEY h1");
+}
+
 TEST(keyboard_layouts_are_listed_by_code) {
     REQUIRE(!keyboard_layouts.empty());
     CHECK_EQ(keyboard_layouts[0].code, "us");

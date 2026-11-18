@@ -48,6 +48,10 @@ struct ListButtons {
 
 [[nodiscard]] ListButtons list_buttons(std::size_t count, std::optional<std::size_t> selected);
 
+/// Whether the terminal keeps a key for the host (an SSH host key or an
+/// RDP certificate) that can be forgotten.
+[[nodiscard]] bool has_saved_key(const Host& host) noexcept;
+
 /// Whether an XDMCP host with this address is already in the list.
 [[nodiscard]] bool has_xdmcp_host(const Settings& settings, std::string_view address);
 

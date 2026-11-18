@@ -546,6 +546,21 @@ TEST(a_wifi_scan_answers_with_what_the_helper_found) {
     CHECK(r.sys.was_sent("APPLY_FAILED"));
 }
 
+TEST(forgetting_a_host_key_names_the_host_to_the_helper) {
+    Rig r;
+    r.boot();
+    r.sup->chooser_line("FORGET_KEY " + ssh_host().id);
+    REQUIRE(r.sys.helper_request.has_value());
+    CHECK(r.sys.helper_request->args
+          == (std::vector<std::string>{"host-key-forget", ssh_host().address,
+                                       std::to_string(ssh_host().port)}));
+    r.sys.answer_helper(*r.sup, {.ok = true, .message = {}, .payload = {}});
+    CHECK(r.sys.was_sent("APPLIED"));
+    r.sup->chooser_line("FORGET_KEY nobody");
+    CHECK(!r.sys.helper_request.has_value());
+    CHECK(r.sys.was_sent("APPLY_FAILED"));
+}
+
 TEST(new_network_settings_are_applied_before_saving) {
     Rig r;
     r.boot();

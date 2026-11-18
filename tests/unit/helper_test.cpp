@@ -471,3 +471,32 @@ TEST(reset_forgets_rdp_certificates) {
     REQUIRE(r.ask({"config-reset"}).ok);
     CHECK(!fs::exists(r.state("rdp-certs/nt_3389.pem")));
 }
+
+// ---- forgetting a host's key ----
+
+TEST(known_hosts_lose_the_lines_for_one_host) {
+    const std::string text = "nt ssh-ed25519 AAAA\n"
+                             "[nt]:2222 ssh-ed25519 BBBB\n"
+                             "other,nt ssh-rsa CCCC\n"
+                             "ntx ssh-ed25519 DDDD\n"
+                             "[ntx]:22 ssh-ed25519 EEEE\n";
+    CHECK_EQ(known_hosts_without(text, "nt", 22),
+             "[nt]:2222 ssh-ed25519 BBBB\nntx ssh-ed25519 DDDD\n[ntx]:22 ssh-ed25519 EEEE\n");
+    CHECK_EQ(known_hosts_without(text, "nt", 2222),
+             "nt ssh-ed25519 AAAA\nother,nt ssh-rsa CCCC\nntx ssh-ed25519 DDDD\n"
+             "[ntx]:22 ssh-ed25519 EEEE\n");
+}
+
+TEST(forgetting_a_host_key_removes_its_ssh_key_and_rdp_certificate) {
+    Rig r;
+    REQUIRE(r.ask({"known-hosts-save"}, "nt ssh-ed25519 AAAA\nvms ssh-ed25519 BBBB\n").ok);
+    REQUIRE(r.ask({"rdp-cert-save", "nt_3389.pem"}, std::string(pem)).ok);
+    REQUIRE(r.ask({"host-key-forget", "nt", "22"}).ok);
+    CHECK_EQ(read(r.state("known_hosts")), "vms ssh-ed25519 BBBB\n");
+    REQUIRE(r.ask({"host-key-forget", "nt", "3389"}).ok);
+    CHECK(!fs::exists(r.state("rdp-certs/nt_3389.pem")));
+    REQUIRE(r.ask({"host-key-forget", "unknown", "22"}).ok); // nothing to forget
+    CHECK(!r.ask({"host-key-forget", "-x", "22"}).ok);
+    CHECK(!r.ask({"host-key-forget", "nt", "0"}).ok);
+    CHECK(!r.ask({"host-key-forget", "nt"}).ok);
+}

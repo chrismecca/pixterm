@@ -149,16 +149,17 @@ void WifiPanel::scan() {
     }
     set_text(country_, checked->country);
     set_label(status_, "Scanning for networks...");
-    configure_.scan_wifi(checked->country, [this](const std::string& text) {
-        found_ = parse_scan_reply(text);
-        std::vector<std::string> rows;
-        rows.reserve(found_.size());
-        for (const auto& n : found_)
-            rows.push_back(chooser::wifi_row(n));
-        set_items(list_, rows);
-        if (found_.empty())
-            show_info(configure_.dialog(), "No WPA2 or WPA3 networks were found.");
-    });
+    configure_.request_line(
+        chooser::wifi_scan_request(checked->country), [this](const std::string& text) {
+            found_ = parse_scan_reply(text);
+            std::vector<std::string> rows;
+            rows.reserve(found_.size());
+            for (const auto& n : found_)
+                rows.push_back(chooser::wifi_row(n));
+            set_items(list_, rows);
+            if (found_.empty())
+                show_info(configure_.dialog(), "No WPA2 or WPA3 networks were found.");
+        });
 }
 
 void WifiPanel::pick() {

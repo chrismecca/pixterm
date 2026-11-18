@@ -130,11 +130,11 @@ void Configure::commit(const Settings& next, Done done, std::string_view wifi_pa
     }
 }
 
-void Configure::scan_wifi(std::string_view country, Done done) {
+void Configure::request_line(const std::string& line, Done done) {
     if (pending_)
         return;
     begin(std::move(done));
-    if (!app_.send(chooser::wifi_scan_request(country))) {
+    if (!app_.send(line)) {
         pending_ = false;
         done_ = nullptr;
         XtSetSensitive(dialog_, True);

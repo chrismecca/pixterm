@@ -198,6 +198,30 @@ void SettingsRequests::apply_wifi() {
         failed("Wi-Fi could not be set up.");
 }
 
+void SettingsRequests::forget_key(std::string_view host_id) {
+    if (busy_ || sup_.system().helper_busy()) {
+        sup_.system().send_to_chooser("APPLY_FAILED Another change is still in progress.");
+        return;
+    }
+    const auto* host = sup_.settings().find_host(host_id);
+    if (host == nullptr || host->address.empty()) {
+        failed("That host is not in the list.");
+        return;
+    }
+    busy_ = true;
+    sup_.log(std::format("forgetting the host key of {}", host->name));
+    const auto done = [this](const helper::Reply& reply) {
+        if (reply.ok)
+            applied("");
+        else
+            failed("The host key could not be forgotten.\n\n" + reply.message);
+    };
+    if (!sup_.system().call_helper(
+            {.args = {"host-key-forget", host->address, std::to_string(host->port)}, .payload = {}},
+            done))
+        failed("The host key could not be forgotten.");
+}
+
 void SettingsRequests::scan(std::string_view country) {
     if (busy_ || sup_.system().helper_busy()) {
         sup_.system().send_to_chooser("APPLY_FAILED Another change is still in progress.");

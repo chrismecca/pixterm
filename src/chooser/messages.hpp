@@ -54,6 +54,10 @@ enum class Request {
 /// saved one, or none.
 [[nodiscard]] std::string start_request(std::string_view host_id, std::string_view username);
 
+/// Asks pixtermd to forget the SSH host key or RDP certificate kept for
+/// a saved host.
+[[nodiscard]] std::string forget_key_request(std::string_view host_id);
+
 /// Asks pixtermd to scan for Wi-Fi networks, for a country.
 [[nodiscard]] std::string wifi_scan_request(std::string_view country);
 

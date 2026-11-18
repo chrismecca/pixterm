@@ -68,6 +68,7 @@ private:
     Widget remove_ = nullptr;
     Widget up_ = nullptr;
     Widget down_ = nullptr;
+    Widget forget_ = nullptr;
     std::optional<std::size_t> select_after_;
 
     // The editor.
@@ -100,6 +101,7 @@ private:
     void save_editor();
     void commit(const chooser::Edit& edit, Configure::Done done = {});
     void remove_selected();
+    void forget_key();
     void move_selected(int by);
     void show_key(const std::string& key);
 };
@@ -119,6 +121,7 @@ Widget HostsPanel::build(Widget parent) {
     remove_ = make_button(buttons, "remove", "Remove", [this] { remove_selected(); });
     up_ = make_button(buttons, "up", "Move Up", [this] { move_selected(-1); });
     down_ = make_button(buttons, "down", "Move Down", [this] { move_selected(1); });
+    forget_ = make_button(buttons, "forget", "Forget Host Key...", [this] { forget_key(); });
     make_button(buttons, "key", "Terminal Key...", [this] {
         configure_.request(chooser::Request::keygen,
                            [this](const std::string& key) { show_key(key); });
@@ -156,6 +159,31 @@ void HostsPanel::refresh() {
     sensitive(remove_, b.remove);
     sensitive(up_, b.up);
     sensitive(down_, b.down);
+    sensitive(forget_, row && chooser::has_saved_key(hosts.at(*row)));
+}
+
+// A host reinstalled, or a Windows host whose certificate was renewed,
+// shows a key the terminal refuses; forgetting it lets the next login
+// trust the new one.
+void HostsPanel::forget_key() {
+    const auto row = selected_row(list_);
+    const auto& hosts = app_.settings().hosts;
+    if (!row || *row >= hosts.size() || !chooser::has_saved_key(hosts.at(*row)))
+        return;
+    const auto& host = hosts.at(*row);
+    confirm(configure_.dialog(),
+            std::format("Forget the host key of {}?\n\n"
+                        "The next login trusts whatever key the host shows. Do this\n"
+                        "only when you know why its key changed.",
+                        host.name),
+            "Forget", [this, id = host.id, name = host.name] {
+                configure_.request_line(
+                    chooser::forget_key_request(id), [this, name](const std::string& /*text*/) {
+                        show_info(configure_.dialog(), std::format("The host key of {} was "
+                                                                   "forgotten.",
+                                                                   name));
+                    });
+            });
 }
 
 void HostsPanel::commit(const chooser::Edit& edit, Configure::Done done) {

@@ -174,8 +174,9 @@ public:
 
     /// Saves new settings. done runs if they were saved.
     void commit(const Settings& next, Done done = {}, std::string_view wifi_passphrase = {});
-    /// Scans for Wi-Fi networks; done gets them as scan_reply text.
-    void scan_wifi(std::string_view country, Done done);
+    /// Sends a request line (a scan, FORGET_KEY ...); done gets
+    /// pixtermd's answer.
+    void request_line(const std::string& line, Done done);
     /// Sends a request that changes no settings (KEYGEN, RESET, ...).
     void request(chooser::Request request, Done done = {});
     /// Adds a host found on the network.
