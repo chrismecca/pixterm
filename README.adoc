@@ -3,9 +3,9 @@
 
 image::doc/img/pixterm.svg[pixterm,540,34]
 
-= PIXterm
+= PiXterm
 
-An X terminal like the NCD terminals of the 1990s.
+A Raspberry Pi-based X terminal inspired by the NCD terminals of the 1990s.
 
 pixterm turns a Raspberry Pi into an X terminal. Switch it on, pick a
 host from a Motif list, log in and use the host's X11 desktop. Log out
