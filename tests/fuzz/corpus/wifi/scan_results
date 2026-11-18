@@ -1,0 +1,3 @@
+bssid / frequency / signal level / flags / ssid
+aa:bb:cc:dd:ee:01	2437	-48	[WPA2-PSK+SAE-CCMP][ESS]	home
+aa:bb:cc:dd:ee:06	2412	-65	[WPA2-PSK-CCMP][ESS]	caf\xc3\xa9
