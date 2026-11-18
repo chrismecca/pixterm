@@ -10,6 +10,7 @@
 #include <charconv>
 #include <format>
 #include <memory>
+#include <ranges>
 
 namespace pixterm::supervisor {
 
@@ -162,6 +163,21 @@ std::pair<std::string, std::string> TerminalWindow::layout(int width, int height
             std::string(font->name)};
 }
 
+std::pair<std::string, std::string> TerminalWindow::layout(int width, int height, int columns,
+                                                           int rows) {
+    const auto* font = &fonts.front();
+    for (const auto& f : std::views::reverse(fonts)) {
+        if ((columns * f.width) + (2 * xterm_border) <= width
+            && (rows * f.height) + (2 * xterm_border) <= height) {
+            font = &f;
+            break;
+        }
+    }
+    const int x = std::max(0, (width - (columns * font->width) - (2 * xterm_border)) / 2);
+    const int y = std::max(0, (height - (rows * font->height) - (2 * xterm_border)) / 2);
+    return {std::format("{}x{}+{}+{}", columns, rows, x, y), std::string(font->name)};
+}
+
 void TerminalWindow::open(Supervisor& sup, std::vector<std::string> command,
                           std::vector<std::string> env, std::string title) {
     command_ = std::move(command);
@@ -175,13 +191,15 @@ void TerminalWindow::open(Supervisor& sup, std::vector<std::string> command,
         if (sup.state() != State::handoff && sup.state() != State::x_setup)
             return;
         const auto [w, h] = screen_size(status, output);
-        auto [geometry, font] = layout(w, h);
+        auto [geometry, font] = size_ ? layout(w, h, size_->first, size_->second) : layout(w, h);
         Program xterm{.name = "xterm",
                       .argv = {std::string(programs::xterm), "-geometry", geometry, "-fn", font,
                                "-bw", "0", "-b", "2", "+sb", "-title", title_, "-e"},
                       .env = env_,
                       .input = {},
                       .hold_input = false};
+        if (!resource_name_.empty())
+            xterm.argv.insert(xterm.argv.begin() + 1, {"-name", resource_name_});
         xterm.argv.insert(xterm.argv.end(), command_.begin(), command_.end());
         if (!sup.system().start(Slot::client, std::move(xterm))) {
             sup.report_error("Internal error: cannot start the terminal.");

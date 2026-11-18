@@ -1,11 +1,15 @@
 // SPDX-FileCopyrightText: 2026 Chris Mecca
 // SPDX-License-Identifier: MIT
 
-// IBM mainframes: 3270 screens over TN3270E, in x3270. The window, with
+// IBM hosts. Mainframes: 3270 screens over TN3270E, in x3270. The window, with
 // no menu bar or keypad, sits in the middle of a white screen in the
 // largest 3270 font that fits. x3270 ends when the host disconnects
 // (-once); Alt+Q leaves at any time. Port 992 means TLS. The key map,
 // "pixterm" in the X resources, adds PC keys to x3270's own.
+//
+// IBM i: 5250 screens over TN5250E, in tn5250 in a terminal. Its key
+// map is the terminal's resources under the name "tn5250". tn5250 ends
+// when the host disconnects; port 992 means TLS.
 
 #include "parts.hpp"
 #include "sessions.hpp"
@@ -104,6 +108,51 @@ public:
     }
 };
 
+class Tn5250Session final : public Session {
+public:
+    using Session::Session;
+
+    bool begin(std::string_view /*username*/) override {
+        // IBM i's sign-on screen asks for the user name.
+        if (!probe_host(sup(), [this](bool reachable) {
+                if (reachable)
+                    sup().start_handoff();
+            })) {
+            sup().report_error("Something else is still in progress; try again.");
+            return false;
+        }
+        sup().set_state(State::probe);
+        return true;
+    }
+
+    void cancel() override {
+        sup().log(std::format("connection to {} cancelled", sup().host().name));
+        sup().system().cancel_job();
+        sup().set_state(State::local);
+        sup().chooser_idle();
+    }
+
+    void start() override {
+        const auto& h = sup().host();
+        terminal_.set_resource_name("tn5250");
+        // A 5250 screen: 24 rows of 80 columns, and tn5250's status line.
+        terminal_.set_size(80, 25);
+        terminal_.open(
+            sup(),
+            {std::string(programs::tn5250),
+             std::format("{}{}:{}", h.port == tls_port ? "ssl:" : "", h.address, h.port)},
+            sup().child_env(), "");
+    }
+
+    void child_exited(Slot slot, ExitStatus status, std::string_view output) override {
+        if (slot == Slot::client)
+            terminal_exited(sup(), status, output);
+    }
+
+private:
+    TerminalWindow terminal_;
+};
+
 } // namespace
 
 std::string x3270_font(int width, int height) {
@@ -112,6 +161,10 @@ std::string x3270_font(int width, int height) {
 
 std::unique_ptr<Session> make_tn3270_session(Supervisor& sup) {
     return std::make_unique<Tn3270Session>(sup);
+}
+
+std::unique_ptr<Session> make_tn5250_session(Supervisor& sup) {
+    return std::make_unique<Tn5250Session>(sup);
 }
 
 } // namespace pixterm::supervisor

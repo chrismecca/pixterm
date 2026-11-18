@@ -17,6 +17,13 @@ cmake --preset debug -B /tmp/b -DCMAKE_INSTALL_PREFIX=/usr -DPIXTERM_SYSTEM_FILE
 cmake --build /tmp/b >/dev/null
 cmake --install /tmp/b >/dev/null
 setcap cap_net_bind_service=ep /usr/libexec/pixterm/pixterm-rexec
+# The programs the image builds from upstream source, built the same way.
+if [ ! -x /usr/local/bin/tn5250 ] || [ ! -x /usr/local/bin/drawterm ]; then
+	/src/image/linux/third-party.sh fetch /src/out/sources
+	for program in tn5250 drawterm; do
+		/src/image/linux/third-party.sh build /src/out/sources "$program" /usr/local
+	done
+fi
 cp /tmp/b/tests/tools/helper-call /tmp/helper-call
 rm -f /home/alice/.ssh/authorized_keys
 cat > /tmp/config.json <<'JSON'
@@ -48,6 +55,8 @@ cat > /tmp/config.json <<'JSON'
       "username": "alice" },
     { "id": "h16", "name": "mainframe", "address": "127.0.0.1", "protocol": "tn3270",
       "port": 2325 },
+    { "id": "h17", "name": "as400", "address": "127.0.0.1", "protocol": "tn5250",
+      "port": 2326 },
     { "id": "h14", "name": "serial-console", "protocol": "serial", "device": "/dev/ttyUSB9",
       "speed": 9600 },
     { "id": "h15", "name": "missing-serial", "protocol": "serial", "device": "/dev/ttyUSB8" }
@@ -72,6 +81,7 @@ socat pty,raw,echo=0,link=/dev/ttyUSB9,mode=666 \
     SYSTEM:'printf "\\r\\nok "; cat' >/tmp/serial.log 2>&1 &
 # A mainframe that answers and, eight seconds later, hangs up.
 socat TCP-LISTEN:2325,bind=127.0.0.1,reuseaddr,fork SYSTEM:'sleep 8' >/tmp/tn3270.log 2>&1 &
+socat TCP-LISTEN:2326,bind=127.0.0.1,reuseaddr,fork SYSTEM:'sleep 8' >/tmp/tn5250.log 2>&1 &
 # xdm as an XDMCP host (no local server; queries from anyone).
 sed -i 's/^DisplayManager.requestPort/!DisplayManager.requestPort/' /etc/X11/xdm/xdm-config
 sed -i 's/^:0 local/#:0 local/' /etc/X11/xdm/Xservers

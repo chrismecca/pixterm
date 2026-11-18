@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Chris Mecca
+# SPDX-License-Identifier: MIT
+#
+# Programs pixterm builds from upstream source, because Debian no longer
+# packages them, or only an old version. third-party.sh fetches and
+# checks each, and builds it. A tarball is pinned by its SHA-256, a git
+# repository by its commit.
+#
+# kind     name      source                                                                    pin
+tarball    tn5250    https://github.com/tn5250/tn5250/releases/download/v0.18.0/tn5250-0.18.0.tar.gz  b936d39d5210fe447245cf08778655a48876ae2dfcb67373910163602128a919
+git        drawterm  https://github.com/9front/drawterm.git                                    cf6a88fe6a256acc097245810f8d3b8a9f9ab977

@@ -9,8 +9,10 @@
 #include "../supervisor.hpp"
 
 #include <functional>
+#include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace pixterm::supervisor {
@@ -28,6 +30,7 @@ inline constexpr std::string_view picocom = "/usr/bin/picocom";
 inline constexpr std::string_view vncviewer = "/usr/bin/xtigervncviewer";
 inline constexpr std::string_view xfreerdp = "/usr/bin/xfreerdp3";
 inline constexpr std::string_view x3270 = "/usr/bin/x3270";
+inline constexpr std::string_view tn5250 = "/usr/local/bin/tn5250";
 } // namespace programs
 
 /// The largest 3270 font ("3270gt8" to "3270gt32") that shows a whole
@@ -89,7 +92,21 @@ public:
     /// and a font name.
     [[nodiscard]] static std::pair<std::string, std::string> layout(int width, int height);
 
+    /// The geometry and font for a terminal of a fixed size (columns by
+    /// rows): the largest font that fits, centred.
+    [[nodiscard]] static std::pair<std::string, std::string> layout(int width, int height,
+                                                                    int columns, int rows);
+
+    /// The xterm's resource name, for resources (such as a key map) of
+    /// its own. Before open.
+    void set_resource_name(std::string name) { resource_name_ = std::move(name); }
+    /// A fixed size, columns by rows, instead of the whole screen.
+    /// Before open.
+    void set_size(int columns, int rows) { size_ = {columns, rows}; }
+
 private:
+    std::string resource_name_;
+    std::optional<std::pair<int, int>> size_;
     std::vector<std::string> command_;
     std::vector<std::string> env_;
     std::string title_;

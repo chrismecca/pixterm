@@ -32,6 +32,7 @@ constexpr std::array<ProtocolInfo, all_protocols.size()> protocols{{
     {.protocol = Protocol::rdp, .name = "rdp", .port = 3389},
     {.protocol = Protocol::serial, .name = "serial", .port = 0},
     {.protocol = Protocol::tn3270, .name = "tn3270", .port = 23},
+    {.protocol = Protocol::tn5250, .name = "tn5250", .port = 23},
 }};
 
 const ProtocolInfo& info(Protocol p) noexcept {

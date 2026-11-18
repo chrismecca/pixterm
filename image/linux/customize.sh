@@ -17,8 +17,10 @@ RUNTIME_PKGS="xserver-xorg-core xserver-xorg-input-libinput xauth mwm libxm4
 	libxext6 libxrandr2 libc++1 libc++abi1 x11-xkb-utils openssh-client
 	xfonts-base xfonts-75dpi xfonts-100dpi
 	xterm inetutils-telnet tigervnc-viewer freerdp3-x11 picocom
-	wpasupplicant wireless-regdb firmware-brcm80211 x3270 xfonts-x3270-misc"
-BUILD_PKGS="clang lld cmake ninja-build pkg-config libc++-dev libc++abi-dev libc6-dev
+	wpasupplicant wireless-regdb firmware-brcm80211 x3270 xfonts-x3270-misc
+	libform6"
+BUILD_PKGS="clang lld cmake ninja-build make pkg-config libc++-dev libc++abi-dev libc6-dev
+	libncurses-dev
 	libmotif-dev libxt-dev libx11-dev libxext-dev libxrandr-dev libssl-dev"
 DEV_PKGS="sudo x11-utils x11-xserver-utils strace"
 
@@ -77,6 +79,11 @@ cmake --preset release -B /tmp/pixterm-build -DCMAKE_INSTALL_PREFIX=/usr \
 cmake --build /tmp/pixterm-build
 cmake --install /tmp/pixterm-build --strip >/dev/null
 cd /
+# Programs Debian no longer packages, from checked upstream source
+# (sources.txt): tn5250 for IBM i, and 9front's drawterm.
+for program in tn5250 drawterm; do
+	"$SRC/image/linux/third-party.sh" build "$SRC/image/linux/cache/sources" "$program" /usr/local
+done
 # rsh connects from a port below 1024; only pixterm-rexec may bind one.
 setcap cap_net_bind_service=ep /usr/libexec/pixterm/pixterm-rexec
 

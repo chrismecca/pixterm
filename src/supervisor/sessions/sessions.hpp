@@ -29,5 +29,6 @@ namespace pixterm::supervisor {
 /// Serial consoles.
 [[nodiscard]] std::unique_ptr<Session> make_serial_session(Supervisor& sup);
 [[nodiscard]] std::unique_ptr<Session> make_tn3270_session(Supervisor& sup);
+[[nodiscard]] std::unique_ptr<Session> make_tn5250_session(Supervisor& sup);
 
 } // namespace pixterm::supervisor

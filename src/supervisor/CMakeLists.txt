@@ -10,7 +10,7 @@ add_library(pixterm_supervisor STATIC
     supervisor.cpp
     sessions/desktops.cpp
     sessions/direct_x.cpp
-    sessions/mainframe.cpp
+    sessions/ibm.cpp
     sessions/make_session.cpp
     sessions/parts.cpp
     sessions/remote_exec.cpp

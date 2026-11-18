@@ -199,8 +199,11 @@ windows on the terminal the same way.
 * *VNC and RDP:* TigerVNC's viewer or FreeRDP shows a whole remote
 desktop. The chooser first checks that the host accepts connections,
 and for RDP that the password is right.
-* *TN3270:* x3270 shows an IBM mainframe's 3270 screens, centred in the
-largest 3270 font that fits, with the keys of PC 3270 emulators.
+* *TN3270 and TN5250:* x3270 shows an IBM mainframe's 3270 screens, and
+tn5250, in a terminal, an IBM i's 5250 screens, each centred in the
+largest font that fits, with the keys of PC emulators. tn5250, which
+Debian no longer packages, is built from a pinned upstream release
+(`image/linux/sources.txt`), and each release carries its source.
 
 See the guides in `doc/hosts/` for each kind of host.
 

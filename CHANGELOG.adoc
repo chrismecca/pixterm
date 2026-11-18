@@ -12,6 +12,9 @@ section into the release notes.
 
 * IBM mainframes: TN3270E sessions in x3270, with the PC 3270 keys, in
 the largest 3270 font that fits the screen. Port 992 uses TLS.
+* IBM i: TN5250E sessions in tn5250, built from a pinned upstream
+release, with the PC 5250 keys. Port 992 uses TLS. Releases carry the
+source of what the image builds from upstream.
 * RDP host certificates are kept on the settings partition, like SSH
 host keys, so a changed certificate is refused after a restart too.
 * Configure > Hosts > Forget Host Key, for a host whose SSH key or RDP

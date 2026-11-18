@@ -13,6 +13,9 @@
 #   pixterm-VERSION-ARCH.img.xz         the image, compressed
 #   pixterm-VERSION-ARCH.img.sha256     checksum of the uncompressed image
 #   pixterm-VERSION-ARCH.img.packages   every package in the image
+#   pixterm-VERSION-third-party-src.tar.gz
+#                                       the source of what the image
+#                                       builds from upstream (sources.txt)
 #   SHA256SUMS                          checksums of the files above
 #   RELEASE-NOTES.md                    the change log's section, and how
 #                                       to check and install the image
@@ -68,12 +71,18 @@ if [ $found = 0 ]; then
 	exit 1
 fi
 
+# The source of the programs the image builds from upstream, as their
+# licences ask, fetched and checked as the image build does.
+"$here/third-party.sh" fetch "$src/sources"
+tar -czf "$dist/pixterm-$VERSION-third-party-src.tar.gz" --exclude=.git \
+    -C "$here" sources.txt -C "$src/sources" .
+
 cd "$dist"
 sha256() {
 	if command -v sha256sum >/dev/null; then sha256sum -- "$@"; else shasum -a 256 -- "$@"; fi
 }
 # shellcheck disable=SC2035 # sha256 passes "--"; the names start with "pixterm"
-sha256 *.img.xz *.img.packages > SHA256SUMS
+sha256 *.img.xz *.img.packages *-third-party-src.tar.gz > SHA256SUMS
 
 # Raspberry Pi Imager reads this list ("rpi-imager --repo URL"). Imager's
 # own settings screen stays off: pixterm has no cloud-init.
@@ -125,6 +134,8 @@ fi
 
 - \`pixterm-$VERSION-arm64.img.xz\`: the SD card image for the Raspberry Pi 3, 4 and 5.
 - \`.img.packages\`: every package in the image, with its version.
+- \`third-party-src.tar.gz\`: the source of tn5250 and drawterm, which the
+  image builds from upstream.
 - \`SHA256SUMS\`: checksums. Check the download with \`sha256sum -c SHA256SUMS\`.
 $attest_note
 ### Installing

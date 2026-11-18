@@ -83,5 +83,6 @@ jobs:
         run: |
           gh release create "$TAG" --draft --verify-tag \
             --title "pixterm ${TAG#v}" --notes-file "$dir/RELEASE-NOTES.md" \
-            "$dir"/*.img.xz "$dir"/*.img.sha256 "$dir"/*.img.packages "$dir/SHA256SUMS" \
+            "$dir"/*.img.xz "$dir"/*.img.sha256 "$dir"/*.img.packages \
+            "$dir"/*-third-party-src.tar.gz "$dir/SHA256SUMS" \
             "$dir/pixterm-imager.json" "$dir/pixterm-icon.png"

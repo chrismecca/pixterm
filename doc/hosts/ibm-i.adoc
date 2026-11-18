@@ -1,0 +1,50 @@
+// SPDX-FileCopyrightText: 2026 Chris Mecca
+// SPDX-License-Identifier: MIT
+
+= IBM i (TN5250E)
+
+pixterm reaches IBM i, the AS/400 and iSeries before it, as a 5250
+display of 24 rows by 80 columns. It runs tn5250 in a terminal; tn5250
+speaks TN5250E. Debian no longer packages tn5250, so the image builds a
+pinned release of it from upstream source, and each pixterm release
+carries that source.
+
+== Host entry
+
+[cols="1,1",options="header"]
+|===
+| Field | Value
+
+| Protocol | TN5250 (IBM i)
+| Port | 23; 992 for TN5250 over TLS
+|===
+
+There is no user name: the IBM i sign-on screen asks for it. On port 992
+the connection uses TLS. On other ports everything, passwords included,
+crosses the network in clear text.
+
+== The screen
+
+The 5250 screen sits in the middle of a white screen, in the largest
+font that fits, with tn5250's status line under it. The session ends
+when the host disconnects, for example after SIGNOFF.
+
+== Keys
+
+[cols="1,1",options="header"]
+|===
+| 5250 key | Key
+
+| Enter | Return, Right Ctrl or keypad Enter
+| Field Exit | Shift+Return
+| Field+, Field- | keypad +, keypad -
+| F1 to F12 | F1 to F12
+| F13 to F24 | Shift+F1 to Shift+F12
+| Roll Up, Roll Down | Page Down, Page Up
+| Reset | Escape
+| Attention | Shift+Escape
+| System Request | Ctrl+Escape
+| Clear | Pause
+| Help | Scroll Lock
+| Print | Print
+|===

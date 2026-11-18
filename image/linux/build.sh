@@ -46,6 +46,8 @@ if [ ! -f "$BASE.img.xz" ]; then
 	curl -fsSLO "$URL.sha256"
 fi
 shasum -a 256 -c "$BASE.img.xz.sha256"
+# Programs built from upstream source (sources.txt), each checked.
+"$here/third-party.sh" fetch "$here/cache/sources"
 
 case $LOCK in
 0) ;;

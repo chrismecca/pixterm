@@ -387,6 +387,32 @@ TEST(tn3270_uses_tls_on_port_992) {
     CHECK_EQ(x3270->argv.back(), "L:mvs:992");
 }
 
+TEST(tn5250_runs_in_a_terminal_with_its_own_keys) {
+    Rig r(make_host(Protocol::tn5250, "as400"));
+    r.pick();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "OK");
+    r.hand_over();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "1920 1080");
+    const auto* xterm = r.sys.program(Slot::client);
+    REQUIRE(xterm != nullptr);
+    CHECK(has_sequence(xterm->argv, {"-name", "tn5250"}));
+    CHECK(has_sequence(xterm->argv, {"-geometry", "80x25+478+238", "-fn", "12x24"}));
+    CHECK(has_sequence(xterm->argv, {"-e", "/usr/local/bin/tn5250", "as400:23"}));
+}
+
+TEST(tn5250_uses_tls_on_port_992) {
+    auto host = make_host(Protocol::tn5250, "as400");
+    host.port = 992;
+    Rig r(host);
+    r.pick();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "OK");
+    r.hand_over();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "1024 768");
+    const auto* xterm = r.sys.program(Slot::client);
+    REQUIRE(xterm != nullptr);
+    CHECK_EQ(xterm->argv.back(), "ssl:as400:992");
+}
+
 TEST(the_3270_font_is_the_largest_that_fits) {
     CHECK_EQ(x3270_font(1920, 1080), "3270gt32");
     CHECK_EQ(x3270_font(1280, 1024), "3270gt24");
@@ -479,6 +505,14 @@ TEST(ssh_saves_new_host_keys) {
     REQUIRE(r.sys.helper_request.has_value());
     CHECK_EQ(r.sys.helper_request->args.at(0), "known-hosts-save");
     CHECK_EQ(r.sys.helper_request->payload, "host.lan ssh-ed25519 AAAA\n");
+}
+
+TEST(a_fixed_size_terminal_is_centred_in_the_largest_font_that_fits) {
+    using Layout = std::pair<std::string, std::string>;
+    CHECK((TerminalWindow::layout(1920, 1080, 80, 25) == Layout{"80x25+478+238", "12x24"}));
+    CHECK((TerminalWindow::layout(1024, 768, 80, 25) == Layout{"80x25+30+82", "12x24"}));
+    CHECK(TerminalWindow::layout(800, 600, 80, 25).second == "9x15");
+    CHECK(TerminalWindow::layout(320, 200, 80, 25).second == "6x13"); // the smallest
 }
 
 TEST(terminal_font_follows_the_screen_height) {

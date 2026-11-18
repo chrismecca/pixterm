@@ -33,7 +33,8 @@ that fills the screen.
 * *Direct X:* the host opens windows on the terminal over TCP; rexec
 and rsh start a command on hosts too old for SSH.
 * *Remote desktops:* VNC (macOS Screen Sharing among them) and RDP.
-* *IBM mainframes:* 3270 screens over TN3270E, in x3270.
+* *IBM mainframes and IBM i:* 3270 screens over TN3270E in x3270, and
+5250 screens over TN5250E in tn5250.
 * *Serial consoles:* a USB serial adapter in the terminal reaches a
 machine's console port.
 
@@ -165,8 +166,8 @@ Other protocols: `xdmcp` (with `xdmcp_mode` `query` or `indirect`),
 `ssh-terminal` (`username` and `auth` as above), `telnet`, `direct-x`,
 `rexec` and `rsh` (`username` and `command`, where `%D` stands for the
 terminal's display), `vnc`, `rdp` (`username`, and `domain` if needed),
-`serial` (`device` and `speed`, with no address), and `tn3270` (port
-992 for TLS). Terminal hosts
+`serial` (`device` and `speed`, with no address), and `tn3270` and
+`tn5250` (port 992 for TLS). Terminal hosts
 with `"allow_x": true` let the host's X programs open windows on the
 terminal.
 

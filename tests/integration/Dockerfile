@@ -16,6 +16,8 @@ RUN apt-get update \
       imagemagick \
       inetutils-telnet \
       libcap2-bin \
+      libncurses-dev \
+      make \
       mwm \
       netcat-openbsd \
       openssh-client \

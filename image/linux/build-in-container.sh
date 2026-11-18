@@ -63,6 +63,9 @@ mount --bind /debs /mnt/var/cache/pixterm-debs
 mkdir -p /mnt/tmp/pixterm-src
 tar -C /src --exclude=./out --exclude=./image/linux/cache --exclude=./image/linux/out \
     --exclude=./.git -cf - . | tar -C /mnt/tmp/pixterm-src -xf -
+# The upstream sources build.sh fetched and checked.
+mkdir -p /mnt/tmp/pixterm-src/image/linux/cache
+cp -R /src/image/linux/cache/sources /mnt/tmp/pixterm-src/image/linux/cache/
 
 chroot /mnt /bin/bash /tmp/pixterm-src/image/linux/customize.sh
 cp /mnt/tmp/pixterm-packages "/out/$out.packages"

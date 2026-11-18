@@ -46,7 +46,6 @@ are kept from the first plan so that issues can refer to them.
 | # | Item | Size
 
 | 28 | drawterm for Plan 9 and 9front CPU servers, built from pinned 9front source | S
-| 32 | TN5250E for IBM i through tn5250, built from a pinned release | S
 |===
 
 == The X server

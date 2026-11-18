@@ -361,11 +361,22 @@ sleep 1
 
 step "TN3270: x3270 shows the mainframe until it hangs up"
 mark
-pick_end 2
+pick_end 3
 wait_log "state handoff -> session" 15
 ps -eo user,args | grep -q '^pixterm */usr/bin/x3270 .*-keymap pixterm .*127.0.0.1:2325' && ok "x3270 running" || bad "x3270 running"
 sleep 2; shot s18b-tn3270
 wait_log "session on mainframe ended" 20
+tail -n +"$((MARK + 1))" "$LOG" | grep -q "error: " && bad "ended without an error" || ok "ended without an error"
+wait_log "started pixterm-ui" 15
+sleep 1
+
+step "TN5250: tn5250 runs in a terminal until the host hangs up"
+mark
+pick_end 2
+wait_log "state handoff -> session" 15
+ps -eo user,args | grep -q '^pixterm */usr/bin/xterm .*-name tn5250 .*-e /usr/local/bin/tn5250 127.0.0.1:2326' && ok "tn5250 running" || bad "tn5250 running"
+sleep 2; shot s18c-tn5250
+wait_log "session on as400 ended" 20
 tail -n +"$((MARK + 1))" "$LOG" | grep -q "error: " && bad "ended without an error" || ok "ended without an error"
 wait_log "started pixterm-ui" 15
 sleep 1
