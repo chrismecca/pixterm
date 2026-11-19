@@ -319,7 +319,9 @@ Boolean dispatch_key(XEvent* event) {
         keys()->open_console();
         return True;
     }
-    return default_key_dispatch() != nullptr ? default_key_dispatch()(event) : False;
+    if (default_key_dispatch() == nullptr)
+        return False;
+    return default_key_dispatch()(event);
 }
 
 } // namespace
