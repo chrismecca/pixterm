@@ -209,6 +209,5 @@ See link:SECURITY.adoc[SECURITY.adoc].
 
 MIT. See link:LICENSE[LICENSE].
 
-----
-
+""""
 Machine-assisted. Human-directed. Evidence-verified. Bugs remain.
