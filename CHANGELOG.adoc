@@ -12,6 +12,12 @@ section into the release notes.
 
 * IBM mainframes: TN3270E sessions in x3270, with the PC 3270 keys, in
 the largest 3270 font that fits the screen. Port 992 uses TLS.
+* Issue forms for bug reports and host reports, and a table of the
+host systems known to work.
+* A window manager on the terminal for SSH hosts that send none:
+Configure > Hosts > Windows.
+* A console during sessions, on Ctrl+Alt+Home: lock the screen with a
+code chosen then, or disconnect.
 * Wake-on-LAN: a host with a MAC address in its entry is woken first,
 and given two minutes to answer.
 * The 3270 fonts, and notes on the DEC fonts the terminal has for

@@ -255,6 +255,9 @@ void Supervisor::chooser_line(std::string_view line) {
         requests_->scan(words[1]);
     } else if (SettingsRequests::handles(verb) && state_ == State::local) {
         requests_->request(verb);
+    } else if (verb == "DISCONNECT" && state_ == State::session) {
+        log(std::format("disconnected from the console of {}", host_.name));
+        teardown();
     } else if (verb == "CANCEL" && (state_ == State::probe || state_ == State::connecting)) {
         if (session_)
             session_->cancel();
@@ -326,6 +329,24 @@ void Supervisor::session_running(State s) {
     set_state(s);
     link_down_since_.reset();
     watch_at_ = system_.now() + timeouts::watch_interval;
+    if (s != State::session)
+        return;
+    start_session_keys();
+    // For a host that sends programs but no window manager.
+    if (host_.local_wm)
+        start_mwm();
+}
+
+// On the local display, pixterm-ui waits for the console's hot key in
+// the chooser's place. Not on a session's own display: a client of ours
+// there would keep the server from resetting when the user logs out.
+void Supervisor::start_session_keys() {
+    if (system_.start_chooser({.name = "pixterm-keys",
+                               .argv = {libexec("pixterm-ui"), "--session", host_.name},
+                               .env = child_env(),
+                               .input = {},
+                               .hold_input = false}))
+        children_.at(index(Slot::chooser)).started = system_.now();
 }
 
 void Supervisor::unless_display_reset(std::function<void()> report) {

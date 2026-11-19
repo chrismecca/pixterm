@@ -244,6 +244,7 @@ private:
     void xsetup_done(ExitStatus status, std::string_view output);
     void start_mwm();
     void start_chooser();
+    void start_session_keys();
     void begin_session(const Host& host, std::string_view username);
     void handoff_check();
     void teardown_check();

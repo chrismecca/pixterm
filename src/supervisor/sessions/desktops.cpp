@@ -151,7 +151,9 @@ private:
         if (!h.domain.empty())
             a.push_back("/d:" + h.domain);
         // The password comes from a pipe, not a terminal.
-        a.insert(a.end(), {"/from-stdin:force", "/cert:tofu", "/log-level:ERROR"});
+        // -grab-keyboard: the console's hot key must still reach pixterm.
+        a.insert(a.end(),
+                 {"/from-stdin:force", "/cert:tofu", "/log-level:ERROR", "-grab-keyboard"});
         return a;
     }
 

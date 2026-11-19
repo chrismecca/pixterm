@@ -234,6 +234,16 @@ System and Diagnostics.
 * A host with a Wake-on-LAN MAC address gets the magic packet, as a
 broadcast on the local network, before the chooser checks it, and has
 two minutes to answer; the packet goes out again every five seconds.
+* An SSH host that sends programs but no window manager (an xterm, a
+custom command) can have mwm run on the terminal during its session,
+the same mwm as the chooser's.
+* During a session on the terminal's own display (every kind but XDMCP
+and direct X, whose display a client of pixterm's would keep from
+resetting at logout), Ctrl+Alt+Home opens a console: Lock Screen,
+Disconnect, Cancel. The lock covers the screen and holds the keyboard
+and pointer until the code chosen when locking (4 to 12 digits) is typed
+again; three wrong codes wait half a minute. A forgotten code:
+Ctrl+Alt+Backspace ends the session, and with it the lock.
 * Configure > Hosts > Forget Host Key forgets the SSH host key and RDP
 certificate kept for a host, for one that was reinstalled or renewed
 its certificate.

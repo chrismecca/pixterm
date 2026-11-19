@@ -50,6 +50,9 @@ pixtermd+`. After three tries the screen explains the failure. Remove
 the file, press Enter, and the chooser comes back.
 . On a 4K monitor, the chooser, Configure and a terminal session use
 large fonts.
+. During an SSH session and an RDP session, Ctrl+Alt+Home opens the
+console. Lock the screen, type a wrong code, then the right one; then
+Disconnect.
 . Start with no monitor, then plug one in at the chooser: it lights
 in the saved mode. Unplug it and plug in another.
 . Set the blanking time to 5 minutes and leave the chooser alone: the

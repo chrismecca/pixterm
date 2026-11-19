@@ -219,6 +219,15 @@ std::expected<Host, std::string> parse_host(const json::Value& v, std::size_t in
         }
     }
 
+    if (h.protocol == Protocol::ssh_x11) {
+        if (const auto* wm = v.find("local_wm")) {
+            const auto b = wm->as_bool();
+            if (!b)
+                return fail("invalid local_wm");
+            h.local_wm = *b;
+        }
+    }
+
     if (is_terminal(h.protocol)) {
         if (const auto* ax = v.find("allow_x")) {
             const auto b = ax->as_bool();
@@ -396,6 +405,8 @@ json::Value host_to_json(const Host& h) {
         add("wake_mac", h.wake_mac);
     if (is_terminal(h.protocol) && h.allow_x)
         add("allow_x", true);
+    if (h.protocol == Protocol::ssh_x11 && h.local_wm)
+        add("local_wm", true);
     if (h.protocol == Protocol::rdp && !h.domain.empty())
         add("domain", h.domain);
     return o;

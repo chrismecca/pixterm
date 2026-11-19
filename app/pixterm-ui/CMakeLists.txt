@@ -14,6 +14,7 @@ add_executable(pixterm-ui
     monitor_watch.cpp
     motif.cpp
     network_panel.cpp
+    session_keys.cpp
     system_panel.cpp
     wifi_panel.cpp
 )

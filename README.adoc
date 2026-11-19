@@ -16,7 +16,8 @@ terminal.
 
 * Design: link:doc/design.adoc[doc/design.adoc]
 * Supported boards: link:doc/hardware.adoc[doc/hardware.adoc]
-* Setting up hosts: link:doc/hosts/[doc/hosts/]
+* Setting up hosts: link:doc/hosts/[doc/hosts/], and the
+link:doc/hosts/systems.adoc[host systems known to work]
 * Upgrading: link:doc/upgrading.adoc[doc/upgrading.adoc]
 * Changes: link:CHANGELOG.adoc[CHANGELOG.adoc]
 * Plans for 1.0 and 1.2: link:ROADMAP.adoc[ROADMAP.adoc]
@@ -50,6 +51,8 @@ last good settings are always kept. You can pull the power at any time.
 networks and joins one, hidden ones too.
 * Configure covers hosts, display mode, network, Wi-Fi, keyboard, USB
 export and import, and a log viewer. An optional PIN guards it.
+* During a session, Ctrl+Alt+Home opens the console: lock the screen
+with a code, or disconnect.
 * To reset a terminal, or recover from a forgotten PIN, make an empty
 file named `pixterm-reset` on the SD card's boot partition. Any
 computer can write to it. The next boot restores the factory settings.
@@ -160,7 +163,9 @@ Session types:
 * `custom` runs `command` with `/bin/sh`.
 * `raw` sends `command` unchanged.
 
-An empty `username` makes the chooser ask for one. `auth` is `password`
+An `ssh-x11` host with `"local_wm": true` gets mwm on the terminal
+during its session, for a host that sends programs but no window
+manager. An empty `username` makes the chooser ask for one. `auth` is `password`
 (the default) or `key`, the terminal's own SSH key.
 
 Other protocols: `xdmcp` (with `xdmcp_mode` `query` or `indirect`),

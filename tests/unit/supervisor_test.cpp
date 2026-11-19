@@ -229,6 +229,60 @@ TEST(an_ordinary_screen_gets_ordinary_fonts) {
     CHECK(has_sequence(p->env, {"XENVIRONMENT=/usr/share/pixterm/Xresources"}));
 }
 
+namespace {
+
+// Logs in to the SSH host; the session then runs on the local display.
+void reach_ssh_session(Rig& r) {
+    r.boot();
+    r.sup->chooser_line("START desktop -");
+    r.sys.sockets.insert("/run/pixterm/ssh-control");
+    r.sys.advance(*r.sup, std::chrono::milliseconds(200));
+    r.hand_over();
+    REQUIRE(r.state() == State::session);
+}
+
+} // namespace
+
+TEST(a_session_on_the_local_display_gets_the_console_keys) {
+    Rig r;
+    reach_ssh_session(r);
+    const auto* keys = r.sys.program(Slot::chooser);
+    REQUIRE(keys != nullptr);
+    CHECK(has_sequence(keys->argv, {"/usr/libexec/pixterm/pixterm-ui", "--session", "desktop"}));
+    CHECK(r.sys.chooser_open); // it talks to pixtermd
+}
+
+TEST(a_host_that_sends_no_window_manager_gets_mwm) {
+    auto host = ssh_host();
+    host.local_wm = true;
+    Rig r({host});
+    reach_ssh_session(r);
+    const auto* mwm = r.sys.program(Slot::mwm);
+    REQUIRE(mwm != nullptr);
+    CHECK_EQ(mwm->name, "mwm");
+}
+
+TEST(a_session_has_no_mwm_unless_asked) {
+    Rig r;
+    reach_ssh_session(r);
+    CHECK(r.sys.program(Slot::mwm) == nullptr);
+}
+
+TEST(disconnect_from_the_console_ends_the_session) {
+    Rig r;
+    reach_ssh_session(r);
+    r.sup->chooser_line("DISCONNECT");
+    CHECK(r.state() == State::teardown);
+    CHECK(mentions(r.sys.logs, "disconnected from the console"));
+}
+
+TEST(disconnect_means_nothing_at_the_chooser) {
+    Rig r;
+    r.boot();
+    r.sup->chooser_line("DISCONNECT");
+    CHECK(r.state() == State::local);
+}
+
 TEST(a_crashed_chooser_comes_back) {
     Rig r;
     r.boot();

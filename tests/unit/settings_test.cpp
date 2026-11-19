@@ -234,6 +234,18 @@ TEST(hosts_may_be_woken_by_their_mac_address) {
     CHECK(parse_ok(to_json(s)) == s);
 }
 
+TEST(ssh_hosts_may_ask_for_a_local_window_manager) {
+    const auto s = parse_ok(with_host(R"("address":"h","protocol":"ssh-x11","local_wm":true)"));
+    REQUIRE_EQ(s.hosts.size(), 1U);
+    CHECK(s.hosts[0].local_wm);
+    CHECK(parse_ok(to_json(s)) == s);
+    CHECK(rejects(with_host(R"("address":"h","protocol":"ssh-x11","local_wm":"yes")")));
+    // Only SSH X11 sessions run on the terminal's display with programs only.
+    CHECK(!parse_ok(with_host(R"("address":"h","protocol":"vnc","local_wm":true)"))
+               .hosts[0]
+               .local_wm);
+}
+
 TEST(rejects_bad_hosts) {
     CHECK(rejects(with_host(R"("address":"h","protocol":"ssh-x11","auth":"hostbased")")));
     CHECK(rejects(with_host(R"("address":"h","protocol":"nx")")));

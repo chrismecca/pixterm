@@ -85,6 +85,7 @@ private:
     Widget wake_mac_ = nullptr;
     Widget key_auth_ = nullptr;
     Widget allow_x_ = nullptr;
+    Widget local_wm_ = nullptr;
     Widget indirect_ = nullptr;
     OptionMenu protocol_menu_;
     OptionMenu session_menu_;
@@ -248,8 +249,10 @@ void HostsPanel::build_editor() {
     allow_x_ = place_row(
         editor_, key_auth_,
         "Terminal:", make_toggle(editor_, "allowX", "The host's X programs may open windows here"));
+    local_wm_ = place_row(editor_, allow_x_, "Windows:",
+                          make_toggle(editor_, "localWm", "Run mwm here (the host sends none)"));
     indirect_ =
-        place_row(editor_, allow_x_,
+        place_row(editor_, local_wm_,
                   "XDMCP:", make_toggle(editor_, "indirect", "Use the host's chooser (indirect)"));
     font_server_ = place_row(editor_, indirect_,
                              "Font server:", make_text_field(editor_, "fontServer", 28), true);
@@ -293,6 +296,7 @@ void HostsPanel::open_editor(std::optional<std::size_t> index) {
     set_text(wake_mac_, f.wake_mac);
     set_toggle(key_auth_, f.key_auth);
     set_toggle(allow_x_, f.allow_x);
+    set_toggle(local_wm_, f.local_wm);
     set_toggle(indirect_, f.indirect);
     protocol_ = f.protocol;
     session_ = f.session;
@@ -311,6 +315,7 @@ void HostsPanel::sync_editor() {
     sensitive(domain_, e.domain);
     sensitive(key_auth_, e.key_auth);
     sensitive(allow_x_, e.allow_x);
+    sensitive(local_wm_, e.local_wm);
     sensitive(session_menu_.menu, e.session);
     sensitive(command_, e.command);
     sensitive(indirect_, e.indirect);
@@ -342,7 +347,8 @@ void HostsPanel::save_editor() {
                                  .session = session_,
                                  .key_auth = toggle_state(key_auth_),
                                  .allow_x = toggle_state(allow_x_),
-                                 .indirect = toggle_state(indirect_)};
+                                 .indirect = toggle_state(indirect_),
+                                 .local_wm = toggle_state(local_wm_)};
     auto host = chooser::read_form(form);
     if (!host) {
         show_error(editor_, host.error());

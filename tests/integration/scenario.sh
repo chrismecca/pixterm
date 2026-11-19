@@ -42,6 +42,13 @@ click_yes() {
 	eval "$($XDO xdotool getwindowgeometry --shell "$w")"
 	$XDO xdotool mousemove $((X + 40)) $((Y + HEIGHT - 33)) click 1
 }
+# click_in CLASS XPERCENT YOFFSET-FROM-BOTTOM: click inside a window found
+# by its class.
+click_in() {
+	w=$($T/search --classname "$1" | head -1)
+	eval "$($XDO xdotool getwindowgeometry --shell "$w")"
+	$XDO xdotool mousemove $((X + WIDTH * $2 / 100)) $((Y + HEIGHT - $3)) click 1
+}
 # Click the left (OK) button of a dialog found by its class.
 click_ok() {
 	w=$($T/search --classname "$1" | head -1)
@@ -144,6 +151,36 @@ $XDO xdotool type --delay 20 exit; $XDO xdotool key Return
 wait_log "session on localhost-xterm ended"
 wait_log "started pixterm-ui" 15
 sleep 1; shot s7-after-logout
+
+step "console: lock the session, unlock it, then disconnect"
+mark
+$XDO xdotool key ctrl+Home Return
+password secret
+wait_log "state handoff -> session"
+wait_log "started pixterm-keys"
+wait_log "started mwm"    # the host asked for a local window manager
+sleep 2
+$XDO xdotool key ctrl+alt+Home
+wait_class consoleDialog_popup
+sleep 0.5; shot s7b-console
+click_in consoleDialog_popup 15 20       # Lock Screen
+wait_class lockCodeDialog_popup
+sleep 0.5
+$XDO xdotool type --delay 30 1234; $XDO xdotool key Tab; $XDO xdotool type --delay 30 1234
+$XDO xdotool key Return
+wait_class lockScreen
+sleep 1; shot s7c-locked
+$XDO xdotool type --delay 30 9999; $XDO xdotool key Return; sleep 1
+$T/search --classname lockScreen >/dev/null && ok "a wrong code keeps it locked" || bad "a wrong code keeps it locked"
+$XDO xdotool type --delay 30 1234; $XDO xdotool key Return; sleep 1
+$T/search --classname lockScreen >/dev/null && bad "the right code unlocks it" || ok "the right code unlocks it"
+$XDO xdotool key ctrl+alt+Home
+wait_class consoleDialog_popup
+sleep 0.5
+click_in consoleDialog_popup 50 20       # Disconnect
+wait_log "disconnected from the console"
+wait_log "started pixterm-ui" 15
+sleep 1
 
 step "connection lost during session"
 mark

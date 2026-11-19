@@ -54,9 +54,6 @@ are kept from the first plan so that issues can refer to them.
 |===
 | # | Item | Size
 
-| 38 | Local mwm during sessions, per host, for hosts that send programs but no window manager | M
-| 39 | A hot-key console during a session: Configure, another host, lock, disconnect | M
-| 41 | Screen lock during a session | M
 | 42 | Hardware security keys for SSH login: FIDO2 and PIV smart cards | M
 | 43 | Kerberos (GSSAPI) SSH login | M
 |===
@@ -78,8 +75,6 @@ are kept from the first plan so that issues can refer to them.
 * Sun and DEC keyboards, with the DEC LK201 editing keys for OpenVMS
 * Diagnostics saved to a USB drive for bug reports
 * Time zone and NTP server settings (the Pi has no clock battery)
-* Issue templates for bug reports and host reports
-* A table of host systems and protocols known to work
 
 == 1.2
 
@@ -87,7 +82,7 @@ are kept from the first plan so that issues can refer to them.
 |===
 | # | Item | Size
 
-| 40 | Several hosts at once on one display (needs items 38 and 39) | L
+| 40 | Several hosts at once on one display, switched from the hot-key console, which also gains Configure | L
 | 49 | A packet filter, loaded by the helper, that drops every inbound connection a running session does not need | M
 | 45 | Sound | L
 | 46 | Printing to a USB printer on the terminal | M

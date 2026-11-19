@@ -31,7 +31,8 @@ cat > /tmp/config.json <<'JSON'
   "schema_version": 1,
   "hosts": [
     { "id": "h1", "name": "localhost-xterm", "address": "127.0.0.1",
-      "protocol": "ssh-x11", "port": 22, "username": "alice", "session": "xterm" },
+      "protocol": "ssh-x11", "port": 22, "username": "alice", "session": "xterm",
+      "local_wm": true },
     { "id": "h2", "name": "ask-for-user", "address": "127.0.0.1",
       "protocol": "ssh-x11", "username": "", "session": "xterm" },
     { "id": "h3", "name": "unreachable", "address": "192.0.2.1",

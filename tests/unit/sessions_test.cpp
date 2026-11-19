@@ -254,6 +254,7 @@ TEST(rdp_checks_the_password_before_handing_over) {
     const auto* check = r.sys.job_program();
     REQUIRE(check != nullptr);
     CHECK(mentions(check->argv, "+auth-only"));
+    CHECK(mentions(check->argv, "-grab-keyboard")); // so the console keys reach pixterm
     CHECK(mentions(check->argv, "/d:LAB"));
     CHECK_EQ(check->input, "secret\n");
 

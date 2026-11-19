@@ -79,7 +79,8 @@ EnabledFields enabled_fields(Protocol p, SessionType s) noexcept {
             .command = p == Protocol::rexec || p == Protocol::rsh || (ssh_x11 && takes_command(s)),
             .indirect = p == Protocol::xdmcp,
             .font_server = is_x11(p),
-            .wake_mac = !serial};
+            .wake_mac = !serial,
+            .local_wm = ssh_x11};
 }
 
 HostForm form_for(const Host* host) {
@@ -99,7 +100,8 @@ HostForm form_for(const Host* host) {
             .session = h.session,
             .key_auth = h.auth == Auth::key,
             .allow_x = h.allow_x,
-            .indirect = h.xdmcp_mode == XdmcpMode::indirect};
+            .indirect = h.xdmcp_mode == XdmcpMode::indirect,
+            .local_wm = h.local_wm};
 }
 
 std::string port_after_change(std::string_view port, Protocol p) {
@@ -160,6 +162,8 @@ std::expected<Host, std::string> read_form(const HostForm& form) {
         h.auth = Auth::key;
     if (fields.allow_x)
         h.allow_x = form.allow_x;
+    if (fields.local_wm)
+        h.local_wm = form.local_wm;
     if (fields.session)
         h.session = form.session;
     if (fields.command) {

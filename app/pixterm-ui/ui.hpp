@@ -204,6 +204,10 @@ private:
     void begin(Done done);
 };
 
+/// The console during a session: Ctrl+Alt+Home offers to lock the
+/// screen or disconnect. Runs until pixtermd ends it.
+int run_session_keys(XtAppContext context, Widget shell, std::string host, int control_fd);
+
 /// Lights a monitor plugged in while the chooser is up, and keeps the
 /// chooser in the middle of the screen when its size changes.
 void watch_monitors(App& app);

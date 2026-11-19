@@ -142,9 +142,13 @@ int main(int argc, char** argv) {
     XtAppContext context = nullptr;
     Widget shell = XtVaOpenApplication(&context, "Pixterm", nullptr, 0, &argc, argv, nullptr,
                                        applicationShellWidgetClass, nullptr);
+    const std::span args(argv, static_cast<std::size_t>(argc));
+    // During a session: the console's hot key, on the session's screen.
+    if (args.size() == 3 && std::string_view(args[1]) == "--session")
+        return run_session_keys(context, shell, args[2], control_fd());
+
     paint_root(XtDisplay(shell), load_resources(shell));
 
-    const std::span args(argv, static_cast<std::size_t>(argc));
     if (args.size() == 3 && std::string_view(args[1]) == "--notice")
         return show_notice(context, shell, args[2]);
 

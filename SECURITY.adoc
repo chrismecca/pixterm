@@ -30,6 +30,8 @@ included, in clear text.
 * A host reached with trusted X11 forwarding controls the display
 during its session. The X server allows indirect GLX, for the OpenGL
 programs of older hosts.
+* The screen lock keeps passers-by out of a session. Anyone at the
+terminal can still end it, with Ctrl+Alt+Backspace.
 * The administrator PIN keeps passers-by out of the settings. It does
 not protect the SD card, which anyone holding the terminal can read.
 That includes the Wi-Fi passphrase, which only root can read on the
