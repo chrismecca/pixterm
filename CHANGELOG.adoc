@@ -15,6 +15,9 @@ section into the release notes.
 
 === Added
 
+* A user guide, `doc/guide.adoc`: first steps, each Configure panel,
+recovery, and faults by symptom; and pictures in the README, which
+`tools/screenshots.sh` takes again when the look changes.
 * Each image is checked as it is built for network services: only
 units on a short list may be enabled, and a release image has no SSH
 server.

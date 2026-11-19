@@ -1,0 +1,117 @@
+// SPDX-FileCopyrightText: 2026 Chris Mecca
+// SPDX-License-Identifier: MIT
+
+= Using the terminal
+
+== First steps
+
+. Write the image to an SD card (the README says how), put it in the
+Pi, and connect a monitor, a USB keyboard and mouse, and Ethernet.
+. Switch the Pi on. After about half a minute the chooser appears: a
+list of hosts, which is empty the first time.
+. Choose Configure, then Hosts, then Add, and fill in the host. The
+guides in link:hosts/[hosts/] say what each kind of host needs, and
+what to set up on the host itself.
+. Close Configure, choose the host and press Login, or double-click it.
+Log out of the host, and the chooser comes back.
+
+Find Hosts lists the XDMCP hosts that answer on the local network; you
+can log in to one at once, or add it to the list.
+
+To use Wi-Fi instead of a cable, see Wi-Fi below.
+
+== During a session
+
+* Ctrl+Alt+Home opens the console. Lock Screen asks for a code of 4 to
+12 digits and covers the screen until you type it again. Disconnect ends
+the session. (Not during XDMCP and direct X sessions.)
+* Ctrl+Alt+Backspace ends any session at once, and the chooser comes
+back. It does not log you out of the host.
+* If the network goes for ten seconds, the session ends and the chooser
+says why.
+
+== Configure
+
+An administrator PIN, if one is set, guards Configure.
+
+Hosts:: The list of hosts. Add, Edit and Remove change it; Move Up and
+Move Down order it. Forget Host Key drops the SSH host key or RDP
+certificate the terminal keeps for a host, for one that was reinstalled
+or whose certificate was renewed. Terminal Key makes the terminal's own
+SSH key and shows its public half, to put on hosts that log in with it.
+
+Display:: The screen's mode, from those the monitor reports. A new mode
+is undone after 15 seconds unless you keep it. Blank the screen after
+sets how long the screen stays on while nobody uses it.
+
+Network:: The wired network: automatic (DHCP) or a fixed address,
+gateway and DNS servers.
+
+Wi-Fi:: Type the country, press Scan, and choose a network; tick Hidden
+and type its name for one that does not announce itself. Type the
+passphrase and Apply. Wi-Fi always gets its address by DHCP. Turning
+Wi-Fi off forgets the passphrase.
+
+Keyboard:: The layout, and a variant if you need one; and the keyboard
+itself, for a Sun Type 6 or Type 7 USB keyboard's extra keys.
+
+Time:: The time zone, such as Europe/London, and NTP servers for a
+network with no way to the internet. The terminal has no clock battery
+and sets its clock from the network at every start.
+
+System:: The version and the settings in use. Export to USB and Import
+from USB carry the settings to another terminal or a new image (not the
+Wi-Fi passphrase or the terminal's private key). Administrator PIN sets
+or removes the PIN. Reset Configuration returns to the factory settings.
+Restart restarts the terminal.
+
+Diagnostics:: The terminal's recent log. Save to USB writes the full
+logs, for a bug report.
+
+== Recovery
+
+* *Forgotten PIN, or settings that no longer work:* on any computer,
+make an empty file named `pixterm-reset` on the SD card's boot
+partition. The next start restores the factory settings.
+* *The screen stays dark:* if X fails to start three times, the screen
+shows why in plain text. Press Enter to try again, or type `reset` for
+the factory settings.
+* *The terminal will not start at all:* write the image to the card
+again. Import the settings from USB afterwards if you exported them.
+
+== Faults by symptom
+
+The chooser says the host did not answer::
+The host is off, or a firewall blocks the port, or the address is wrong.
+For a host that sleeps, give its entry a Wake-on-LAN MAC address.
+
+An XDMCP host is willing but never shows a login::
+The host must reach the terminal on TCP port 6000: check the firewalls
+between them.
+
+SSH asks to accept a host key that changed::
+Find out why. If the host was reinstalled, Configure > Hosts > Forget
+Host Key, then log in again.
+
+An RDP host is refused after a while::
+Windows renews its own certificate from time to time: Forget Host Key,
+as above.
+
+Keys do odd things on OpenVMS::
+Tick Keys: DEC VT220 keys in the host entry, for terminal sessions.
+
+Programs on the host draw no windows, or windows cannot be moved::
+The host sends no window manager: tick Windows: Run mwm here, for SSH
+hosts.
+
+Secure connections fail, or the clock is wrong::
+The terminal sets its clock from the network. On a network with no way
+to the internet, set an NTP server in Configure > Time.
+
+The text is too small on a 4K monitor::
+It should not be: pixterm uses fonts twice the size on screens 1800
+pixels tall or more. Check the mode in Configure > Display.
+
+Anything else::
+Configure > Diagnostics > Save to USB, and open a bug report on GitHub
+with the files.

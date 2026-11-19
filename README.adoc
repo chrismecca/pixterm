@@ -14,6 +14,11 @@ and the list comes back.
 This is not PIXterm, the unrelated program that draws images in a text
 terminal.
 
+image::doc/img/chooser.png[The chooser: a list of hosts, with Login, Find Hosts and Configure]
+image::doc/img/configure.png[Configure, on its Hosts panel]
+
+
+* Using the terminal: link:doc/guide.adoc[doc/guide.adoc]
 * Design: link:doc/design.adoc[doc/design.adoc]
 * Supported boards: link:doc/hardware.adoc[doc/hardware.adoc]
 * Setting up hosts: link:doc/hosts/[doc/hosts/], and the

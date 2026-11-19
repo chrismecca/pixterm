@@ -63,8 +63,6 @@ are kept from the first plan so that issues can refer to them.
 |===
 | # | Item | Size
 
-| 20 | A user guide: first steps, each Configure panel, recovery, and faults by symptom | M
-| 21 | Screenshots in the README | S
 | 23 | Host guides checked by other people: Solaris and CDE, HP-UX, AIX, Linux with LightDM or GDM | M
 |===
 
