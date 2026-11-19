@@ -494,6 +494,23 @@ TEST(a_terminal_host_may_have_the_dec_vt220_keys) {
     CHECK(has_sequence(xterm->argv, {"-kt", "vt220"}));
 }
 
+TEST(ipv6_addresses_are_bracketed_where_a_port_follows) {
+    CHECK_EQ(with_port("2001:db8::1", 3389), "[2001:db8::1]:3389");
+    CHECK_EQ(with_port("host.lan", 3389), "host.lan:3389");
+    CHECK_EQ(with_port("192.0.2.1", 23), "192.0.2.1:23");
+}
+
+TEST(vnc_reaches_an_ipv6_host) {
+    Rig r(make_host(Protocol::vnc, "2001:db8::5"));
+    r.pick();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "OK");
+    r.hand_over();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "1024 768");
+    const auto* viewer = r.sys.program(Slot::client);
+    REQUIRE(viewer != nullptr);
+    CHECK_EQ(viewer->argv.back(), "[2001:db8::5]::5900");
+}
+
 TEST(serial_checks_the_port_before_closing_the_chooser) {
     auto host = make_host(Protocol::serial, "");
     host.device = "/dev/ttyUSB0";

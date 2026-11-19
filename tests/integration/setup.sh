@@ -62,7 +62,9 @@ cat > /tmp/config.json <<'JSON'
       "port": 17019, "username": "glenda" },
     { "id": "h14", "name": "serial-console", "protocol": "serial", "device": "/dev/ttyUSB9",
       "speed": 9600 },
-    { "id": "h15", "name": "missing-serial", "protocol": "serial", "device": "/dev/ttyUSB8" }
+    { "id": "h15", "name": "missing-serial", "protocol": "serial", "device": "/dev/ttyUSB8" },
+    { "id": "h19", "name": "ipv6-xterm", "address": "::1", "protocol": "ssh-x11",
+      "username": "alice", "session": "xterm" }
   ]
 }
 JSON

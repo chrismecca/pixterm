@@ -28,7 +28,7 @@ the same container, on every change; `tools/ci.sh sessions` runs it.
 |===
 | Stand-in host | Protocol
 
-| Debian's OpenSSH | SSH / X11, SSH terminal, key login
+| Debian's OpenSSH | SSH / X11 (over IPv4 and IPv6), SSH terminal, key login
 | Debian's xdm | XDMCP, Find Hosts
 | A telnet stand-in | Telnet
 | pixterm's own rexec and rsh test servers | rexec, rsh

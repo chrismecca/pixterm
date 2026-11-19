@@ -35,6 +35,14 @@ constexpr std::array fonts{
 
 } // namespace
 
+std::string bracketed(std::string_view address) {
+    return address.contains(':') ? std::format("[{}]", address) : std::string(address);
+}
+
+std::string with_port(std::string_view address, int port) {
+    return std::format("{}:{}", bracketed(address), port);
+}
+
 std::string probe_reason(std::string_view output) {
     return output.starts_with("E ") ? std::string(output.substr(2)) : "The check failed.";
 }

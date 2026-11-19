@@ -58,7 +58,7 @@ public:
                                 .argv = {std::string(programs::vncviewer), "-geometry",
                                          std::format("{}x{}+0+0", w, h), "-AlertOnFatalError=0",
                                          "-ReconnectOnError=0",
-                                         std::format("{}::{}", host.address, host.port)},
+                                         std::format("{}::{}", bracketed(host.address), host.port)},
                                 .env = sup().child_env(),
                                 .input = {},
                                 .hold_input = false});
@@ -147,7 +147,7 @@ private:
     [[nodiscard]] std::vector<std::string> args() const {
         const auto& h = sup().host();
         std::vector<std::string> a{std::string(programs::xfreerdp),
-                                   std::format("/v:{}:{}", h.address, h.port), "/u:" + user_};
+                                   "/v:" + with_port(h.address, h.port), "/u:" + user_};
         if (!h.domain.empty())
             a.push_back("/d:" + h.domain);
         // The password comes from a pipe, not a terminal.

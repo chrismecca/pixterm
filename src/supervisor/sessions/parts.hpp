@@ -38,6 +38,13 @@ inline constexpr std::string_view drawterm = "/usr/local/bin/drawterm";
 /// 3270 model 2 screen on a screen this size.
 [[nodiscard]] std::string x3270_font(int width, int height);
 
+/// "address:port", with an IPv6 address in brackets: "[2001:db8::1]:23".
+[[nodiscard]] std::string with_port(std::string_view address, int port);
+
+/// The address alone, in brackets if it is IPv6, for programs that add
+/// the port themselves.
+[[nodiscard]] std::string bracketed(std::string_view address);
+
 /// The text after "E " in a TCP probe's failure, or a general reason.
 [[nodiscard]] std::string probe_reason(std::string_view output);
 

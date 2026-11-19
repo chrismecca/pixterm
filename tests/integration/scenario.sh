@@ -398,7 +398,7 @@ sleep 1
 
 step "TN3270: x3270 shows the mainframe until it hangs up"
 mark
-pick_end 4
+pick_end 5
 wait_log "state handoff -> session" 15
 ps -eo user,args | grep -q '^pixterm */usr/bin/x3270 .*-keymap pixterm .*127.0.0.1:2325' && ok "x3270 running" || bad "x3270 running"
 sleep 2; shot s18b-tn3270
@@ -409,7 +409,7 @@ sleep 1
 
 step "TN5250: tn5250 runs in a terminal until the host hangs up"
 mark
-pick_end 3
+pick_end 4
 wait_log "state handoff -> session" 15
 ps -eo user,args | grep -q '^pixterm */usr/bin/xterm .*-name tn5250 .*-e /usr/local/bin/tn5250 127.0.0.1:2326' && ok "tn5250 running" || bad "tn5250 running"
 sleep 2; shot s18c-tn5250
@@ -420,7 +420,7 @@ sleep 1
 
 step "drawterm: the CPU server's failed login is reported"
 mark
-pick_end 2
+pick_end 3
 wait_log "state handoff -> session" 15
 ps -eo user,args | grep -q '^pixterm */usr/local/bin/drawterm -h 127.0.0.1 -a 127.0.0.1 -g 1280x1024+0+0 -u glenda' && ok "drawterm running" || bad "drawterm running"
 sleep 2; shot s18d-drawterm
@@ -430,12 +430,12 @@ $XDO xdotool key Return; sleep 0.5
 
 step "Serial console: a missing port is reported; a present one opens"
 mark
-pick_end 0
+pick_end 1
 wait_log "There is no serial port /dev/ttyUSB8"
 wait_class errorDialog_popup
 $XDO xdotool key Return; sleep 0.5
 mark
-pick_end 1
+pick_end 2
 wait_log "state handoff -> session" 15
 ps -eo user,args | grep -q '^pixterm */usr/bin/xterm .*-e /usr/bin/picocom .*--send-cmd  --receive-cmd  /dev/ttyUSB9' && ok "terminal runs picocom" || bad "terminal runs picocom"
 sleep 6; shot s19-serial
@@ -443,6 +443,22 @@ sleep 6; shot s19-serial
 # sometimes lost; what matters here is that its end ends the session.
 pkill -x picocom
 wait_log "terminal session on serial-console ended" 15
+wait_log "started pixterm-ui" 15
+sleep 1
+
+step "IPv6: an SSH host at ::1"
+mark
+pick_end 0
+wait_win "Login to ipv6-xterm" 15    # a new host key
+sleep 0.5; click_yes
+sleep 1
+password secret
+wait_log "state handoff -> session" 30
+ps -eo args | grep -q '^/usr/bin/ssh .*-- ::1' && ok "ssh to ::1" || bad "ssh to ::1"
+sleep 3
+$XDO xdotool mousemove 100 100; sleep 0.3
+$XDO xdotool type --delay 20 exit; $XDO xdotool key Return
+wait_log "session on ipv6-xterm ended" 15
 wait_log "started pixterm-ui" 15
 sleep 1
 

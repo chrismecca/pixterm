@@ -91,8 +91,8 @@ public:
                           "-efont", x3270_font(w, h), "-keymap", "pixterm", "-geometry",
                           std::format("+{}+{}", std::max(0, (w - window_width(cell)) / 2),
                                       std::max(0, (h - window_height(cell)) / 2)),
-                          std::format("{}{}:{}", host.port == tls_port ? "L:" : "", host.address,
-                                      host.port)},
+                          std::format("{}{}", host.port == tls_port ? "L:" : "",
+                                      with_port(host.address, host.port))},
                  .env = sup().child_env(),
                  .input = {},
                  .hold_input = false});
@@ -140,7 +140,7 @@ public:
         terminal_.open(
             sup(),
             {std::string(programs::tn5250),
-             std::format("{}{}:{}", h.port == tls_port ? "ssl:" : "", h.address, h.port)},
+             std::format("{}{}", h.port == tls_port ? "ssl:" : "", with_port(h.address, h.port))},
             sup().child_env(), "");
     }
 

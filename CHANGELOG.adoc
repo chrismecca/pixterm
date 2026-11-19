@@ -12,6 +12,9 @@ section into the release notes.
 
 * IBM mainframes: TN3270E sessions in x3270, with the PC 3270 keys, in
 the largest 3270 font that fits the screen. Port 992 uses TLS.
+* IPv6 host addresses work with every kind of host: VNC, RDP, TN3270
+and TN5250 now put them in brackets before the port. The session test
+logs in to an SSH host at ::1.
 * Keyboards: Sun Type 6 and Type 7 USB keyboards (Configure >
 Keyboard), with Sun's extra keys for Solaris and CDE; and the DEC VT220
 editing keys and PF1 to PF4 for terminal hosts that ask for them, as

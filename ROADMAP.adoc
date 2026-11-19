@@ -71,7 +71,6 @@ are kept from the first plan so that issues can refer to them.
 
 == Also wanted for 1.0
 
-* IPv6 host addresses, tested from end to end
 
 == 1.2
 
