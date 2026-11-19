@@ -72,7 +72,6 @@ are kept from the first plan so that issues can refer to them.
 == Also wanted for 1.0
 
 * IPv6 host addresses, tested from end to end
-* Sun and DEC keyboards, with the DEC LK201 editing keys for OpenVMS
 
 == 1.2
 

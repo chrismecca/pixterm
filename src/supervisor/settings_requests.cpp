@@ -46,7 +46,8 @@ helper::Request network_request(const Network& n) {
 
 bool display_differs(const Settings& a, const Settings& b) {
     return a.display_mode != b.display_mode || a.blank_minutes != b.blank_minutes
-           || a.keyboard_layout != b.keyboard_layout || a.keyboard_variant != b.keyboard_variant;
+           || a.keyboard_layout != b.keyboard_layout || a.keyboard_model != b.keyboard_model
+           || a.keyboard_variant != b.keyboard_variant;
 }
 
 } // namespace

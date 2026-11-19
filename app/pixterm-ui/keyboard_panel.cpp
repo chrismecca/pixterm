@@ -27,6 +27,8 @@ private:
     Configure& configure_;
     Widget layouts_ = nullptr;
     Widget variant_ = nullptr;
+    OptionMenu model_menu_;
+    std::size_t model_ = 0;
 
     void apply();
 };
@@ -45,6 +47,12 @@ Widget KeyboardPanel::build(Widget parent) {
                                 XmATTACH_WIDGET, XmNbottomWidget, apply_button, XmNleftAttachment,
                                 XmATTACH_FORM, XmNrightAttachment, XmATTACH_FORM, nullptr);
     variant_ = place_row(row, nullptr, "Variant (optional):", make_text_field(row, "variant", 16));
+    std::vector<std::string_view> models;
+    models.reserve(chooser::keyboard_models.size());
+    for (const auto& m : chooser::keyboard_models)
+        models.push_back(m.name);
+    model_menu_ = make_option_menu(row, "model", models, [this](std::size_t i) { model_ = i; });
+    place_row(row, variant_, "Keyboard:", model_menu_.menu);
     layouts_ = make_list(form, "layoutList");
     XtVaSetValues(XtParent(layouts_), XmNtopAttachment, XmATTACH_FORM, XmNleftAttachment,
                   XmATTACH_FORM, XmNrightAttachment, XmATTACH_FORM, XmNbottomAttachment,
@@ -63,6 +71,8 @@ void KeyboardPanel::refresh() {
     else
         XmListDeselectAllItems(layouts_);
     set_text(variant_, app_.settings().keyboard_variant);
+    model_ = chooser::keyboard_model_row(app_.settings().keyboard_model);
+    model_menu_.show(model_);
 }
 
 void KeyboardPanel::apply() {
@@ -78,6 +88,7 @@ void KeyboardPanel::apply() {
     Settings next = app_.settings();
     next.keyboard_layout = std::move(chosen->first);
     next.keyboard_variant = std::move(chosen->second);
+    next.keyboard_model = std::string(chooser::keyboard_models.at(model_).code);
     configure_.commit(next);
 }
 

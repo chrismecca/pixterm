@@ -202,6 +202,9 @@ void TerminalWindow::open(Supervisor& sup, std::vector<std::string> command,
                       .hold_input = false};
         if (!resource_name_.empty())
             xterm.argv.insert(xterm.argv.begin() + 1, {"-name", resource_name_});
+        // The LK201's editing keys and PF1 to PF4, as OpenVMS expects.
+        if (sup.host().dec_keys)
+            xterm.argv.insert(xterm.argv.begin() + 1, {"-kt", "vt220"});
         xterm.argv.insert(xterm.argv.end(), command_.begin(), command_.end());
         if (!sup.system().start(Slot::client, std::move(xterm))) {
             sup.report_error("Internal error: cannot start the terminal.");

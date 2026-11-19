@@ -198,3 +198,12 @@ std::expected<TimeSettings, std::string> read_time_form(const TimeForm& form) {
 }
 
 } // namespace pixterm::chooser
+
+namespace pixterm::chooser {
+
+std::size_t keyboard_model_row(std::string_view code) {
+    const auto* const it = std::ranges::find(keyboard_models, code, &KeyboardModel::code);
+    return it == keyboard_models.end() ? 0 : static_cast<std::size_t>(it - keyboard_models.begin());
+}
+
+} // namespace pixterm::chooser

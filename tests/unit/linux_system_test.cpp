@@ -290,10 +290,12 @@ TEST(xorg_reads_the_keyboard_and_display_size_from_the_settings) {
     Rig r;
     Settings s;
     s.keyboard_layout = "de";
+    s.keyboard_model = "sun_type6_usb";
     s.display_mode = "1280x1024@75";
     CHECK(r.sys->start_xorg(s, {}));
     const auto conf = r.sys->read_file(r.dir.path() / "xorg.conf").value_or("");
     CHECK(conf.contains(R"(Option "XkbLayout" "de")"));
+    CHECK(conf.contains(R"(Option "XkbModel" "sun_type6_usb")"));
     // Xorg starts every display, XDMCP ones too, at the chosen size.
     CHECK(conf.contains(R"(Identifier "HDMI-1")"));
     CHECK(conf.contains(R"(Identifier "HDMI-2")"));

@@ -69,11 +69,11 @@ Settings load_settings() {
 }
 
 bool apply_keyboard(const Settings& s) {
-    const int status =
-        run_and_wait({"/usr/bin/setxkbmap", "-layout", s.keyboard_layout, "-variant",
-                      s.keyboard_variant, "-option", "", "-option", "terminate:ctrl_alt_bksp"},
-                     {"PATH=/usr/bin:/bin", "DISPLAY=" + from_environment("DISPLAY", ":0"),
-                      "XAUTHORITY=" + from_environment("XAUTHORITY", "")});
+    const int status = run_and_wait(
+        {"/usr/bin/setxkbmap", "-model", s.keyboard_model, "-layout", s.keyboard_layout, "-variant",
+         s.keyboard_variant, "-option", "", "-option", "terminate:ctrl_alt_bksp"},
+        {"PATH=/usr/bin:/bin", "DISPLAY=" + from_environment("DISPLAY", ":0"),
+         "XAUTHORITY=" + from_environment("XAUTHORITY", "")});
     if (status != 0)
         std::println(stderr, "pixterm-xsetup: setxkbmap failed");
     return status == 0;

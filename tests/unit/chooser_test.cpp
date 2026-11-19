@@ -360,6 +360,12 @@ TEST(the_time_form_checks_the_zone_and_servers) {
     CHECK(bad_server.error().contains("NTP"));
 }
 
+TEST(keyboard_models_start_with_the_pc) {
+    CHECK_EQ(keyboard_models.front().code, "pc105");
+    CHECK_EQ(keyboard_model_row("sun_type7_usb"), 2U);
+    CHECK_EQ(keyboard_model_row("unknown"), 0U);
+}
+
 TEST(keyboard_layouts_are_listed_by_code) {
     REQUIRE(!keyboard_layouts.empty());
     CHECK_EQ(keyboard_layouts[0].code, "us");

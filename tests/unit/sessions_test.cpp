@@ -481,6 +481,19 @@ TEST(an_xdmcp_host_with_a_mac_address_is_woken_too) {
     CHECK(r.sys.job->timeout >= std::chrono::minutes(2));
 }
 
+TEST(a_terminal_host_may_have_the_dec_vt220_keys) {
+    auto host = make_host(Protocol::telnet, "vms");
+    host.dec_keys = true;
+    Rig r(host);
+    r.pick();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "OK");
+    r.hand_over();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "1024 768");
+    const auto* xterm = r.sys.program(Slot::client);
+    REQUIRE(xterm != nullptr);
+    CHECK(has_sequence(xterm->argv, {"-kt", "vt220"}));
+}
+
 TEST(serial_checks_the_port_before_closing_the_chooser) {
     auto host = make_host(Protocol::serial, "");
     host.device = "/dev/ttyUSB0";

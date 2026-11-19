@@ -12,6 +12,10 @@ section into the release notes.
 
 * IBM mainframes: TN3270E sessions in x3270, with the PC 3270 keys, in
 the largest 3270 font that fits the screen. Port 992 uses TLS.
+* Keyboards: Sun Type 6 and Type 7 USB keyboards (Configure >
+Keyboard), with Sun's extra keys for Solaris and CDE; and the DEC VT220
+editing keys and PF1 to PF4 for terminal hosts that ask for them, as
+OpenVMS expects.
 * Configure > Time: the time zone, and NTP servers for networks with
 no way to the internet. The terminal has no clock battery, and secure
 connections need the right time.

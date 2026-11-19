@@ -118,6 +118,7 @@ struct Host {
     std::string font_server;                     ///< X11 sessions: "tcp/host:port", or empty
     bool allow_x = false;  ///< terminal hosts: their X programs may open windows here
     bool local_wm = false; ///< ssh-x11: run mwm here, for a host that sends none
+    bool dec_keys = false; ///< terminals: the DEC VT220 editing keys and PF1-PF4
     std::string domain;    ///< RDP: the Windows domain, or empty
     std::string device;    ///< serial: the port, such as /dev/ttyUSB0
     int speed = 9600;      ///< serial: bits per second
@@ -171,6 +172,7 @@ struct Settings {
     int blank_minutes = 10; ///< idle time before the screen blanks; 0 is never
     std::string keyboard_layout = "us";
     std::string keyboard_variant;
+    std::string keyboard_model = "pc105"; ///< XKB model: a PC, or a Sun USB keyboard
     Network network;
     Wifi wifi;
     TimeSettings time;

@@ -259,6 +259,22 @@ TEST(reads_time_settings) {
     CHECK(rejects(R"({"schema_version":1,"device":{"time":{"ntp":["-oops"]}}})"));
 }
 
+TEST(reads_the_keyboard_model_and_dec_keys) {
+    CHECK_EQ(parse_ok(R"({"schema_version":1})").keyboard_model, "pc105");
+    const auto s = parse_ok(R"({"schema_version":1,"device":{"keyboard":{"layout":"us",
+        "model":"sun_type7_usb"}},"hosts":[{"id":"a","name":"n","address":"vms",
+        "protocol":"telnet","dec_keys":true}]})");
+    CHECK_EQ(s.keyboard_model, "sun_type7_usb");
+    REQUIRE_EQ(s.hosts.size(), 1U);
+    CHECK(s.hosts[0].dec_keys);
+    CHECK(parse_ok(to_json(s)) == s);
+    CHECK(rejects(R"({"schema_version":1,"device":{"keyboard":{"model":"pc;rm"}}})"));
+    // Only terminals have DEC keys.
+    CHECK(!parse_ok(with_host(R"("address":"h","protocol":"rdp","dec_keys":true)"))
+               .hosts[0]
+               .dec_keys);
+}
+
 TEST(rejects_bad_hosts) {
     CHECK(rejects(with_host(R"("address":"h","protocol":"ssh-x11","auth":"hostbased")")));
     CHECK(rejects(with_host(R"("address":"h","protocol":"nx")")));

@@ -86,6 +86,7 @@ private:
     Widget key_auth_ = nullptr;
     Widget allow_x_ = nullptr;
     Widget local_wm_ = nullptr;
+    Widget dec_keys_ = nullptr;
     Widget indirect_ = nullptr;
     OptionMenu protocol_menu_;
     OptionMenu session_menu_;
@@ -249,7 +250,10 @@ void HostsPanel::build_editor() {
     allow_x_ = place_row(
         editor_, key_auth_,
         "Terminal:", make_toggle(editor_, "allowX", "The host's X programs may open windows here"));
-    local_wm_ = place_row(editor_, allow_x_, "Windows:",
+    dec_keys_ = place_row(
+        editor_, allow_x_,
+        "Keys:", make_toggle(editor_, "decKeys", "DEC VT220 keys (Find, Select, PF1-PF4)"));
+    local_wm_ = place_row(editor_, dec_keys_, "Windows:",
                           make_toggle(editor_, "localWm", "Run mwm here (the host sends none)"));
     indirect_ =
         place_row(editor_, local_wm_,
@@ -297,6 +301,7 @@ void HostsPanel::open_editor(std::optional<std::size_t> index) {
     set_toggle(key_auth_, f.key_auth);
     set_toggle(allow_x_, f.allow_x);
     set_toggle(local_wm_, f.local_wm);
+    set_toggle(dec_keys_, f.dec_keys);
     set_toggle(indirect_, f.indirect);
     protocol_ = f.protocol;
     session_ = f.session;
@@ -316,6 +321,7 @@ void HostsPanel::sync_editor() {
     sensitive(key_auth_, e.key_auth);
     sensitive(allow_x_, e.allow_x);
     sensitive(local_wm_, e.local_wm);
+    sensitive(dec_keys_, e.dec_keys);
     sensitive(session_menu_.menu, e.session);
     sensitive(command_, e.command);
     sensitive(indirect_, e.indirect);
@@ -348,7 +354,8 @@ void HostsPanel::save_editor() {
                                  .key_auth = toggle_state(key_auth_),
                                  .allow_x = toggle_state(allow_x_),
                                  .indirect = toggle_state(indirect_),
-                                 .local_wm = toggle_state(local_wm_)};
+                                 .local_wm = toggle_state(local_wm_),
+                                 .dec_keys = toggle_state(dec_keys_)};
     auto host = chooser::read_form(form);
     if (!host) {
         show_error(editor_, host.error());

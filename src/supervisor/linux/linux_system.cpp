@@ -239,16 +239,18 @@ bool LinuxSystem::write_xauthority() {
 void LinuxSystem::write_xorg_conf(const Settings& settings) {
     // The layout and variant were checked: lower-case letters, digits,
     // '_' and '-'.
-    auto text = std::format(R"(# Written by pixtermd from the terminal's settings.
+    auto text =
+        std::format(R"(# Written by pixtermd from the terminal's settings.
 Section "InputClass"
 	Identifier "pixterm-keyboard"
 	MatchIsKeyboard "on"
 	Option "XkbLayout" "{}"
 	Option "XkbVariant" "{}"
+	Option "XkbModel" "{}"
 	Option "XkbOptions" "terminate:ctrl_alt_bksp"
 EndSection
 )",
-                            settings.keyboard_layout, settings.keyboard_variant);
+                    settings.keyboard_layout, settings.keyboard_variant, settings.keyboard_model);
     // A Monitor section named after an output applies to it. Xorg picks
     // the first mode of that size, whatever its rate, and ignores a size
     // the monitor does not offer; pixterm-xsetup sets the exact mode on

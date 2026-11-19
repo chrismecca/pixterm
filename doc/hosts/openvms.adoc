@@ -43,6 +43,13 @@ shows the line to add, and Export to USB writes it to
 `+pixterm-terminal-key.pub+`. Then tick "Log in with this terminal's key"
 in the host entry. A key avoids both problems below.
 
+== Terminal sessions
+
+For SSH terminal or Telnet sessions, tick Keys: DEC VT220 keys in the
+host entry. The PC's six editing keys then send the LK201's: Home is
+Find, Insert is Insert Here, Delete is Remove, End is Select, Page Up
+and Page Down are Prev and Next; F1 to F4 are PF1 to PF4.
+
 == Fonts
 
 The terminal has the DEC fonts DECwindows asks for most: the DEC

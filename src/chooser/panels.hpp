@@ -103,6 +103,23 @@ inline constexpr std::array<KeyboardLayout, 34> keyboard_layouts{{
 
 /// The list row of a layout code, if it is listed.
 [[nodiscard]] std::optional<std::size_t> layout_row(std::string_view code);
+
+struct KeyboardModel {
+    std::string_view code; ///< the XKB model
+    std::string_view name;
+};
+
+/// The keyboards whose extra keys pixterm knows: a PC's, and Sun's USB
+/// keyboards (Stop, Again, Props, Undo, Front, Copy, Open, Paste, Find,
+/// Cut, Help), which Solaris and CDE programs use.
+inline constexpr std::array<KeyboardModel, 3> keyboard_models{{
+    {"pc105", "PC keyboard"},
+    {"sun_type6_usb", "Sun Type 6 (USB)"},
+    {"sun_type7_usb", "Sun Type 7 (USB)"},
+}};
+
+/// The row of a model; row 0, the PC, for one not listed.
+[[nodiscard]] std::size_t keyboard_model_row(std::string_view code);
 [[nodiscard]] std::string layout_line(const KeyboardLayout& layout);
 
 /// Checks a chosen layout and a typed variant.

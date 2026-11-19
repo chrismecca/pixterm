@@ -51,6 +51,9 @@ TEST(fields_follow_the_protocol) {
     CHECK(!enabled_fields(Protocol::vnc, SessionType::xsession).font_server);
     CHECK(enabled_fields(Protocol::vnc, SessionType::xsession).wake_mac);
     CHECK(enabled_fields(Protocol::ssh_x11, SessionType::xterm).local_wm);
+    CHECK(enabled_fields(Protocol::telnet, SessionType::xsession).dec_keys);
+    CHECK(enabled_fields(Protocol::serial, SessionType::xsession).dec_keys);
+    CHECK(!enabled_fields(Protocol::ssh_x11, SessionType::xsession).dec_keys);
     CHECK(!enabled_fields(Protocol::rdp, SessionType::xsession).local_wm);
     CHECK(!enabled_fields(Protocol::serial, SessionType::xsession).wake_mac);
     const auto plan9 = enabled_fields(Protocol::drawterm, SessionType::xsession);

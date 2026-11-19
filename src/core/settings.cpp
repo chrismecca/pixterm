@@ -219,6 +219,15 @@ std::expected<Host, std::string> parse_host(const json::Value& v, std::size_t in
         }
     }
 
+    if (is_terminal(h.protocol) || h.protocol == Protocol::serial) {
+        if (const auto* dec = v.find("dec_keys")) {
+            const auto b = dec->as_bool();
+            if (!b)
+                return fail("invalid dec_keys");
+            h.dec_keys = *b;
+        }
+    }
+
     if (h.protocol == Protocol::ssh_x11) {
         if (const auto* wm = v.find("local_wm")) {
             const auto b = wm->as_bool();
@@ -339,6 +348,11 @@ std::expected<Settings, std::string> parse_document(const json::Value& root) {
 
     auto layout = checked_member(keyboard, "layout", is_valid_layout, true);
     auto variant = checked_member(keyboard, "variant", is_valid_variant, true);
+    auto model = checked_member(keyboard, "model", is_valid_variant, true);
+    if (!model)
+        return error("invalid keyboard model");
+    if (!model->empty())
+        s.keyboard_model = std::move(*model);
     auto mode = checked_member(display, "mode", is_valid_display_mode, true);
     auto pin = checked_member(device, "admin_pin", is_valid_pin_hash, true);
     if (!layout)
@@ -435,6 +449,8 @@ json::Value host_to_json(const Host& h) {
         add("allow_x", true);
     if (h.protocol == Protocol::ssh_x11 && h.local_wm)
         add("local_wm", true);
+    if ((is_terminal(h.protocol) || h.protocol == Protocol::serial) && h.dec_keys)
+        add("dec_keys", true);
     if (h.protocol == Protocol::rdp && !h.domain.empty())
         add("domain", h.domain);
     return o;
@@ -515,6 +531,8 @@ std::string to_json(const Settings& s) {
     json::Object keyboard{{.key = "layout", .value = s.keyboard_layout}};
     if (!s.keyboard_variant.empty())
         keyboard.push_back({.key = "variant", .value = s.keyboard_variant});
+    if (s.keyboard_model != Settings{}.keyboard_model)
+        keyboard.push_back({.key = "model", .value = s.keyboard_model});
 
     json::Object network;
     if (s.network.is_static) {
