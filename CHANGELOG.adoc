@@ -8,7 +8,16 @@ section into the release notes.
 
 == Unreleased
 
+=== Fixed
+
+* systemd-resolved answered LLMNR queries from the network, on port
+5355. It now only looks names up, as release images promise.
+
 === Added
+
+* Each image is checked as it is built for network services: only
+units on a short list may be enabled, and a release image has no SSH
+server.
 
 * IBM mainframes: TN3270E sessions in x3270, with the PC 3270 keys, in
 the largest 3270 font that fits the screen. Port 992 uses TLS.

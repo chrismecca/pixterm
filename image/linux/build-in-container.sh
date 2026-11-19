@@ -68,6 +68,8 @@ mkdir -p /mnt/tmp/pixterm-src/image/linux/cache
 cp -R /src/image/linux/cache/sources /mnt/tmp/pixterm-src/image/linux/cache/
 
 chroot /mnt /bin/bash /tmp/pixterm-src/image/linux/customize.sh
+# Release images run no network services; check it before going on.
+/src/image/linux/check-image.sh /mnt "${PIXTERM_DEV:-1}"
 cp /mnt/tmp/pixterm-packages "/out/$out.packages"
 cp /mnt/tmp/pixterm-lock "/out/$out.lock"
 rm -rf /mnt/tmp/pixterm-src /mnt/tmp/pixterm-packages /mnt/tmp/pixterm-lock

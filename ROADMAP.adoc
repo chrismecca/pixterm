@@ -36,7 +36,6 @@ are kept from the first plan so that issues can refer to them.
 | 9 | The checklist in `doc/hardware.adoc` on the Pi 3B+, 4B, 400 and 5 | M
 | 10 | Hundreds of automatic power cuts, some during saves | M
 | 11 | A 72-hour session, watching memory and open files | S
-| 18 | Test that a release image, booted in QEMU, accepts no connections unless a setting allows them | M
 |===
 
 == The X server
@@ -68,9 +67,6 @@ are kept from the first plan so that issues can refer to them.
 | 21 | Screenshots in the README | S
 | 23 | Host guides checked by other people: Solaris and CDE, HP-UX, AIX, Linux with LightDM or GDM | M
 |===
-
-== Also wanted for 1.0
-
 
 == 1.2
 

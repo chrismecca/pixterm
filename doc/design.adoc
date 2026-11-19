@@ -352,7 +352,10 @@ settings carried over by Export and Import.
 pixterm is meant for trusted home, lab and office networks, not for the
 open internet. `SECURITY.adoc` says how to report a problem.
 
-* *Inbound services:* none in release images. During an XDMCP or
+* *Inbound services:* none in release images. `image/linux/check-image.sh`
+checks each image as it is built: every enabled unit is on a short list
+of clients and pixterm's own, a release image has no SSH server, and
+systemd-resolved answers no one (no LLMNR or multicast DNS). During an XDMCP or
 direct X session, the X server accepts connections on TCP port 6000,
 from that session's host alone where the host is known in advance.
 * *Remote hosts:* a host with trusted X11 forwarding controls the

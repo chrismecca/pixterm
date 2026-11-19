@@ -68,6 +68,9 @@ and after a restart wpa_supplicant does not run.
 restart, Configure > Time shows the right local time.
 . Set an administrator PIN, then clear it with `+pixterm-reset+` on the
 boot partition.
+. With a release image at the chooser, scan the terminal from another
+machine (`+nmap -sT -sU -p- ADDRESS+`): nothing is open. During an
+XDMCP session, TCP port 6000 is.
 . Cut the power 20 times: at the chooser, during a session and while a
 change is being saved. The settings must survive every time.
 . Record memory use (`+free -m+`) after boot and after an hour's session.
