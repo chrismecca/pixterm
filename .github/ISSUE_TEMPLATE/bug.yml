@@ -1,0 +1,47 @@
+# SPDX-FileCopyrightText: 2026 Chris Mecca
+# SPDX-License-Identifier: MIT
+name: Bug report
+description: Something on the terminal does not work as the documents say.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Security problems go to the Security tab instead ("Report a
+        vulnerability"), not here.
+  - type: input
+    id: version
+    attributes:
+      label: pixterm version
+      description: Configure > System shows it.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: board
+    attributes:
+      label: Board
+      options: [Raspberry Pi 3 B, Raspberry Pi 3 B+, Raspberry Pi 4 B, Raspberry Pi 400, Raspberry Pi 5, Other]
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: host
+    attributes:
+      label: The host
+      description: Its kind (SSH, XDMCP, RDP ...), operating system and version, if a session is involved.
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: >
+        Configure > Diagnostics shows the terminal's recent log. Paste the
+        part around the problem, without passwords or addresses you would
+        rather keep private.
+      render: text

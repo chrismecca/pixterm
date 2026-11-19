@@ -1,0 +1,44 @@
+# SPDX-FileCopyrightText: 2026 Chris Mecca
+# SPDX-License-Identifier: MIT
+name: Host report
+description: A host system that works, or does not, with pixterm.
+labels: [host report]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Reports like this one fill in the table of host systems known to
+        work, in doc/hosts/. Thank you.
+  - type: input
+    id: system
+    attributes:
+      label: Host system and version
+      placeholder: "Solaris 9 on a Sun Blade 150"
+    validations:
+      required: true
+  - type: dropdown
+    id: protocol
+    attributes:
+      label: Protocol
+      options: [SSH / X11, XDMCP, SSH terminal, Telnet, Direct X, rexec, rsh, VNC, RDP, Serial console, TN3270, TN5250, Plan 9 (drawterm)]
+    validations:
+      required: true
+  - type: dropdown
+    id: works
+    attributes:
+      label: Does it work?
+      options: [Yes, Partly, No]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: pixterm version
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Setup the host needed, and anything that did not work.

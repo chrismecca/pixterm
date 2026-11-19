@@ -1,0 +1,39 @@
+// SPDX-FileCopyrightText: 2026 Chris Mecca
+// SPDX-License-Identifier: MIT
+
+= Host systems known to work
+
+Each row says how it was checked. To add a system, or report one that
+does not work, open a host report on GitHub.
+
+== On real hosts
+
+[cols="2,1,2",options="header"]
+|===
+| Host system | Protocol | Notes
+
+| OpenVMS V9.2-3 (x86-64), VSI OpenSSH | SSH / X11 | DECwindows, raw session type; see link:openvms.adoc[]
+| IRIX on an SGI Origin 200 | XDMCP | see link:irix.adoc[]
+| NetBSD 11.1 | SSH / X11 | olvwm from `+~/.xsession+`; see link:unix-ssh.adoc[]
+| Debian | SSH / X11 | see link:unix-ssh.adoc[]
+| A Sun workstation's console port | Serial console | through a USB serial adapter; see link:serial.adoc[]
+|===
+
+== In the session test
+
+The session test runs each kind of session against a stand-in host in
+the same container, on every change; `tools/ci.sh sessions` runs it.
+
+[cols="2,1",options="header"]
+|===
+| Stand-in host | Protocol
+
+| Debian's OpenSSH | SSH / X11, SSH terminal, key login
+| Debian's xdm | XDMCP, Find Hosts
+| A telnet stand-in | Telnet
+| pixterm's own rexec and rsh test servers | rexec, rsh
+| TigerVNC's Xvnc | VNC
+| FreeRDP's shadow server | RDP
+| A pseudo-terminal | Serial console
+| Hosts that answer and hang up | TN3270, TN5250, Plan 9 (drawterm): the program starts and the session ends cleanly; no real mainframe, IBM i or Plan 9 yet
+|===
