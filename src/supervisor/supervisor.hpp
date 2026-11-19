@@ -68,6 +68,11 @@ struct Environment {
 /// Screens at least this tall (4K) get the large fonts.
 inline constexpr int large_screen_height = 1800;
 
+/// The 8-bit display that runs inside the terminal's own, for a host
+/// whose programs need a colour map.
+inline constexpr std::string_view nested_display = ":1";
+inline constexpr int nested_display_number = 1; ///< the same display
+
 /// How long the supervisor waits for things.
 namespace timeouts {
 inline constexpr Duration x_start{20'000};
@@ -178,8 +183,11 @@ public:
 
     /// A pixterm program's full path.
     [[nodiscard]] std::string libexec(std::string_view program) const;
-    /// The environment for a child: the base, plus extra.
+    /// The environment for a child: the base, plus extra, which replaces
+    /// any base variable of the same name.
     [[nodiscard]] std::vector<std::string> child_env(std::vector<std::string> extra = {}) const;
+    /// Starts a program in a slot, noting when.
+    [[nodiscard]] bool start(Slot slot, Program program);
     /// When the program in a slot last started.
     [[nodiscard]] Time started(Slot slot) const;
 
@@ -225,6 +233,7 @@ private:
     std::unique_ptr<SettingsRequests> requests_;
     std::unique_ptr<FailureConsole> console_;
     bool own_display_ = false; ///< the X server is the session's own
+    bool handed_over_ = false; ///< the session has started, in this handoff
     std::array<Child, slot_count> children_{};
     int xstart_failures_ = 0;
     bool large_screen_ = false; ///< as pixterm-xsetup last reported
@@ -242,7 +251,7 @@ private:
     void reload_settings();
     void start_x();
     void xsetup_done(ExitStatus status, std::string_view output);
-    void start_mwm();
+    void start_mwm(std::vector<std::string> extra_env = {});
     void start_chooser();
     void start_session_keys();
     void begin_session(const Host& host, std::string_view username);

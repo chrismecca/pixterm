@@ -214,7 +214,7 @@ void TerminalWindow::open(Supervisor& sup, std::vector<std::string> command,
         if (sup.host().dec_keys)
             xterm.argv.insert(xterm.argv.begin() + 1, {"-kt", "vt220"});
         xterm.argv.insert(xterm.argv.end(), command_.begin(), command_.end());
-        if (!sup.system().start(Slot::client, std::move(xterm))) {
+        if (!sup.start(Slot::client, std::move(xterm))) {
             sup.report_error("Internal error: cannot start the terminal.");
             sup.teardown();
             return;
@@ -250,7 +250,7 @@ void terminal_exited(Supervisor& sup, ExitStatus status, std::string_view output
 
 void run_desktop(Supervisor& sup, Program program) {
     const auto name = program.name;
-    if (!sup.system().start(Slot::client, std::move(program))) {
+    if (!sup.start(Slot::client, std::move(program))) {
         sup.report_error(std::format("Internal error: cannot start {}.", name));
         sup.teardown();
         return;
@@ -280,6 +280,82 @@ void desktop_exited(Supervisor& sup, ExitStatus status, std::string_view output,
         report();
     else
         sup.unless_display_reset(report);
+}
+
+} // namespace pixterm::supervisor
+
+namespace pixterm::supervisor {
+
+namespace {
+
+constexpr Duration nested_poll{100};
+constexpr Duration nested_start{10'000};
+constexpr std::string_view nested_socket = "/tmp/.X11-unix/X1";
+
+} // namespace
+
+void NestedDisplay::start(Supervisor& sup, std::vector<std::string> extra,
+                          std::function<void()> ready) {
+    ready_ = std::move(ready);
+    const auto sized = [this, &sup, extra = std::move(extra)](ExitStatus status,
+                                                              std::string_view output) {
+        if (sup.state() != State::handoff)
+            return;
+        const auto [w, h] = screen_size(status, output);
+        // -no-host-grab: Ctrl+Shift must not take the terminal's keyboard.
+        Program xephyr{.name = "Xephyr",
+                       .argv = {std::string(programs::xephyr), std::string(nested_display),
+                                "-screen", std::format("{}x{}x8", w, h), "-no-host-grab", "-title",
+                                sup.host().name},
+                       .env = sup.child_env(),
+                       .input = {},
+                       .hold_input = false};
+        xephyr.argv.insert(xephyr.argv.end(), extra.begin(), extra.end());
+        if (!sup.start(Slot::nested, std::move(xephyr))) {
+            sup.report_error("Internal error: cannot start the 8-bit display.");
+            sup.teardown();
+            return;
+        }
+        sup.log(
+            std::format("8-bit display {} ({}x{}) for {}", nested_display, w, h, sup.host().name));
+        poll_at_ = sup.system().now();
+        give_up_at_ = sup.system().now() + nested_start;
+    };
+    if (!sup.run_xsetup({"--full-screen"}, sized))
+        sized(ExitStatus::exited(1), "");
+}
+
+void NestedDisplay::tick(Supervisor& sup, Time now) {
+    if (!poll_at_ || now < *poll_at_)
+        return;
+    if (sup.system().is_socket(nested_socket)) {
+        poll_at_.reset();
+        if (ready_)
+            ready_();
+        return;
+    }
+    if (give_up_at_ && now >= *give_up_at_) {
+        poll_at_.reset();
+        sup.report_error("The 8-bit display did not start.");
+        sup.teardown();
+        return;
+    }
+    poll_at_ = now + nested_poll;
+}
+
+bool NestedDisplay::exited(Supervisor& sup) {
+    if (!poll_at_)
+        return true;
+    poll_at_.reset();
+    sup.report_error("The 8-bit display did not start.");
+    sup.teardown();
+    return false;
+}
+
+std::vector<std::string> nested_font_path(const Host& host) {
+    if (host.font_server.empty())
+        return {};
+    return {"-fp", std::format("{},{}", default_font_path, host.font_server)};
 }
 
 } // namespace pixterm::supervisor

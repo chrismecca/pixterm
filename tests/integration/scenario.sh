@@ -398,7 +398,7 @@ sleep 1
 
 step "TN3270: x3270 shows the mainframe until it hangs up"
 mark
-pick_end 5
+pick_end 7
 wait_log "state handoff -> session" 15
 ps -eo user,args | grep -q '^pixterm */usr/bin/x3270 .*-keymap pixterm .*127.0.0.1:2325' && ok "x3270 running" || bad "x3270 running"
 sleep 2; shot s18b-tn3270
@@ -409,7 +409,7 @@ sleep 1
 
 step "TN5250: tn5250 runs in a terminal until the host hangs up"
 mark
-pick_end 4
+pick_end 6
 wait_log "state handoff -> session" 15
 ps -eo user,args | grep -q '^pixterm */usr/bin/xterm .*-name tn5250 .*-e /usr/local/bin/tn5250 127.0.0.1:2326' && ok "tn5250 running" || bad "tn5250 running"
 sleep 2; shot s18c-tn5250
@@ -420,7 +420,7 @@ sleep 1
 
 step "drawterm: the CPU server's failed login is reported"
 mark
-pick_end 3
+pick_end 5
 wait_log "state handoff -> session" 15
 ps -eo user,args | grep -q '^pixterm */usr/local/bin/drawterm -h 127.0.0.1 -a 127.0.0.1 -g 1280x1024+0+0 -u glenda' && ok "drawterm running" || bad "drawterm running"
 sleep 2; shot s18d-drawterm
@@ -430,12 +430,12 @@ $XDO xdotool key Return; sleep 0.5
 
 step "Serial console: a missing port is reported; a present one opens"
 mark
-pick_end 1
+pick_end 3
 wait_log "There is no serial port /dev/ttyUSB8"
 wait_class errorDialog_popup
 $XDO xdotool key Return; sleep 0.5
 mark
-pick_end 2
+pick_end 4
 wait_log "state handoff -> session" 15
 ps -eo user,args | grep -q '^pixterm */usr/bin/xterm .*-e /usr/bin/picocom .*--send-cmd  --receive-cmd  /dev/ttyUSB9' && ok "terminal runs picocom" || bad "terminal runs picocom"
 sleep 6; shot s19-serial
@@ -448,18 +448,53 @@ sleep 1
 
 step "IPv6: an SSH host at ::1"
 mark
-pick_end 0
+pick_end 2
 wait_win "Login to ipv6-xterm" 15    # a new host key
 sleep 0.5; click_yes
 sleep 1
 password secret
 wait_log "state handoff -> session" 30
 ps -eo args | grep -q '^/usr/bin/ssh .*-- ::1' && ok "ssh to ::1" || bad "ssh to ::1"
-sleep 3
+sleep 6 # a session that ends sooner is reported as one that never ran
 $XDO xdotool mousemove 100 100; sleep 0.3
 $XDO xdotool type --delay 20 exit; $XDO xdotool key Return
 wait_log "session on ipv6-xterm ended" 15
 wait_log "started pixterm-ui" 15
+sleep 1
+
+step "8-bit: an SSH host's xterm on a PseudoColor display"
+mark
+pick_end 1
+password secret
+wait_log "8-bit display :1" 20
+wait_log "state handoff -> session" 20
+ps -eo args | grep -q '^/usr/bin/Xephyr :1 -screen [0-9]*x[0-9]*x8 ' && ok "Xephyr at 8 bits" || bad "Xephyr at 8 bits"
+info=$(DISPLAY=:1 xdpyinfo 2>/dev/null || true)
+echo "$info" | grep -q 'depth of root window: *8 planes' && echo "$info" | grep -q 'class: *PseudoColor' \
+	&& ok "an 8-bit PseudoColor screen" || bad "an 8-bit PseudoColor screen"
+sleep 6; shot s21-pseudocolor
+pkill -u alice -x xterm
+wait_log "session on eight-bit ended" 15
+wait_log "started pixterm-ui" 15
+ps -eo args | grep -q '^/usr/bin/Xephyr' && bad "Xephyr stopped" || ok "Xephyr stopped"
+sleep 1
+
+step "8-bit: an XDMCP login on a PseudoColor display"
+mark
+pick_end 0
+wait_log "8-bit display :1" 20
+wait_log "state handoff -> session" 20
+ps -eo args | grep -q '^/usr/bin/Xephyr :1 -screen [0-9]*x[0-9]*x8 .*-query 127.0.0.1 -once' && ok "Xephyr queries xdm" || bad "Xephyr queries xdm"
+sleep 4; shot s22-pseudocolor-greeter
+$XDO xdotool mousemove 200 200; sleep 0.3
+$XDO xdotool type --delay 30 alice; $XDO xdotool key Return; sleep 1
+$XDO xdotool type --delay 30 secret; $XDO xdotool key Return
+i=0; until ps -eo user,args | grep -q '^alice *xterm' || [ $i -ge 30 ]; do sleep 0.5; i=$((i + 1)); done
+ps -eo user,args | grep -q '^alice *xterm' && ok "8-bit XDMCP session xterm running" || bad "8-bit XDMCP session xterm running"
+sleep 6; pkill -u alice -x xterm
+wait_log "XDMCP session on eight-bit-xdm ended" 20
+wait_log "started pixterm-ui" 15
+tail -n +"$((MARK + 1))" "$LOG" | grep -q 'ended immediately' && bad "no refusal reported" || ok "no refusal reported"
 sleep 1
 
 step "leftover processes"

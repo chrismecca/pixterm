@@ -275,6 +275,15 @@ TEST(reads_the_keyboard_model_and_dec_keys) {
                .dec_keys);
 }
 
+TEST(x11_hosts_may_ask_for_an_8_bit_display) {
+    const auto s = parse_ok(with_host(R"("address":"h","protocol":"xdmcp","pseudocolor":true)"));
+    CHECK(s.hosts[0].pseudocolor);
+    CHECK(parse_ok(to_json(s)) == s);
+    CHECK(!parse_ok(with_host(R"("address":"h","protocol":"rdp","pseudocolor":true)"))
+               .hosts[0]
+               .pseudocolor);
+}
+
 TEST(rejects_bad_hosts) {
     CHECK(rejects(with_host(R"("address":"h","protocol":"ssh-x11","auth":"hostbased")")));
     CHECK(rejects(with_host(R"("address":"h","protocol":"nx")")));

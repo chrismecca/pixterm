@@ -104,6 +104,11 @@ Programs on the host draw no windows, or windows cannot be moved::
 The host sends no window manager: tick Windows: Run mwm here, for SSH
 hosts.
 
+An old program will not start, or says it cannot allocate colours::
+It needs an 8-bit display with a colour map. Tick Colours: 8-bit
+display in the host entry, for SSH and XDMCP hosts. The session then
+runs on an 8-bit display that fills the screen.
+
 Secure connections fail, or the clock is wrong::
 The terminal sets its clock from the network. On a network with no way
 to the internet, set an NTP server in Configure > Time.

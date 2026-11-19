@@ -96,7 +96,7 @@ public:
     void show_console(std::string_view text) override;
     void console_echo(bool on) override;
     [[nodiscard]] std::optional<bool> link_carrier() const override;
-    [[nodiscard]] std::optional<int> display_clients(bool tcp_only) const override;
+    [[nodiscard]] std::optional<int> display_clients(int display, bool tcp_only) const override;
 
 private:
     struct Child {

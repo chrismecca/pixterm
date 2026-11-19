@@ -40,7 +40,7 @@ public:
     void watch(Time now) override {
         if (sup().state() != State::remote)
             return;
-        const auto clients = sup().system().display_clients(true);
+        const auto clients = sup().system().display_clients(0, true);
         if (clients > 0) {
             if (!seen_) {
                 sup().log(std::format("{} opened a window", sup().host().name));

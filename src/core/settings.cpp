@@ -228,6 +228,15 @@ std::expected<Host, std::string> parse_host(const json::Value& v, std::size_t in
         }
     }
 
+    if (h.protocol == Protocol::ssh_x11 || h.protocol == Protocol::xdmcp) {
+        if (const auto* pc = v.find("pseudocolor")) {
+            const auto b = pc->as_bool();
+            if (!b)
+                return fail("invalid pseudocolor");
+            h.pseudocolor = *b;
+        }
+    }
+
     if (h.protocol == Protocol::ssh_x11) {
         if (const auto* wm = v.find("local_wm")) {
             const auto b = wm->as_bool();
@@ -449,6 +458,8 @@ json::Value host_to_json(const Host& h) {
         add("allow_x", true);
     if (h.protocol == Protocol::ssh_x11 && h.local_wm)
         add("local_wm", true);
+    if ((h.protocol == Protocol::ssh_x11 || h.protocol == Protocol::xdmcp) && h.pseudocolor)
+        add("pseudocolor", true);
     if ((is_terminal(h.protocol) || h.protocol == Protocol::serial) && h.dec_keys)
         add("dec_keys", true);
     if (h.protocol == Protocol::rdp && !h.domain.empty())

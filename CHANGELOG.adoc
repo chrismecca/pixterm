@@ -10,11 +10,16 @@ section into the release notes.
 
 === Fixed
 
+* A session program that ended at once was not reported as an error on
+a terminal: pixtermd never noted when the session's programs started.
 * systemd-resolved answered LLMNR queries from the network, on port
 5355. It now only looks names up, as release images promise.
 
 === Added
 
+* 8-bit PseudoColor displays: an SSH or XDMCP host may ask for an 8-bit
+display with a colour map, for old programs that need one. The session
+runs in Xephyr, filling the screen.
 * A user guide, `doc/guide.adoc`: first steps, each Configure panel,
 recovery, and faults by symptom; and pictures in the README, which
 `tools/screenshots.sh` takes again when the look changes.

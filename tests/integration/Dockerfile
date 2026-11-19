@@ -41,6 +41,7 @@ RUN apt-get update \
       xfonts-75dpi \
       xfonts-base \
       xfonts-x3270-misc \
+      xserver-xephyr \
       xterm \
       xvfb \
  && rm -rf /var/lib/apt/lists/*

@@ -55,6 +55,10 @@ TEST(fields_follow_the_protocol) {
     CHECK(enabled_fields(Protocol::serial, SessionType::xsession).dec_keys);
     CHECK(!enabled_fields(Protocol::ssh_x11, SessionType::xsession).dec_keys);
     CHECK(!enabled_fields(Protocol::rdp, SessionType::xsession).local_wm);
+    CHECK(enabled_fields(Protocol::ssh_x11, SessionType::xsession).pseudocolor);
+    CHECK(enabled_fields(Protocol::xdmcp, SessionType::xsession).pseudocolor);
+    CHECK(!enabled_fields(Protocol::direct_x, SessionType::xsession).pseudocolor);
+    CHECK(!enabled_fields(Protocol::vnc, SessionType::xsession).pseudocolor);
     CHECK(!enabled_fields(Protocol::serial, SessionType::xsession).wake_mac);
     const auto plan9 = enabled_fields(Protocol::drawterm, SessionType::xsession);
     CHECK(plan9.address && plan9.port && plan9.username);
@@ -179,6 +183,18 @@ TEST(options_of_other_protocols_are_dropped) {
     CHECK(h->auth == Auth::password);
     CHECK(h->command.empty());
     CHECK(h->allow_x);
+}
+
+TEST(an_8_bit_display_is_kept_for_x11_hosts_only) {
+    auto f = ssh_form();
+    f.pseudocolor = true;
+    const auto h = read_form(f);
+    REQUIRE(h.has_value());
+    CHECK(h->pseudocolor);
+    CHECK(form_for(&*h).pseudocolor);
+    f.protocol = Protocol::telnet;
+    f.port = "23";
+    CHECK(!read_form(f)->pseudocolor);
 }
 
 TEST(a_serial_host_has_a_device_and_no_address) {

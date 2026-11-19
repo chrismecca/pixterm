@@ -38,3 +38,7 @@ between the two.
 * If programs need fonts that only the host has, run its font server
 (`+fs+`, port 7100) and fill in Font server in the host entry.
 * Logging out of IRIX returns the terminal to its chooser.
+* Older IRIX programs may need an 8-bit display with a colour map
+(PseudoColor). Tick Colours: 8-bit display in the host entry. Colours
+can change for a moment when a program installs a colour map of its
+own, as they did on 8-bit workstations.

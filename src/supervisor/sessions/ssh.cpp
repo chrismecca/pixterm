@@ -11,13 +11,20 @@
 // The session ends when the session command exits (a logout) or the
 // master connection dies (the network failed). Stray remote X programs
 // cannot keep it alive, because teardown kills the master.
+//
+// A host marked pseudocolor gets an 8-bit display, Xephyr inside the
+// terminal's own, and its programs open their windows there. The
+// master must already point at it: with ControlMaster, it is the
+// master's DISPLAY that ssh forwards to.
 
 #include "parts.hpp"
 #include "sessions.hpp"
 
+#include <algorithm>
 #include <csignal>
 #include <cstdint>
 #include <format>
+#include <iterator>
 
 namespace pixterm::supervisor {
 
@@ -43,7 +50,7 @@ public:
     }
     void child_exited(Slot slot, ExitStatus status, std::string_view output) override;
     [[nodiscard]] std::optional<Time> deadline() const override {
-        return sup().state() == State::connecting ? poll_at_ : std::nullopt;
+        return sup().state() == State::connecting ? poll_at_ : nested_.deadline();
     }
     void tick(Time now) override;
     void stop() override { sup().system().close_input(Slot::client); }
@@ -55,6 +62,7 @@ private:
     std::optional<Time> poll_at_;
     DirectX direct_x_;
     TerminalWindow terminal_;
+    NestedDisplay nested_;
 
     [[nodiscard]] const Host& host() const { return sup().host(); }
     [[nodiscard]] std::filesystem::path control_path() const {
@@ -70,8 +78,12 @@ private:
         return sup().environment().runtime_dir / "known_hosts";
     }
     [[nodiscard]] std::vector<std::string> env() const {
-        return sup().child_env({"SSH_ASKPASS=" + sup().libexec("pixterm-askpass"),
-                                "SSH_ASKPASS_REQUIRE=force", "PIXTERM_HOST_NAME=" + host().name});
+        std::vector<std::string> extra{"SSH_ASKPASS=" + sup().libexec("pixterm-askpass"),
+                                       "SSH_ASKPASS_REQUIRE=force",
+                                       "PIXTERM_HOST_NAME=" + host().name};
+        if (host().pseudocolor)
+            extra.push_back(NestedDisplay::variable());
+        return sup().child_env(std::move(extra));
     }
     [[nodiscard]] std::vector<std::string> args(Kind kind) const;
     void start_session();
@@ -80,6 +92,7 @@ private:
     [[nodiscard]] bool connect();
     void master_exited(ExitStatus status, std::string_view output);
     void client_exited(ExitStatus status, std::string_view output);
+    void nested_exited();
 };
 
 std::vector<std::string> SshSession::args(Kind kind) const {
@@ -174,11 +187,11 @@ bool SshSession::connect() {
     auto& system = sup().system();
     sup().log(std::format("connecting to {} ({}@{}:{})", host().name, user_, host().address,
                           host().port));
-    if (!system.start(Slot::master, {.name = "ssh",
-                                     .argv = args(Kind::master),
-                                     .env = env(),
-                                     .input = {},
-                                     .hold_input = false})) {
+    if (!sup().start(Slot::master, {.name = "ssh",
+                                    .argv = args(Kind::master),
+                                    .env = env(),
+                                    .input = {},
+                                    .hold_input = false})) {
         sup().report_error("Internal error: cannot start ssh.");
         return false;
     }
@@ -201,8 +214,10 @@ void SshSession::cancel() {
 
 // The control socket appears once the user has logged in.
 void SshSession::tick(Time now) {
-    if (sup().state() != State::connecting)
+    if (sup().state() != State::connecting) {
+        nested_.tick(sup(), now);
         return;
+    }
     if (sup().system().is_socket(control_path())) {
         poll_at_.reset();
         sup().start_handoff();
@@ -218,6 +233,15 @@ void SshSession::start() {
     }
     if (host().protocol == Protocol::ssh_terminal) {
         start_terminal();
+        return;
+    }
+    if (host().pseudocolor) {
+        // Xephyr has no cookie of its own. -ac lets in its only clients,
+        // ssh's forwarded connections and mwm, which run here; TCP
+        // stays off.
+        std::vector<std::string> extra{"-ac", "-nolisten", "tcp"};
+        std::ranges::move(nested_font_path(host()), std::back_inserter(extra));
+        nested_.start(sup(), std::move(extra), [this] { start_session(); });
         return;
     }
     if (!host().font_server.empty()
@@ -238,11 +262,11 @@ void SshSession::start_session() {
     argv.push_back(remote_command(host()));
     // Standard input stays open until teardown: on OpenVMS the command's
     // input is the SSH channel, and end of file there ends it at once.
-    if (!sup().system().start(Slot::client, {.name = "ssh-session",
-                                             .argv = std::move(argv),
-                                             .env = env(),
-                                             .input = {},
-                                             .hold_input = true})) {
+    if (!sup().start(Slot::client, {.name = "ssh-session",
+                                    .argv = std::move(argv),
+                                    .env = env(),
+                                    .input = {},
+                                    .hold_input = true})) {
         sup().report_error("Internal error: cannot start the remote session.");
         sup().teardown();
         return;
@@ -275,6 +299,8 @@ void SshSession::save_known_hosts() {
 void SshSession::child_exited(Slot slot, ExitStatus status, std::string_view output) {
     if (slot == Slot::master)
         master_exited(status, output);
+    else if (slot == Slot::nested)
+        nested_exited();
     else if (host().protocol == Protocol::ssh_terminal)
         terminal_exited(sup(), status, output);
     else
@@ -298,6 +324,13 @@ void SshSession::master_exited(ExitStatus status, std::string_view output) {
             std::format("The connection to {} was lost.{}", host().name, paragraph(output)));
         sup().teardown();
     }
+}
+
+void SshSession::nested_exited() {
+    if (!nested_.exited(sup()) || sup().state() != State::session)
+        return;
+    sup().report_error(std::format("The 8-bit display for {} closed.", host().name));
+    sup().teardown();
 }
 
 void SshSession::client_exited(ExitStatus status, std::string_view output) {

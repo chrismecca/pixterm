@@ -64,7 +64,11 @@ cat > /tmp/config.json <<'JSON'
       "speed": 9600 },
     { "id": "h15", "name": "missing-serial", "protocol": "serial", "device": "/dev/ttyUSB8" },
     { "id": "h19", "name": "ipv6-xterm", "address": "::1", "protocol": "ssh-x11",
-      "username": "alice", "session": "xterm" }
+      "username": "alice", "session": "xterm" },
+    { "id": "h20", "name": "eight-bit", "address": "127.0.0.1", "protocol": "ssh-x11",
+      "username": "alice", "session": "xterm", "pseudocolor": true },
+    { "id": "h21", "name": "eight-bit-xdm", "address": "127.0.0.1", "protocol": "xdmcp",
+      "pseudocolor": true }
   ]
 }
 JSON

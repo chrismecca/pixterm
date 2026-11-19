@@ -16,7 +16,7 @@ export DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8
 RUNTIME_PKGS="xserver-xorg-core xserver-xorg-input-libinput xauth mwm libxm4
 	libxext6 libxrandr2 libc++1 libc++abi1 x11-xkb-utils openssh-client
 	xfonts-base xfonts-75dpi xfonts-100dpi
-	xterm inetutils-telnet tigervnc-viewer freerdp3-x11 picocom
+	xterm inetutils-telnet tigervnc-viewer freerdp3-x11 picocom xserver-xephyr
 	wpasupplicant wireless-regdb firmware-brcm80211 x3270 xfonts-x3270-misc
 	libncurses6"
 BUILD_PKGS="clang lld cmake ninja-build make pkg-config libc++-dev libc++abi-dev libc6-dev

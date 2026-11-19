@@ -7,6 +7,11 @@
 // that runs -query (or -indirect) host -once. The host's display
 // manager logs the user in; -once makes Xorg exit when the session
 // ends, which is the logout signal (state remote).
+//
+// A host marked pseudocolor gets Xephyr instead, an 8-bit display
+// inside the terminal's own, with the same -query and -once; Xephyr
+// exiting is then the logout. The console keys work as for a session
+// on the local display.
 
 #include "parts.hpp"
 #include "sessions.hpp"
@@ -22,31 +27,29 @@ constexpr Duration refused_within{15'000};
 constexpr Duration greeter_within{30'000};
 constexpr int x_tcp_port = 6000;
 
-// Xorg's built-in font path on Debian; Xorg skips missing directories.
-constexpr std::string_view default_font_path =
-    "/usr/share/fonts/X11/misc,/usr/share/fonts/X11/cyrillic,"
-    "/usr/share/fonts/X11/100dpi/:unscaled,/usr/share/fonts/X11/75dpi/:unscaled,"
-    "/usr/share/fonts/X11/Type1,/usr/share/fonts/X11/100dpi,"
-    "/usr/share/fonts/X11/75dpi,built-ins";
-
 class XdmcpSession final : public Session {
 public:
     using Session::Session;
 
     bool begin(std::string_view username) override;
     void cancel() override;
-    void start() override { sup().switch_display(); }
+    void start() override;
     [[nodiscard]] std::vector<std::string> xorg_args() const override;
     void display_ready() override;
     void watch(Time now) override;
     void xorg_exited(ExitStatus status) override;
+    void child_exited(Slot slot, ExitStatus status, std::string_view output) override;
+    [[nodiscard]] std::optional<Time> deadline() const override { return nested_.deadline(); }
+    void tick(Time now) override { nested_.tick(sup(), now); }
 
 private:
     Time began_;
     bool greeter_seen_ = false;
+    NestedDisplay nested_;
 
     [[nodiscard]] const Host& host() const { return sup().host(); }
     void probe_done(std::string_view output);
+    void ended(Time started);
 };
 
 bool XdmcpSession::begin(std::string_view /*username*/) {
@@ -104,6 +107,17 @@ void XdmcpSession::cancel() {
     sup().chooser_idle();
 }
 
+void XdmcpSession::start() {
+    if (!host().pseudocolor) {
+        sup().switch_display();
+        return;
+    }
+    nested_.start(sup(), xorg_args(), [this] {
+        display_ready();
+        sup().session_running(State::session);
+    });
+}
+
 std::vector<std::string> XdmcpSession::xorg_args() const {
     // The display manager's programs connect back over TCP, unencrypted.
     // No -noreset: the reset at the end of the session is what makes
@@ -125,15 +139,18 @@ void XdmcpSession::display_ready() {
                           host().name, host().address));
     began_ = sup().system().now();
     greeter_seen_ = false;
-    sup().session_running(State::remote);
+    if (!host().pseudocolor)
+        sup().session_running(State::remote);
 }
 
 // The host must connect back to the display, and show its login, in
 // time.
 void XdmcpSession::watch(Time now) {
-    if (sup().state() != State::remote || greeter_seen_)
+    const auto running = host().pseudocolor ? State::session : State::remote;
+    if (sup().state() != running || greeter_seen_)
         return;
-    const auto clients = sup().system().display_clients(false);
+    const auto clients =
+        sup().system().display_clients(host().pseudocolor ? nested_display_number : 0, false);
     if (clients != 0) {
         greeter_seen_ = true; // connected, or we cannot tell
     } else if (now - began_ >= greeter_within) {
@@ -147,8 +164,19 @@ void XdmcpSession::watch(Time now) {
 }
 
 void XdmcpSession::xorg_exited(ExitStatus /*status*/) {
+    ended(sup().started(Slot::xorg));
+}
+
+void XdmcpSession::child_exited(Slot slot, ExitStatus /*status*/, std::string_view /*output*/) {
+    if (slot != Slot::nested || !nested_.exited(sup()) || sup().state() != State::session)
+        return;
+    ended(sup().started(Slot::nested));
+    sup().teardown();
+}
+
+void XdmcpSession::ended(Time started) {
     // A login that connected means a real session, however short.
-    if (!greeter_seen_ && sup().system().now() - sup().started(Slot::xorg) < refused_within)
+    if (!greeter_seen_ && sup().system().now() - started < refused_within)
         sup().report_error(std::format(
             "The XDMCP session with {} ended immediately.\n\n"
             "The host answered but refused the session; check its display manager's log.",

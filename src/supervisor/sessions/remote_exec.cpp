@@ -124,7 +124,7 @@ void RemoteExecSession::run_command() {
               .input = is_rexec() ? password_ + '\n' : std::string(),
               .hold_input = true};
     forget_password();
-    if (!sup().system().start(Slot::client, std::move(p))) {
+    if (!sup().start(Slot::client, std::move(p))) {
         sup().report_error(std::format("Internal error: cannot start {}.", kind()));
         sup().teardown();
         return;

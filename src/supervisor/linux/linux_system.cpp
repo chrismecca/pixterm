@@ -41,8 +41,6 @@ constexpr Duration helper_timeout{30'000};
 constexpr Duration drain_wait{100};
 constexpr std::string_view display_name = ":0";
 
-constexpr std::array slots{Slot::xorg, Slot::mwm, Slot::chooser, Slot::master, Slot::client};
-
 // Signals a program and its process group. Right after fork the child
 // may not have made its group yet, so the program itself is signalled
 // too.
@@ -496,7 +494,7 @@ void LinuxSystem::reap() {
             job_reaped(status);
             continue;
         }
-        for (const auto slot : slots) {
+        for (const auto slot : stop_order) {
             if (child(slot).pid == pid) {
                 child_reaped(slot, status);
                 break;
@@ -507,11 +505,11 @@ void LinuxSystem::reap() {
 
 void LinuxSystem::terminate_all() {
     cancel_job();
-    for (const auto slot : slots)
+    for (const auto slot : stop_order)
         signal(slot, SIGTERM);
     const auto until = Clock::now() + std::chrono::seconds(3);
     while (Clock::now() < until
-           && std::ranges::any_of(slots, [this](Slot s) { return running(s); })) {
+           && std::ranges::any_of(stop_order, [this](Slot s) { return running(s); })) {
         int status = 0;
         const pid_t pid = ::waitpid(-1, &status, WNOHANG);
         for (auto& c : children_)
@@ -520,7 +518,7 @@ void LinuxSystem::terminate_all() {
         if (pid <= 0)
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
-    for (const auto slot : slots)
+    for (const auto slot : stop_order)
         signal(slot, SIGKILL);
     kill_leftovers();
 }
@@ -736,8 +734,8 @@ std::optional<bool> LinuxSystem::link_carrier() const {
     return pixterm::link_carrier();
 }
 
-std::optional<int> LinuxSystem::display_clients(bool tcp_only) const {
-    return tcp_only ? display_tcp_connections(0) : display_connections(0);
+std::optional<int> LinuxSystem::display_clients(int display, bool tcp_only) const {
+    return tcp_only ? display_tcp_connections(display) : display_connections(display);
 }
 
 } // namespace pixterm::supervisor

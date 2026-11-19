@@ -32,7 +32,16 @@ inline constexpr std::string_view xfreerdp = "/usr/bin/xfreerdp3";
 inline constexpr std::string_view x3270 = "/usr/bin/x3270";
 inline constexpr std::string_view tn5250 = "/usr/local/bin/tn5250";
 inline constexpr std::string_view drawterm = "/usr/local/bin/drawterm";
+inline constexpr std::string_view xephyr = "/usr/bin/Xephyr";
 } // namespace programs
+
+/// Xorg's built-in font path on Debian; X servers skip missing
+/// directories.
+inline constexpr std::string_view default_font_path =
+    "/usr/share/fonts/X11/misc,/usr/share/fonts/X11/cyrillic,"
+    "/usr/share/fonts/X11/100dpi/:unscaled,/usr/share/fonts/X11/75dpi/:unscaled,"
+    "/usr/share/fonts/X11/Type1,/usr/share/fonts/X11/100dpi,"
+    "/usr/share/fonts/X11/75dpi,built-ins";
 
 /// The largest 3270 font ("3270gt8" to "3270gt32") that shows a whole
 /// 3270 model 2 screen on a screen this size.
@@ -119,6 +128,33 @@ private:
     std::vector<std::string> env_;
     std::string title_;
 };
+
+/// An 8-bit PseudoColor display for a session whose programs need a
+/// colour map: Xephyr as display :1, filling the terminal's screen. The
+/// terminal's own X server stays as it is.
+class NestedDisplay {
+public:
+    /// The variable that puts a program on this display.
+    [[nodiscard]] static std::string variable() { return "DISPLAY=" + std::string(nested_display); }
+
+    /// Starts Xephyr once the screen's size is known; extra are its own
+    /// arguments. ready runs once it accepts connections.
+    void start(Supervisor& sup, std::vector<std::string> extra, std::function<void()> ready);
+    [[nodiscard]] std::optional<Time> deadline() const { return poll_at_; }
+    void tick(Supervisor& sup, Time now);
+    /// Xephyr exited. If it never came up, the user is told and the
+    /// session ends, and the result is false.
+    [[nodiscard]] bool exited(Supervisor& sup);
+
+private:
+    std::function<void()> ready_;
+    std::optional<Time> poll_at_;
+    std::optional<Time> give_up_at_;
+};
+
+/// Xephyr's -fp argument for a host's font server: X.Org's own fonts,
+/// then the server's. Nothing for no font server.
+[[nodiscard]] std::vector<std::string> nested_font_path(const Host& host);
 
 /// The terminal's xterm exited: end the session, explaining why if it
 /// ended too soon.

@@ -35,6 +35,7 @@ struct HostForm {
     bool indirect = false;
     bool local_wm = false;
     bool dec_keys = false;
+    bool pseudocolor = false;
 };
 
 /// Which fields mean something for a protocol and session type. The
@@ -55,6 +56,7 @@ struct EnabledFields {
     bool wake_mac = false;
     bool local_wm = false;
     bool dec_keys = false;
+    bool pseudocolor = false;
 };
 
 [[nodiscard]] EnabledFields enabled_fields(Protocol p, SessionType s) noexcept;

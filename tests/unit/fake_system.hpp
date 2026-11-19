@@ -25,7 +25,9 @@ using namespace pixterm::supervisor;
 
 class FakeSystem final : public System {
 public:
-    Time clock{};
+    // An hour after boot, as on a terminal: a start time never set
+    // (zero) must not pass for a recent one.
+    Time clock{std::chrono::hours(1)};
     std::vector<std::string> logs;
     Settings settings;
     std::vector<std::vector<std::string>> xorg_starts;
@@ -46,6 +48,7 @@ public:
     std::string console; ///< what tty1 shows
     bool console_echoes = true;
     std::optional<int> tcp_clients = 0;
+    mutable int clients_display = -1; ///< the display last asked about
 
     // ---- System ----
 
@@ -137,7 +140,8 @@ public:
     void console_echo(bool on) override { console_echoes = on; }
 
     [[nodiscard]] std::optional<bool> link_carrier() const override { return carrier; }
-    [[nodiscard]] std::optional<int> display_clients(bool tcp_only) const override {
+    [[nodiscard]] std::optional<int> display_clients(int display, bool tcp_only) const override {
+        clients_display = display;
         return tcp_only ? tcp_clients : clients;
     }
 
@@ -161,7 +165,7 @@ public:
 
     /// Every program that was sent a signal exits, Xorg last.
     void reap_signalled(Supervisor& sup) {
-        for (const auto slot : {Slot::client, Slot::master, Slot::chooser, Slot::mwm, Slot::xorg}) {
+        for (const auto slot : stop_order) {
             const bool signalled =
                 std::ranges::any_of(signals, [slot](const auto& s) { return s.first == slot; });
             if (signalled && running(slot)) {

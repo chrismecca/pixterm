@@ -87,6 +87,7 @@ private:
     Widget allow_x_ = nullptr;
     Widget local_wm_ = nullptr;
     Widget dec_keys_ = nullptr;
+    Widget pseudocolor_ = nullptr;
     Widget indirect_ = nullptr;
     OptionMenu protocol_menu_;
     OptionMenu session_menu_;
@@ -255,8 +256,11 @@ void HostsPanel::build_editor() {
         "Keys:", make_toggle(editor_, "decKeys", "DEC VT220 keys (Find, Select, PF1-PF4)"));
     local_wm_ = place_row(editor_, dec_keys_, "Windows:",
                           make_toggle(editor_, "localWm", "Run mwm here (the host sends none)"));
+    pseudocolor_ = place_row(
+        editor_, local_wm_, "Colours:",
+        make_toggle(editor_, "pseudocolor", "8-bit display with a colour map (PseudoColor)"));
     indirect_ =
-        place_row(editor_, local_wm_,
+        place_row(editor_, pseudocolor_,
                   "XDMCP:", make_toggle(editor_, "indirect", "Use the host's chooser (indirect)"));
     font_server_ = place_row(editor_, indirect_,
                              "Font server:", make_text_field(editor_, "fontServer", 28), true);
@@ -302,6 +306,7 @@ void HostsPanel::open_editor(std::optional<std::size_t> index) {
     set_toggle(allow_x_, f.allow_x);
     set_toggle(local_wm_, f.local_wm);
     set_toggle(dec_keys_, f.dec_keys);
+    set_toggle(pseudocolor_, f.pseudocolor);
     set_toggle(indirect_, f.indirect);
     protocol_ = f.protocol;
     session_ = f.session;
@@ -322,6 +327,7 @@ void HostsPanel::sync_editor() {
     sensitive(allow_x_, e.allow_x);
     sensitive(local_wm_, e.local_wm);
     sensitive(dec_keys_, e.dec_keys);
+    sensitive(pseudocolor_, e.pseudocolor);
     sensitive(session_menu_.menu, e.session);
     sensitive(command_, e.command);
     sensitive(indirect_, e.indirect);
@@ -355,7 +361,8 @@ void HostsPanel::save_editor() {
                                  .allow_x = toggle_state(allow_x_),
                                  .indirect = toggle_state(indirect_),
                                  .local_wm = toggle_state(local_wm_),
-                                 .dec_keys = toggle_state(dec_keys_)};
+                                 .dec_keys = toggle_state(dec_keys_),
+                                 .pseudocolor = toggle_state(pseudocolor_)};
     auto host = chooser::read_form(form);
     if (!host) {
         show_error(editor_, host.error());

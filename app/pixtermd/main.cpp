@@ -68,6 +68,7 @@ int main() {
         "PATH=/usr/bin:/bin",
         "LANG=C.UTF-8",
         "DISPLAY=:0",
+        "PIXTERM_DISPLAY=:0", // the terminal's own, whatever DISPLAY a program is given
         "HOME=" + home.string(),
         "USER=" + name,
         "LOGNAME=" + name,

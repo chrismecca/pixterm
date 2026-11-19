@@ -38,15 +38,6 @@ are kept from the first plan so that issues can refer to them.
 | 11 | A 72-hour session, watching memory and open files | S
 |===
 
-== The X server
-
-[cols="1,8,1",options="header"]
-|===
-| # | Item | Size
-
-| 36 | 8-bit PseudoColor displays, per host, for programs that need a colour map | M
-|===
-
 == The terminal
 
 [cols="1,8,1",options="header"]

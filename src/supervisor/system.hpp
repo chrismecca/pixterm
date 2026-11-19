@@ -14,6 +14,7 @@
 #include <pixterm/helper_protocol.hpp>
 #include <pixterm/settings_store.hpp>
 
+#include <array>
 #include <chrono>
 #include <cstddef>
 #include <filesystem>
@@ -38,9 +39,16 @@ enum class Slot {
     chooser, ///< pixterm-ui, or a notice in its place
     master,  ///< a connection that logs in before the session starts
     client,  ///< the session's own program
+    nested,  ///< an X server inside the terminal's, for an 8-bit session
 };
 
-inline constexpr std::size_t slot_count = 5;
+inline constexpr std::size_t slot_count = 6;
+
+/// Every slot, in the order their programs are stopped: the session's
+/// first, the X server last.
+inline constexpr std::array stop_order{Slot::client,  Slot::master, Slot::nested,
+                                       Slot::chooser, Slot::mwm,    Slot::xorg};
+static_assert(stop_order.size() == slot_count);
 
 /// How a program ended.
 struct ExitStatus {
@@ -190,8 +198,8 @@ public:
 
     /// Whether any network link, wired or Wi-Fi, is up; see link_carrier.
     [[nodiscard]] virtual std::optional<bool> link_carrier() const = 0;
-    /// Clients of the X display: TCP ones only, or all.
-    [[nodiscard]] virtual std::optional<int> display_clients(bool tcp_only) const = 0;
+    /// Clients of an X display, by number: TCP ones only, or all.
+    [[nodiscard]] virtual std::optional<int> display_clients(int display, bool tcp_only) const = 0;
 };
 
 } // namespace pixterm::supervisor

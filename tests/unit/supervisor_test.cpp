@@ -262,6 +262,34 @@ TEST(a_host_that_sends_no_window_manager_gets_mwm) {
     CHECK_EQ(mwm->name, "mwm");
 }
 
+TEST(mwm_for_an_8_bit_host_runs_on_the_8_bit_display) {
+    auto host = ssh_host();
+    host.local_wm = true;
+    host.pseudocolor = true;
+    Rig r({host});
+    r.boot();
+    r.sup->chooser_line("START desktop -");
+    r.sys.sockets.insert("/run/pixterm/ssh-control");
+    r.sys.advance(*r.sup, std::chrono::milliseconds(200));
+    r.hand_over();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "1024 768");
+    r.sys.sockets.insert("/tmp/.X11-unix/X1");
+    r.sys.advance(*r.sup, std::chrono::milliseconds(200));
+    REQUIRE(r.state() == State::session);
+    const auto* mwm = r.sys.program(Slot::mwm);
+    REQUIRE(mwm != nullptr);
+    CHECK(mentions(mwm->env, "DISPLAY=:1"));
+    CHECK(!mentions(mwm->env, "DISPLAY=:0"));
+}
+
+TEST(a_programs_own_variable_replaces_the_terminals) {
+    Rig r;
+    const auto env = r.sup->child_env({"DISPLAY=:1"});
+    CHECK(mentions(env, "DISPLAY=:1"));
+    CHECK(!mentions(env, "DISPLAY=:0"));
+    CHECK(mentions(env, "PATH=/usr/bin:/bin"));
+}
+
 TEST(a_session_has_no_mwm_unless_asked) {
     Rig r;
     reach_ssh_session(r);

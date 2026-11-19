@@ -129,6 +129,12 @@ unsigned char dialog_type(Kind kind) {
 } // namespace
 
 int main(int argc, char** argv) {
+    // On the terminal's own screen: for an 8-bit session, ssh's DISPLAY
+    // is the display inside it, which is not up yet during the login.
+    // Done first: setenv may invalidate pointers getenv returned.
+    if (const char* own = std::getenv("PIXTERM_DISPLAY"); own != nullptr && *own != '\0')
+        ::setenv("DISPLAY", own, 1);
+
     Dialog d;
     const std::string prompt = argc > 1 ? argv[1] : "Password:";
     const char* host = std::getenv("PIXTERM_HOST_NAME");

@@ -33,11 +33,12 @@ struct Rig {
 
     explicit Rig(const Host& host) {
         sys.settings.hosts = {host};
-        sup = std::make_unique<Supervisor>(sys, Environment{.runtime_dir = "/run/pixterm",
-                                                            .state_dir = "/var/lib/pixterm",
-                                                            .libexec_dir = "/usr/libexec/pixterm",
-                                                            .data_dir = "/usr/share/pixterm",
-                                                            .base_env = {"PATH=/usr/bin:/bin"}});
+        sup = std::make_unique<Supervisor>(
+            sys, Environment{.runtime_dir = "/run/pixterm",
+                             .state_dir = "/var/lib/pixterm",
+                             .libexec_dir = "/usr/libexec/pixterm",
+                             .data_dir = "/usr/share/pixterm",
+                             .base_env = {"PATH=/usr/bin:/bin", "DISPLAY=:0"}});
         sup->start();
         sup->x_ready();
         sys.finish_job(*sup, ExitStatus::exited(0), "");
@@ -509,6 +510,112 @@ TEST(vnc_reaches_an_ipv6_host) {
     const auto* viewer = r.sys.program(Slot::client);
     REQUIRE(viewer != nullptr);
     CHECK_EQ(viewer->argv.back(), "[2001:db8::5]::5900");
+}
+
+TEST(an_8_bit_xdmcp_session_runs_in_a_nested_display) {
+    auto host = make_host(Protocol::xdmcp, "sgi");
+    host.pseudocolor = true;
+    Rig r(host);
+    r.pick();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "W sgi\tload 0.1");
+    r.hand_over();
+    REQUIRE_EQ(r.sys.xorg_starts.size(), 1U); // the terminal's own X server stays
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "1280 1024");
+    const auto* xephyr = r.sys.program(Slot::nested);
+    REQUIRE(xephyr != nullptr);
+    CHECK(has_sequence(xephyr->argv, {"/usr/bin/Xephyr", ":1", "-screen", "1280x1024x8"}));
+    CHECK(has_sequence(xephyr->argv, {"-query", "sgi", "-once"}));
+    CHECK(has_sequence(xephyr->argv, {"-listen", "tcp"}));
+    r.sys.sockets.insert("/tmp/.X11-unix/X1");
+    r.sys.advance(*r.sup, std::chrono::milliseconds(300));
+    CHECK(r.state() == State::session);
+    r.sys.clock += std::chrono::minutes(10);
+    r.sys.exit(*r.sup, Slot::nested, ExitStatus::exited(0)); // logged out
+    CHECK(r.state() == State::teardown);
+    CHECK(!mentions(r.sys.logs, "error: "));
+}
+
+TEST(an_8_bit_ssh_session_forwards_to_the_nested_display) {
+    auto host = make_host(Protocol::ssh_x11, "sgi");
+    host.username = "alice";
+    host.session = SessionType::xterm;
+    host.pseudocolor = true;
+    Rig r(host);
+    r.pick();
+    const auto* master = r.sys.program(Slot::master);
+    REQUIRE(master != nullptr);
+    CHECK(mentions(master->env, "DISPLAY=:1"));
+    CHECK(!mentions(master->env, "DISPLAY=:0"));
+    r.sys.sockets.insert("/run/pixterm/ssh-control");
+    r.sys.advance(*r.sup, std::chrono::milliseconds(300));
+    r.hand_over();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "1024 768");
+    const auto* xephyr = r.sys.program(Slot::nested);
+    REQUIRE(xephyr != nullptr);
+    CHECK(has_sequence(xephyr->argv, {"-ac", "-nolisten", "tcp"}));
+    CHECK(!r.sys.job_running()); // no second screen check, and no second Xephyr
+    CHECK_EQ(std::ranges::count_if(r.sys.started_programs,
+                                   [](const auto& p) { return p.first == Slot::nested; }),
+             1);
+    CHECK(r.sys.program(Slot::client) == nullptr); // waits for the display
+    r.sys.sockets.insert("/tmp/.X11-unix/X1");
+    r.sys.advance(*r.sup, std::chrono::milliseconds(300));
+    const auto* client = r.sys.program(Slot::client);
+    REQUIRE(client != nullptr);
+    CHECK(mentions(client->env, "DISPLAY=:1"));
+    CHECK(r.state() == State::session);
+    r.sys.exit(*r.sup, Slot::nested, ExitStatus::killed(SIGTERM));
+    CHECK(r.state() == State::teardown);
+    CHECK(mentions(r.sys.logs, "8-bit display"));
+}
+
+TEST(an_8_bit_display_that_never_starts_ends_the_session) {
+    auto host = make_host(Protocol::xdmcp, "sgi");
+    host.pseudocolor = true;
+    Rig r(host);
+    r.pick();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "W sgi\tload 0.1");
+    r.hand_over();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "1280 1024");
+    r.sys.advance(*r.sup, std::chrono::seconds(11));
+    CHECK(r.state() == State::teardown);
+    CHECK(mentions(r.sys.logs, "did not start"));
+}
+
+TEST(an_8_bit_xdmcp_host_that_never_shows_a_login_says_so) {
+    auto host = make_host(Protocol::xdmcp, "sgi");
+    host.pseudocolor = true;
+    Rig r(host);
+    r.pick();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "W sgi\tload 0.1");
+    r.hand_over();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "1280 1024");
+    r.sys.sockets.insert("/tmp/.X11-unix/X1");
+    r.sys.clients = 0;
+    r.sys.advance(*r.sup, std::chrono::milliseconds(300));
+    REQUIRE(r.state() == State::session);
+    r.sys.advance(*r.sup, std::chrono::seconds(31));
+    CHECK_EQ(r.sys.clients_display, 1);
+    CHECK(r.state() == State::teardown);
+    CHECK(mentions(r.sys.logs, "never showed a login"));
+}
+
+TEST(an_8_bit_xdmcp_host_that_refuses_says_so) {
+    auto host = make_host(Protocol::xdmcp, "sgi");
+    host.pseudocolor = true;
+    host.font_server = "tcp/fonts.example.org:7100";
+    Rig r(host);
+    r.pick();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "W sgi\tload 0.1");
+    r.hand_over();
+    r.sys.finish_job(*r.sup, ExitStatus::exited(0), "1280 1024");
+    const auto* xephyr = r.sys.program(Slot::nested);
+    REQUIRE(xephyr != nullptr);
+    CHECK(mentions(xephyr->argv, "tcp/fonts.example.org:7100"));
+    r.sys.sockets.insert("/tmp/.X11-unix/X1");
+    r.sys.advance(*r.sup, std::chrono::milliseconds(300));
+    r.sys.exit(*r.sup, Slot::nested, ExitStatus::exited(0));
+    CHECK(mentions(r.sys.logs, "ended immediately"));
 }
 
 TEST(serial_checks_the_port_before_closing_the_chooser) {

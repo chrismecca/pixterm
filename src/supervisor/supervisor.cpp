@@ -25,7 +25,7 @@ constexpr std::array state_names{
     "handoff", "session", "teardown", "x_switch", "remote",
 };
 
-constexpr std::array slot_names{"Xorg", "mwm", "chooser", "master", "client"};
+constexpr std::array slot_names{"Xorg", "mwm", "chooser", "master", "client", "nested X server"};
 
 constexpr std::string_view mwm_path = "/usr/bin/mwm";
 
@@ -72,9 +72,22 @@ std::vector<std::string> Supervisor::child_env(std::vector<std::string> extra) c
     auto env = env_.base_env;
     env.push_back("XENVIRONMENT="
                   + (env_.data_dir / (large_screen_ ? "Xresources-large" : "Xresources")).string());
+    // An extra variable replaces the base one: a program on the 8-bit
+    // display gets DISPLAY=:1 instead of :0, not both.
+    for (const auto& e : extra) {
+        const auto name = std::string_view(e).substr(0, e.find('=') + 1);
+        std::erase_if(env, [name](const std::string& b) { return b.starts_with(name); });
+    }
     env.insert(env.end(), std::make_move_iterator(extra.begin()),
                std::make_move_iterator(extra.end()));
     return env;
+}
+
+bool Supervisor::start(Slot slot, Program program) {
+    if (!system_.start(slot, std::move(program)))
+        return false;
+    children_.at(index(slot)).started = system_.now();
+    return true;
 }
 
 Time Supervisor::started(Slot slot) const {
@@ -185,13 +198,12 @@ bool Supervisor::run_xsetup(std::vector<std::string> args, JobDone done) {
 
 // ---- the local display ----------------------------------------------
 
-void Supervisor::start_mwm() {
-    if (system_.start(Slot::mwm, {.name = "mwm",
-                                  .argv = {std::string(mwm_path)},
-                                  .env = child_env(),
-                                  .input = {},
-                                  .hold_input = false}))
-        children_.at(index(Slot::mwm)).started = system_.now();
+void Supervisor::start_mwm(std::vector<std::string> extra_env) {
+    (void)start(Slot::mwm, {.name = "mwm",
+                            .argv = {std::string(mwm_path)},
+                            .env = child_env(std::move(extra_env)),
+                            .input = {},
+                            .hold_input = false});
 }
 
 void Supervisor::start_chooser() {
@@ -315,13 +327,16 @@ void Supervisor::start_handoff() {
     system_.close_chooser();
     system_.signal(Slot::mwm, SIGTERM);
     deadline_ = system_.now() + timeouts::handoff;
+    handed_over_ = false;
     handoff_check();
 }
 
 void Supervisor::handoff_check() {
     if (state_ != State::handoff || system_.running(Slot::chooser) || system_.running(Slot::mwm)
-        || system_.job_running() || !session_)
+        || system_.job_running() || !session_ || handed_over_)
         return;
+    // Once: a session may run jobs of its own before it is running.
+    handed_over_ = true;
     session_->start();
 }
 
@@ -332,9 +347,11 @@ void Supervisor::session_running(State s) {
     if (s != State::session)
         return;
     start_session_keys();
-    // For a host that sends programs but no window manager.
+    // For a host that sends programs but no window manager, on the
+    // display they open their windows on.
     if (host_.local_wm)
-        start_mwm();
+        start_mwm(host_.pseudocolor ? std::vector{"DISPLAY=" + std::string(nested_display)}
+                                    : std::vector<std::string>{});
 }
 
 // On the local display, pixterm-ui waits for the console's hot key in
@@ -370,7 +387,7 @@ void Supervisor::teardown() {
     system_.close_chooser();
     if (session_)
         session_->stop();
-    for (const auto slot : {Slot::client, Slot::master, Slot::chooser, Slot::mwm, Slot::xorg})
+    for (const auto slot : stop_order)
         system_.signal(slot, SIGTERM);
     deadline_ = system_.now() + timeouts::terminate;
     teardown_check();
@@ -379,7 +396,7 @@ void Supervisor::teardown() {
 void Supervisor::teardown_check() {
     if (state_ != State::teardown || system_.job_running())
         return;
-    for (const auto slot : {Slot::xorg, Slot::mwm, Slot::chooser, Slot::master, Slot::client})
+    for (const auto slot : stop_order)
         if (system_.running(slot))
             return;
     system_.kill_leftovers();
@@ -464,6 +481,7 @@ void Supervisor::child_exited(Slot slot, ExitStatus status, std::string_view out
         break;
     case Slot::master:
     case Slot::client:
+    case Slot::nested:
         if (session_)
             session_->child_exited(slot, status, output);
         break;
@@ -560,7 +578,7 @@ void Supervisor::state_timeout(Time now) {
         break;
     case State::teardown:
         log("programs did not exit; killing them");
-        for (const auto slot : {Slot::client, Slot::master, Slot::chooser, Slot::mwm, Slot::xorg})
+        for (const auto slot : stop_order)
             system_.signal(slot, SIGKILL);
         deadline_ = now + timeouts::terminate;
         break;

@@ -172,7 +172,9 @@ A terminal or serial host with `"dec_keys": true` has the DEC VT220
 editing keys and PF1 to PF4, as OpenVMS expects. An `ssh-x11` host with
 `"local_wm": true` gets mwm on the terminal
 during its session, for a host that sends programs but no window
-manager. An empty `username` makes the chooser ask for one. `auth` is `password`
+manager. An `ssh-x11` or `xdmcp` host with `"pseudocolor": true` runs
+its session on an 8-bit PseudoColor display with a colour map, for old
+programs that need one. An empty `username` makes the chooser ask for one. `auth` is `password`
 (the default) or `key`, the terminal's own SSH key.
 
 Other protocols: `xdmcp` (with `xdmcp_mode` `query` or `indirect`),
