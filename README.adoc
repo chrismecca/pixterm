@@ -49,8 +49,8 @@ last good settings are always kept. You can pull the power at any time.
 `pixterm-helper`, runs as root and does only what the settings need.
 * Wired Ethernet or Wi-Fi: Configure scans for WPA2 and WPA3-Personal
 networks and joins one, hidden ones too.
-* Configure covers hosts, display mode, network, Wi-Fi, keyboard, USB
-export and import, and a log viewer. An optional PIN guards it.
+* Configure covers hosts, display mode, network, Wi-Fi, keyboard, time
+zone and NTP servers, USB export and import, and a log viewer. An optional PIN guards it.
 * During a session, Ctrl+Alt+Home opens the console: lock the screen
 with a code, or disconnect.
 * To reset a terminal, or recover from a forgotten PIN, make an empty

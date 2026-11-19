@@ -230,7 +230,7 @@ cp -p /tmp/known_hosts.kept /tmp/state/known_hosts
 $XDO xdotool key Return; sleep 0.5
 $T/click-rel "pixterm Configuration" 7 393     # Wi-Fi
 sleep 1; shot s10b-wifi
-$T/click-rel "pixterm Configuration" 7 355     # System
+$T/click-rel "pixterm Configuration" 7 336     # System
 sleep 1
 $T/click-rel "pixterm Configuration" 84 136    # Administrator PIN...
 wait_win "Administrator PIN"

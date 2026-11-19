@@ -256,6 +256,8 @@ Result Helper::dispatch(const Request& request) {
         return save_rdp_cert(args, request.payload);
     if (command == "host-key-forget")
         return forget_host_key(args);
+    if (command == "time")
+        return set_time(args);
     if (!args.empty())
         return fail(std::format("{} takes no arguments", command));
     if (command == "config-save")
@@ -487,6 +489,9 @@ std::expected<void, std::string> Helper::boot(bool reset_requested) {
     const auto settings = SettingsStore(paths_.state_dir, paths_.factory_settings).load().settings;
     if (auto ok = write_network(settings.network); !ok)
         return ok;
+    // systemd-timesyncd starts after this, and reads the servers.
+    if (auto ok = write_time(settings.time); !ok)
+        (void)write_time(TimeSettings{});
     // wpa_supplicant starts after this, if its configuration exists.
     if (settings.wifi.enabled) {
         if (auto passphrase = stored_passphrase(settings.wifi.ssid)) {
@@ -625,6 +630,55 @@ Result Helper::forget_host_key(std::span<const std::string> args) {
                return {};
            })
         .transform([] { return std::string(); });
+}
+
+// ---- time ------------------------------------------------------------
+//
+// /etc/localtime, on the read-only root, links to time_dir/localtime,
+// which links to the chosen zone. NTP servers go in a drop-in for
+// systemd-timesyncd; with none, it uses DHCP's or Debian's.
+
+std::expected<void, std::string> Helper::write_time(const TimeSettings& time) const {
+    const auto zone = paths_.zoneinfo / time.zone;
+    std::error_code ec;
+    if (!is_valid_time_zone(time.zone) || !std::filesystem::is_regular_file(zone, ec))
+        return fail(std::format("There is no time zone {}.", time.zone));
+    for (const auto& dir : {paths_.time_dir, paths_.timesyncd_dir}) {
+        std::filesystem::create_directories(dir, ec);
+        if (ec)
+            return fail(describe(dir, ec));
+    }
+    const auto link = paths_.time_dir / "localtime";
+    const auto tmp = paths_.time_dir / ".localtime.tmp";
+    ::unlink(tmp.c_str());
+    if (::symlink(zone.c_str(), tmp.c_str()) != 0 || ::rename(tmp.c_str(), link.c_str()) != 0)
+        return fail(describe(link, last_error()));
+    std::string conf = "# Written by pixterm-helper from the terminal's settings.\n[Time]\n";
+    if (!time.ntp.empty()) {
+        conf += "NTP=";
+        for (std::size_t i = 0; i < time.ntp.size(); ++i)
+            conf += (i == 0 ? "" : " ") + time.ntp[i];
+        conf += "\n";
+    }
+    return replace_file(paths_.timesyncd_dir, "pixterm.conf", conf, 0644);
+}
+
+Result Helper::set_time(std::span<const std::string> args) {
+    if (args.size() != 3)
+        return fail("usage: time ZONE NTP1|- NTP2|-");
+    TimeSettings time{.zone = args[0], .ntp = {}};
+    for (const auto& server : args.subspan(1)) {
+        if (server == "-")
+            continue;
+        if (!is_valid_address(server))
+            return fail("time: invalid NTP server");
+        time.ntp.push_back(server);
+    }
+    if (auto ok = write_time(time); !ok)
+        return fail(ok.error());
+    if (privileged_.run({std::string(systemctl), "restart", "systemd-timesyncd.service"}) != 0)
+        return fail("The clock service could not be restarted.");
+    return std::string();
 }
 
 Result Helper::wifi_scan(std::span<const std::string> args) {

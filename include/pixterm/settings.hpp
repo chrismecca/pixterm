@@ -142,6 +142,18 @@ struct Wifi {
     friend bool operator==(const Wifi&, const Wifi&) = default;
 };
 
+/// The clock: the terminal has no battery for one, so it sets its clock
+/// from the network.
+struct TimeSettings {
+    std::string zone = "UTC";     ///< IANA name, such as "Europe/London"
+    std::vector<std::string> ntp; ///< up to two servers; none: DHCP's or Debian's
+
+    friend bool operator==(const TimeSettings&, const TimeSettings&) = default;
+};
+
+/// The most NTP servers the settings may name.
+inline constexpr std::size_t max_ntp_servers = 2;
+
 /// The wired network: DHCP, or a static IPv4 address.
 struct Network {
     bool is_static = false;
@@ -161,6 +173,7 @@ struct Settings {
     std::string keyboard_variant;
     Network network;
     Wifi wifi;
+    TimeSettings time;
     std::string admin_pin; ///< a PIN hash, or empty for no PIN
     std::vector<Host> hosts;
 

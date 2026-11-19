@@ -189,19 +189,40 @@ void SettingsRequests::apply_wifi() {
     wipe(passphrase_);
     passphrase_.clear();
     if (!wifi) {
-        save(candidate_);
+        apply_time();
         return;
     }
     const auto done = [this](const helper::Reply& reply) {
         if (!reply.ok)
             failed("Wi-Fi could not be set up.\n\n" + reply.message);
         else
-            save(candidate_);
+            apply_time();
     };
     const bool sent = sup_.system().call_helper(*wifi, done);
     wipe(wifi->payload);
     if (!sent)
         failed("Wi-Fi could not be set up.");
+}
+
+void SettingsRequests::apply_time() {
+    const auto& next = candidate_.time;
+    if (next == sup_.settings().time) {
+        save(candidate_);
+        return;
+    }
+    sup_.log(std::format("setting the time zone to {}", next.zone));
+    const auto server = [&next](std::size_t i) {
+        return i < next.ntp.size() ? next.ntp[i] : std::string("-");
+    };
+    const auto done = [this](const helper::Reply& reply) {
+        if (!reply.ok)
+            failed("The time settings could not be applied.\n\n" + reply.message);
+        else
+            save(candidate_);
+    };
+    if (!sup_.system().call_helper(
+            {.args = {"time", next.zone, server(0), server(1)}, .payload = {}}, done))
+        failed("The time settings could not be applied.");
 }
 
 void SettingsRequests::forget_key(std::string_view host_id) {

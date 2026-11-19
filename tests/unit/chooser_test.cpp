@@ -341,6 +341,25 @@ TEST(ssh_and_rdp_hosts_have_a_key_to_forget) {
     CHECK_EQ(forget_key_request("h1"), "FORGET_KEY h1");
 }
 
+TEST(the_time_form_checks_the_zone_and_servers) {
+    const auto f = time_form({.zone = "Europe/London", .ntp = {"ntp.example.org"}});
+    CHECK_EQ(f.zone, "Europe/London");
+    CHECK_EQ(f.ntp1, "ntp.example.org");
+    CHECK_EQ(f.ntp2, "");
+    const auto t = read_time_form({.zone = " Europe/Paris ", .ntp1 = "", .ntp2 = "192.0.2.1"});
+    REQUIRE(t.has_value());
+    CHECK_EQ(t->zone, "Europe/Paris");
+    CHECK(t->ntp == std::vector<std::string>{"192.0.2.1"});
+    CHECK_EQ(read_time_form({.zone = "", .ntp1 = "", .ntp2 = ""}).value_or(TimeSettings{}).zone,
+             "UTC");
+    const auto bad_zone = read_time_form({.zone = "../x", .ntp1 = "", .ntp2 = ""});
+    REQUIRE(!bad_zone);
+    CHECK(bad_zone.error().contains("time zone"));
+    const auto bad_server = read_time_form({.zone = "UTC", .ntp1 = "-x", .ntp2 = ""});
+    REQUIRE(!bad_server);
+    CHECK(bad_server.error().contains("NTP"));
+}
+
 TEST(keyboard_layouts_are_listed_by_code) {
     REQUIRE(!keyboard_layouts.empty());
     CHECK_EQ(keyboard_layouts[0].code, "us");

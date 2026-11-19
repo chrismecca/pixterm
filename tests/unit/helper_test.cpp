@@ -95,7 +95,10 @@ Paths paths_in(const fs::path& dir) {
             .usb_dir = dir / "usb",
             .keygen_dir = dir / "keygen",
             .wifi_dir = dir / "wifi",
-            .xorg_log = dir / "Xorg.log"};
+            .xorg_log = dir / "Xorg.log",
+            .time_dir = dir / "time",
+            .timesyncd_dir = dir / "timesyncd",
+            .zoneinfo = dir / "zoneinfo"};
 }
 
 struct Rig {
@@ -521,4 +524,29 @@ TEST(diagnostics_go_to_the_drive_without_the_pin) {
     CHECK(r.ran({"/usr/bin/journalctl", "-b", "--no-pager"}));
     CHECK(!read(dir / "settings.json").contains("admin_pin"));
     CHECK(read(dir / "settings.json").contains("schema_version"));
+}
+
+// ---- time ----
+
+TEST(the_time_zone_and_ntp_servers_are_applied) {
+    Rig r;
+    fs::create_directories(r.dir.path() / "zoneinfo/Europe");
+    std::ofstream(r.dir.path() / "zoneinfo/Europe/London") << "TZif";
+    std::ofstream(r.dir.path() / "zoneinfo/UTC") << "TZif";
+    REQUIRE(r.ask({"time", "Europe/London", "ntp.example.org", "-"}).ok);
+    CHECK_EQ(fs::read_symlink(r.dir.path() / "time/localtime"),
+             r.dir.path() / "zoneinfo/Europe/London");
+    CHECK(read(r.dir.path() / "timesyncd/pixterm.conf").contains("NTP=ntp.example.org\n"));
+    CHECK(r.ran({"/usr/bin/systemctl", "restart", "systemd-timesyncd.service"}));
+    // Back to the defaults: UTC, and the servers DHCP or Debian name.
+    REQUIRE(r.ask({"time", "UTC", "-", "-"}).ok);
+    CHECK(!read(r.dir.path() / "timesyncd/pixterm.conf").contains("NTP="));
+}
+
+TEST(time_arguments_are_checked) {
+    Rig r;
+    CHECK(!r.ask({"time", "Mars/Olympus", "-", "-"}).ok); // no such zone
+    CHECK(!r.ask({"time", "../x", "-", "-"}).ok);
+    CHECK(!r.ask({"time", "UTC", "-bad", "-"}).ok);
+    CHECK(!r.ask({"time", "UTC"}).ok);
 }

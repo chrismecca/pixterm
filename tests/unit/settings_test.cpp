@@ -246,6 +246,19 @@ TEST(ssh_hosts_may_ask_for_a_local_window_manager) {
                .local_wm);
 }
 
+TEST(reads_time_settings) {
+    CHECK_EQ(parse_ok(R"({"schema_version":1})").time.zone, "UTC");
+    const auto s = parse_ok(R"({"schema_version":1,"device":{"time":{
+        "zone":"Europe/London","ntp":["ntp.example.org","192.0.2.123"]}}})");
+    CHECK_EQ(s.time.zone, "Europe/London");
+    CHECK(s.time.ntp == (std::vector<std::string>{"ntp.example.org", "192.0.2.123"}));
+    CHECK(parse_ok(to_json(s)) == s);
+    CHECK(rejects(R"({"schema_version":1,"device":{"time":{"zone":"../etc/passwd"}}})"));
+    CHECK(rejects(R"({"schema_version":1,"device":{"time":{"zone":"/etc/passwd"}}})"));
+    CHECK(rejects(R"({"schema_version":1,"device":{"time":{"ntp":["a","b","c"]}}})"));
+    CHECK(rejects(R"({"schema_version":1,"device":{"time":{"ntp":["-oops"]}}})"));
+}
+
 TEST(rejects_bad_hosts) {
     CHECK(rejects(with_host(R"("address":"h","protocol":"ssh-x11","auth":"hostbased")")));
     CHECK(rejects(with_host(R"("address":"h","protocol":"nx")")));

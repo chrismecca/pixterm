@@ -277,6 +277,27 @@ std::expected<Network, std::string> parse_network(const json::Value* v) {
     return n;
 }
 
+std::expected<TimeSettings, std::string> parse_time(const json::Value& v) {
+    TimeSettings t;
+    auto zone = checked_member(&v, "zone", is_valid_time_zone, true);
+    if (!zone)
+        return error("time: invalid zone");
+    if (!zone->empty())
+        t.zone = std::move(*zone);
+    if (const auto* ntp = v.find("ntp")) {
+        const auto* list = ntp->as_array();
+        if (list == nullptr || list->size() > max_ntp_servers)
+            return error("time: invalid ntp list");
+        for (const auto& server : *list) {
+            const auto s = server.as_string();
+            if (!s || !is_valid_address(*s))
+                return error("time: invalid ntp server");
+            t.ntp.emplace_back(*s);
+        }
+    }
+    return t;
+}
+
 std::expected<Wifi, std::string> parse_wifi(const json::Value& v) {
     if (v.find("passphrase") != nullptr)
         return error("wifi: the passphrase is not kept in the settings");
@@ -340,6 +361,13 @@ std::expected<Settings, std::string> parse_document(const json::Value& root) {
         s.blank_minutes = static_cast<int>(*blank);
     }
     s.admin_pin = std::move(*pin);
+
+    if (const auto* time = device != nullptr ? device->find("time") : nullptr) {
+        auto t = parse_time(*time);
+        if (!t)
+            return std::unexpected(t.error());
+        s.time = std::move(*t);
+    }
 
     if (const auto* wifi = device != nullptr ? device->find("wifi") : nullptr) {
         auto w = parse_wifi(*wifi);
@@ -509,6 +537,14 @@ std::string to_json(const Settings& s) {
         {.key = "keyboard", .value = std::move(keyboard)},
         {.key = "network", .value = std::move(network)},
     };
+    if (s.time != TimeSettings{}) {
+        json::Array ntp;
+        for (const auto& server : s.time.ntp)
+            ntp.emplace_back(server);
+        device.push_back({.key = "time",
+                          .value = json::Object{{.key = "zone", .value = s.time.zone},
+                                                {.key = "ntp", .value = std::move(ntp)}}});
+    }
     if (s.wifi != Wifi{})
         device.push_back({.key = "wifi",
                           .value = json::Object{{.key = "enabled", .value = s.wifi.enabled},

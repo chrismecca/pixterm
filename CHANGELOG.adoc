@@ -12,6 +12,9 @@ section into the release notes.
 
 * IBM mainframes: TN3270E sessions in x3270, with the PC 3270 keys, in
 the largest 3270 font that fits the screen. Port 992 uses TLS.
+* Configure > Time: the time zone, and NTP servers for networks with
+no way to the internet. The terminal has no clock battery, and secure
+connections need the right time.
 * Configure > Diagnostics > Save to USB: the journal, Xorg's log and
 the settings (without the PIN), for a bug report.
 * Issue forms for bug reports and host reports, and a table of the

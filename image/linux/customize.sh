@@ -196,6 +196,9 @@ systemctl mask $unwanted
 systemctl disable remote-fs.target
 # Wi-Fi: wpa_supplicant reads the configuration pixterm-helper writes to
 # /run; without one it does not start (see its drop-in in rootfs).
+# The time zone pixterm-helper chooses, from /run.
+ln -sf /run/pixterm-time/localtime /etc/localtime
+rm -f /etc/timezone
 install -d -m 755 /etc/wpa_supplicant
 ln -sf /run/pixterm-wifi/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
 systemctl enable wpa_supplicant@wlan0.service

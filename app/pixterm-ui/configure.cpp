@@ -19,6 +19,7 @@ Configure::Configure(App& app) : app_(app) {
     panels_.push_back(make_network_panel(app, *this));
     panels_.push_back(make_wifi_panel(app, *this));
     panels_.push_back(make_keyboard_panel(app, *this));
+    panels_.push_back(make_time_panel(app, *this));
     panels_.push_back(make_system_panel(app, *this));
     panels_.push_back(make_diagnostics_panel(app, *this));
 }

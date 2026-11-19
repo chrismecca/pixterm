@@ -229,8 +229,11 @@ start other programs.
 
 * The chooser lists the configured hosts; a double click or Return logs
 in. Find Hosts lists XDMCP hosts that answer a broadcast query.
-* Configure has seven panels: Hosts, Display, Network, Wi-Fi, Keyboard,
-System and Diagnostics.
+* Configure has eight panels: Hosts, Display, Network, Wi-Fi, Keyboard,
+Time, System and Diagnostics.
+* The terminal has no battery for its clock: systemd-timesyncd sets it
+at every start, from the NTP servers in Configure > Time, else DHCP's,
+else Debian's. /etc/localtime links through /run to the chosen zone.
 * A host with a Wake-on-LAN MAC address gets the magic packet, as a
 broadcast on the local network, before the chooser checks it, and has
 two minutes to answer; the packet goes out again every five seconds.

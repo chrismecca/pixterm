@@ -19,6 +19,7 @@
 ///                        to keep the one stored for that network
 ///     wifi off           forgets the passphrase
 ///     wifi-scan COUNTRY  reply: the networks found, as scan_reply
+///     time ZONE NTP1|- NTP2|-   the time zone and NTP servers
 ///     rdp-cert-save HOST_PORT.pem   payload: an RDP host's certificate
 ///     host-key-forget ADDRESS PORT  forgets its SSH key and RDP certificate
 ///
@@ -83,11 +84,14 @@ public:
 struct Paths {
     std::filesystem::path state_dir; ///< the settings partition
     std::filesystem::path factory_settings;
-    std::filesystem::path network_dir; ///< systemd-networkd's, in /run
-    std::filesystem::path usb_dir;     ///< where mount_usb mounts the drive
-    std::filesystem::path keygen_dir;  ///< private scratch space for ssh-keygen
-    std::filesystem::path wifi_dir;    ///< wpa_supplicant's configuration, in /run
-    std::filesystem::path xorg_log;    ///< for diagnostics
+    std::filesystem::path network_dir;   ///< systemd-networkd's, in /run
+    std::filesystem::path usb_dir;       ///< where mount_usb mounts the drive
+    std::filesystem::path keygen_dir;    ///< private scratch space for ssh-keygen
+    std::filesystem::path wifi_dir;      ///< wpa_supplicant's configuration, in /run
+    std::filesystem::path xorg_log;      ///< for diagnostics
+    std::filesystem::path time_dir;      ///< /etc/localtime links to localtime here
+    std::filesystem::path timesyncd_dir; ///< systemd-timesyncd's drop-ins, in /run
+    std::filesystem::path zoneinfo;      ///< the time zone files
 };
 
 /// The systemd-networkd file for a network setting.
@@ -149,6 +153,9 @@ private:
     save_rdp_cert(std::span<const std::string> args, std::string_view pem);
     [[nodiscard]] std::expected<std::string, std::string>
     forget_host_key(std::span<const std::string> args);
+    [[nodiscard]] std::expected<std::string, std::string>
+    set_time(std::span<const std::string> args);
+    [[nodiscard]] std::expected<void, std::string> write_time(const TimeSettings& time) const;
     [[nodiscard]] std::expected<void, std::string>
     write_wifi_conf(const Wifi& wifi, std::string_view passphrase) const;
     /// The passphrase stored for ssid, if any.

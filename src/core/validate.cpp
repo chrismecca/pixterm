@@ -134,6 +134,15 @@ bool is_valid_country(std::string_view s) noexcept {
     return s.size() == 2 && all_of(s, [](char c) { return c >= 'A' && c <= 'Z'; });
 }
 
+bool is_valid_time_zone(std::string_view s) noexcept {
+    const auto name_char = [](char c) {
+        return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
+               || c == '_' || c == '+' || c == '-' || c == '/';
+    };
+    return length_within(s, 1, limits::time_zone) && all_of(s, name_char) && s.front() != '/'
+           && s.back() != '/' && !s.contains("//") && s.front() != '-';
+}
+
 bool is_valid_layout(std::string_view s) noexcept {
     return is_xkb_word(s, 2, limits::layout);
 }

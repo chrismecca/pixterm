@@ -50,6 +50,7 @@ private:
     void apply_candidate();
     void apply_network();
     void apply_wifi();
+    void apply_time();
     void save(const Settings& candidate);
     /// After the settings changed under the running system: apply the
     /// network (if asked) and display settings that differ from before,

@@ -626,6 +626,20 @@ TEST(diagnostics_are_saved_through_the_helper) {
     CHECK(r.sys.was_sent("APPLIED Saved."));
 }
 
+TEST(a_new_time_zone_is_applied_before_saving) {
+    Rig r;
+    r.boot();
+    r.sys.files["/run/pixterm/config.candidate.json"] =
+        R"({"schema_version":1,"device":{"time":{"zone":"Europe/Paris","ntp":["ntp.lab"]}}})";
+    r.sup->chooser_line("APPLY");
+    REQUIRE(r.sys.helper_request.has_value());
+    CHECK(r.sys.helper_request->args
+          == (std::vector<std::string>{"time", "Europe/Paris", "ntp.lab", "-"}));
+    r.sys.answer_helper(*r.sup, {.ok = true, .message = {}, .payload = {}});
+    REQUIRE(r.sys.helper_request.has_value());
+    CHECK_EQ(r.sys.helper_request->args.at(0), "config-save");
+}
+
 TEST(new_network_settings_are_applied_before_saving) {
     Rig r;
     r.boot();

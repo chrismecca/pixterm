@@ -108,6 +108,9 @@ int main(int argc, char** argv) {
         .keygen_dir = "/run/pixterm-keygen",
         .wifi_dir = "/run/pixterm-wifi",
         .xorg_log = "/run/pixterm/Xorg.log",
+        .time_dir = "/run/pixterm-time",
+        .timesyncd_dir = "/run/systemd/timesyncd.conf.d",
+        .zoneinfo = "/usr/share/zoneinfo",
     };
     const uid_t service = uid_of(service_user);
     LinuxPrivileged privileged(paths, service);

@@ -153,6 +153,7 @@ public:
 [[nodiscard]] std::unique_ptr<Panel> make_network_panel(App& app, Configure& configure);
 [[nodiscard]] std::unique_ptr<Panel> make_wifi_panel(App& app, Configure& configure);
 [[nodiscard]] std::unique_ptr<Panel> make_keyboard_panel(App& app, Configure& configure);
+[[nodiscard]] std::unique_ptr<Panel> make_time_panel(App& app, Configure& configure);
 [[nodiscard]] std::unique_ptr<Panel> make_system_panel(App& app, Configure& configure);
 [[nodiscard]] std::unique_ptr<Panel> make_diagnostics_panel(App& app, Configure& configure);
 

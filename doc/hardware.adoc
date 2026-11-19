@@ -64,6 +64,8 @@ name. Take out the Ethernet cable: sessions keep working over Wi-Fi.
 . Restart: the terminal joins the same network again. Turn Wi-Fi off,
 and after a restart wpa_supplicant does not run.
 . Export to and import from a FAT USB drive.
+. Set a time zone and an NTP server on the local network; after a
+restart, Configure > Time shows the right local time.
 . Set an administrator PIN, then clear it with `+pixterm-reset+` on the
 boot partition.
 . Cut the power 20 times: at the chooser, during a session and while a

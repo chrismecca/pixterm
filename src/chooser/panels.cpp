@@ -170,3 +170,31 @@ std::string wifi_row(const WifiNetwork& n) {
 }
 
 } // namespace pixterm::chooser
+
+namespace pixterm::chooser {
+
+TimeForm time_form(const TimeSettings& t) {
+    return {.zone = t.zone,
+            .ntp1 = !t.ntp.empty() ? t.ntp[0] : std::string(),
+            .ntp2 = t.ntp.size() > 1 ? t.ntp[1] : std::string()};
+}
+
+std::expected<TimeSettings, std::string> read_time_form(const TimeForm& form) {
+    TimeSettings t;
+    if (auto zone = trimmed(form.zone); !zone.empty())
+        t.zone = std::move(zone);
+    if (!is_valid_time_zone(t.zone))
+        return std::unexpected("Type the time zone as its region and city, for example "
+                               "Europe/London or America/New_York, or UTC.");
+    for (const auto& field : {form.ntp1, form.ntp2}) {
+        auto server = trimmed(field);
+        if (server.empty())
+            continue;
+        if (!is_valid_address(server))
+            return std::unexpected("An NTP server must be a host name or an IP address.");
+        t.ntp.push_back(std::move(server));
+    }
+    return t;
+}
+
+} // namespace pixterm::chooser

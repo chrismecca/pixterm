@@ -32,6 +32,7 @@ inline constexpr std::size_t command = 512;
 inline constexpr std::size_t pin_hash = 200;
 inline constexpr std::size_t ssid = 32; ///< bytes, as 802.11 allows
 inline constexpr std::size_t wifi_passphrase = 63;
+inline constexpr std::size_t time_zone = 64;
 } // namespace limits
 
 /// A host identifier: letters, digits, '-' and '_'.
@@ -87,6 +88,10 @@ inline constexpr std::size_t wifi_passphrase = 63;
 
 /// An ISO 3166 country code, such as "GB": two capital letters.
 [[nodiscard]] bool is_valid_country(std::string_view s) noexcept;
+
+/// An IANA time zone name, such as "Europe/London": letters, digits,
+/// '_', '+', '-' and '/' between names, never ".." or a leading '/'.
+[[nodiscard]] bool is_valid_time_zone(std::string_view s) noexcept;
 
 /// Converts a font server given as "host", "host:port" or
 /// "tcp/host:port" to "tcp/host:port".

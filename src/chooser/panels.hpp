@@ -130,6 +130,22 @@ struct NetworkForm {
 /// @return The network settings, or a sentence for the user.
 [[nodiscard]] std::expected<Network, std::string> read_network_form(const NetworkForm& form);
 
+// ---- Time ----
+
+/// The Time panel's fields, as typed.
+struct TimeForm {
+    std::string zone;
+    std::string ntp1;
+    std::string ntp2;
+};
+
+[[nodiscard]] TimeForm time_form(const TimeSettings& t);
+
+/// Checks the form; an empty zone means UTC.
+///
+/// @return The time settings, or a sentence for the user.
+[[nodiscard]] std::expected<TimeSettings, std::string> read_time_form(const TimeForm& form);
+
 // ---- Wi-Fi ----
 
 /// The Wi-Fi panel's fields, as typed.

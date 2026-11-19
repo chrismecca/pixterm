@@ -16,6 +16,7 @@ add_executable(pixterm-ui
     network_panel.cpp
     session_keys.cpp
     system_panel.cpp
+    time_panel.cpp
     wifi_panel.cpp
 )
 target_link_libraries(pixterm-ui PRIVATE
