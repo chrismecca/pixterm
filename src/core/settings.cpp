@@ -3,6 +3,7 @@
 
 #include <pixterm/json.hpp>
 #include <pixterm/settings.hpp>
+#include <pixterm/wake.hpp>
 
 #include <sys/random.h>
 
@@ -206,6 +207,18 @@ std::expected<Host, std::string> parse_host(const json::Value& v, std::size_t in
         }
     }
 
+    if (h.protocol != Protocol::serial) {
+        const auto mac = string_member(&v, "wake_mac");
+        if (!mac)
+            return fail(mac.error());
+        if (!mac->empty()) {
+            auto normal = normalize_mac(*mac);
+            if (!normal)
+                return fail("invalid wake_mac");
+            h.wake_mac = std::move(*normal);
+        }
+    }
+
     if (is_terminal(h.protocol)) {
         if (const auto* ax = v.find("allow_x")) {
             const auto b = ax->as_bool();
@@ -379,6 +392,8 @@ json::Value host_to_json(const Host& h) {
         add("xdmcp_mode", h.xdmcp_mode == XdmcpMode::indirect ? "indirect" : "query");
     if (is_x11(h.protocol) && !h.font_server.empty())
         add("font_server", h.font_server);
+    if (!h.wake_mac.empty())
+        add("wake_mac", h.wake_mac);
     if (is_terminal(h.protocol) && h.allow_x)
         add("allow_x", true);
     if (h.protocol == Protocol::rdp && !h.domain.empty())

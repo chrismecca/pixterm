@@ -16,6 +16,7 @@ add_library(pixterm_core STATIC
     settings_store.cpp
     spawn.cpp
     validate.cpp
+    wake.cpp
     wifi.cpp
     xdmcp.cpp
 )
@@ -37,6 +38,7 @@ target_sources(pixterm_core
             ${PROJECT_SOURCE_DIR}/include/pixterm/settings_store.hpp
             ${PROJECT_SOURCE_DIR}/include/pixterm/spawn.hpp
             ${PROJECT_SOURCE_DIR}/include/pixterm/validate.hpp
+            ${PROJECT_SOURCE_DIR}/include/pixterm/wake.hpp
             ${PROJECT_SOURCE_DIR}/include/pixterm/wifi.hpp
             ${PROJECT_SOURCE_DIR}/include/pixterm/xdmcp.hpp
 )

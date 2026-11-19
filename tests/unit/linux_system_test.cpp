@@ -185,11 +185,12 @@ TEST(the_tcp_probe_finds_a_listener) {
 
     std::optional<std::string> result;
     const auto done = [&](ExitStatus, std::string_view out) { result = std::string(out); };
-    REQUIRE(r.sys->start_job({.name = "tcp-probe",
-                              .task = TcpProbe{.address = "127.0.0.1", .port = port},
-                              .timeout = std::chrono::seconds(5),
-                              .secret = false},
-                             done));
+    REQUIRE(
+        r.sys->start_job({.name = "tcp-probe",
+                          .task = TcpProbe{.address = "127.0.0.1", .port = port, .wake_mac = {}},
+                          .timeout = std::chrono::seconds(5),
+                          .secret = false},
+                         done));
     REQUIRE(r.run_until([&] { return result.has_value(); }));
     REQUIRE(result.has_value());
     CHECK_EQ(*result, "OK");
@@ -199,7 +200,7 @@ TEST(the_tcp_probe_explains_a_refusal) {
     Rig r;
     std::optional<std::string> result;
     REQUIRE(r.sys->start_job({.name = "tcp-probe",
-                              .task = TcpProbe{.address = "127.0.0.1", .port = 1},
+                              .task = TcpProbe{.address = "127.0.0.1", .port = 1, .wake_mac = {}},
                               .timeout = std::chrono::seconds(5),
                               .secret = false},
                              [&](ExitStatus, std::string_view out) { result = std::string(out); }));

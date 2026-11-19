@@ -73,7 +73,13 @@ struct Program {
 struct TcpProbe {
     std::string address;
     int port = 0;
+    /// If set, a Wake-on-LAN packet goes out first, and the probe keeps
+    /// trying for as long as a host takes to wake.
+    std::string wake_mac;
 };
+
+/// How long a host woken with Wake-on-LAN has to answer.
+inline constexpr Duration wake_time{120'000};
 
 /// Does an XDMCP display manager answer? The job's output is
 /// "W <host>\t<status>" (willing), "U <host>\t<status>" (unwilling),
@@ -82,6 +88,7 @@ struct XdmcpProbe {
     std::string address;
     int port = 0;
     bool indirect = false;
+    std::string wake_mac; ///< as for TcpProbe
 };
 
 /// A short task run in a child process: a program, or one of the

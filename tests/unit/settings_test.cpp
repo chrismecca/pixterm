@@ -225,6 +225,15 @@ TEST(rejects_bad_wifi_settings) {
     CHECK(rejects(R"({"schema_version":1,"device":{"wifi":{"passphrase":"secret12"}}})"));
 }
 
+TEST(hosts_may_be_woken_by_their_mac_address) {
+    const auto s =
+        parse_ok(with_host(R"("address":"h","protocol":"ssh-x11","wake_mac":"00-1A-2B-3C-4D-5E")"));
+    REQUIRE_EQ(s.hosts.size(), 1U);
+    CHECK_EQ(s.hosts[0].wake_mac, "00:1a:2b:3c:4d:5e");
+    CHECK(rejects(with_host(R"("address":"h","protocol":"ssh-x11","wake_mac":"nonsense")")));
+    CHECK(parse_ok(to_json(s)) == s);
+}
+
 TEST(rejects_bad_hosts) {
     CHECK(rejects(with_host(R"("address":"h","protocol":"ssh-x11","auth":"hostbased")")));
     CHECK(rejects(with_host(R"("address":"h","protocol":"nx")")));

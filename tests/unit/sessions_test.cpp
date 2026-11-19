@@ -454,6 +454,32 @@ TEST(the_3270_font_is_the_largest_that_fits) {
     CHECK_EQ(x3270_font(320, 200), "3270gt8");
 }
 
+TEST(a_host_with_a_mac_address_is_woken_and_given_time) {
+    auto host = make_host(Protocol::ssh_x11, "sleepy");
+    host.username = "alice";
+    host.wake_mac = "00:1a:2b:3c:4d:5e";
+    Rig r(host);
+    r.pick();
+    REQUIRE(r.sys.job.has_value());
+    const auto* probe = std::get_if<TcpProbe>(&r.sys.job->task);
+    REQUIRE(probe != nullptr);
+    CHECK_EQ(probe->wake_mac, "00:1a:2b:3c:4d:5e");
+    CHECK(r.sys.job->timeout >= std::chrono::minutes(2));
+    CHECK(mentions(r.sys.logs, "waking Host"));
+}
+
+TEST(an_xdmcp_host_with_a_mac_address_is_woken_too) {
+    auto host = make_host(Protocol::xdmcp, "sleepy");
+    host.wake_mac = "00:1a:2b:3c:4d:5e";
+    Rig r(host);
+    r.pick();
+    REQUIRE(r.sys.job.has_value());
+    const auto* probe = std::get_if<XdmcpProbe>(&r.sys.job->task);
+    REQUIRE(probe != nullptr);
+    CHECK_EQ(probe->wake_mac, "00:1a:2b:3c:4d:5e");
+    CHECK(r.sys.job->timeout >= std::chrono::minutes(2));
+}
+
 TEST(serial_checks_the_port_before_closing_the_chooser) {
     auto host = make_host(Protocol::serial, "");
     host.device = "/dev/ttyUSB0";

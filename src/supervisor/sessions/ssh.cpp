@@ -77,6 +77,7 @@ private:
     void start_session();
     void start_terminal();
     void save_known_hosts();
+    [[nodiscard]] bool connect();
     void master_exited(ExitStatus status, std::string_view output);
     void client_exited(ExitStatus status, std::string_view output);
 };
@@ -154,6 +155,23 @@ bool SshSession::begin(std::string_view username) {
         return false;
     }
     cancelled_ = false;
+    // A host that sleeps is woken, and ssh starts once it answers.
+    if (!host().wake_mac.empty()) {
+        if (!probe_host(sup(), [this](bool reachable) {
+                if (reachable && !connect())
+                    sup().chooser_idle();
+            })) {
+            sup().report_error("Something else is still in progress; try again.");
+            return false;
+        }
+        sup().set_state(State::probe);
+        return true;
+    }
+    return connect();
+}
+
+bool SshSession::connect() {
+    auto& system = sup().system();
     sup().log(std::format("connecting to {} ({}@{}:{})", host().name, user_, host().address,
                           host().port));
     if (!system.start(Slot::master, {.name = "ssh",
@@ -171,6 +189,12 @@ bool SshSession::begin(std::string_view username) {
 
 void SshSession::cancel() {
     sup().log(std::format("connection to {} cancelled", host().name));
+    if (sup().state() == State::probe) {
+        sup().system().cancel_job();
+        sup().set_state(State::local);
+        sup().chooser_idle();
+        return;
+    }
     cancelled_ = true;
     sup().system().signal(Slot::master, SIGTERM);
 }

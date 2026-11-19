@@ -59,7 +59,6 @@ are kept from the first plan so that issues can refer to them.
 | 41 | Screen lock during a session | M
 | 42 | Hardware security keys for SSH login: FIDO2 and PIV smart cards | M
 | 43 | Kerberos (GSSAPI) SSH login | M
-| 44 | Wake-on-LAN for a host before connecting | S
 |===
 
 == Documents

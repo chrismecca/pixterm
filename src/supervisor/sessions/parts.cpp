@@ -42,10 +42,12 @@ std::string probe_reason(std::string_view output) {
 bool probe_host(Supervisor& sup, std::function<void(bool reachable)> done) {
     const auto& h = sup.host();
     sup.log(std::format("checking {} ({}, port {})", h.name, h.address, h.port));
+    if (!h.wake_mac.empty())
+        sup.log(std::format("waking {} ({})", h.name, h.wake_mac));
     return sup.system().start_job(
         {.name = "tcp-probe",
-         .task = TcpProbe{.address = h.address, .port = h.port},
-         .timeout = probe_timeout,
+         .task = TcpProbe{.address = h.address, .port = h.port, .wake_mac = h.wake_mac},
+         .timeout = h.wake_mac.empty() ? probe_timeout : probe_timeout + wake_time,
          .secret = false},
         [&sup, done = std::move(done)](ExitStatus, std::string_view output) {
             if (sup.state() != State::probe)

@@ -56,8 +56,9 @@ bool XdmcpSession::begin(std::string_view /*username*/) {
         {.name = "xdmcp-probe",
          .task = XdmcpProbe{.address = host().address,
                             .port = host().port,
-                            .indirect = host().xdmcp_mode == XdmcpMode::indirect},
-         .timeout = probe_timeout,
+                            .indirect = host().xdmcp_mode == XdmcpMode::indirect,
+                            .wake_mac = host().wake_mac},
+         .timeout = host().wake_mac.empty() ? probe_timeout : probe_timeout + wake_time,
          .secret = false},
         [this](ExitStatus, std::string_view output) { probe_done(output); });
     if (!started) {

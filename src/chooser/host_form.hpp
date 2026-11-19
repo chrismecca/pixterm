@@ -27,6 +27,7 @@ struct HostForm {
     std::string speed;
     std::string command;
     std::string font_server;
+    std::string wake_mac;
     Protocol protocol = Protocol::ssh_x11;
     SessionType session = SessionType::xsession;
     bool key_auth = false;
@@ -49,6 +50,7 @@ struct EnabledFields {
     bool command = false;
     bool indirect = false;
     bool font_server = false;
+    bool wake_mac = false;
 };
 
 [[nodiscard]] EnabledFields enabled_fields(Protocol p, SessionType s) noexcept;

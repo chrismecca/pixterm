@@ -3,6 +3,8 @@
 
 #include "host_form.hpp"
 
+#include <pixterm/wake.hpp>
+
 #include <algorithm>
 #include <array>
 #include <charconv>
@@ -76,7 +78,8 @@ EnabledFields enabled_fields(Protocol p, SessionType s) noexcept {
             .session = ssh_x11,
             .command = p == Protocol::rexec || p == Protocol::rsh || (ssh_x11 && takes_command(s)),
             .indirect = p == Protocol::xdmcp,
-            .font_server = is_x11(p)};
+            .font_server = is_x11(p),
+            .wake_mac = !serial};
 }
 
 HostForm form_for(const Host* host) {
@@ -91,6 +94,7 @@ HostForm form_for(const Host* host) {
             .speed = std::to_string(h.speed),
             .command = h.command,
             .font_server = h.font_server,
+            .wake_mac = h.wake_mac,
             .protocol = h.protocol,
             .session = h.session,
             .key_auth = h.auth == Auth::key,
@@ -173,6 +177,12 @@ std::expected<Host, std::string> read_form(const HostForm& form) {
         if (!normal)
             return problem("The font server must look like host or host:7100.");
         h.font_server = std::move(*normal);
+    }
+    if (fields.wake_mac && !trim(form.wake_mac).empty()) {
+        auto normal = normalize_mac(trim(form.wake_mac));
+        if (!normal)
+            return problem("The MAC address must look like 00:1a:2b:3c:4d:5e.");
+        h.wake_mac = std::move(*normal);
     }
     return h;
 }

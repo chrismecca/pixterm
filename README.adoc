@@ -168,7 +168,9 @@ Other protocols: `xdmcp` (with `xdmcp_mode` `query` or `indirect`),
 `rexec` and `rsh` (`username` and `command`, where `%D` stands for the
 terminal's display), `vnc`, `rdp` (`username`, and `domain` if needed),
 `serial` (`device` and `speed`, with no address), `tn3270` and
-`tn5250` (port 992 for TLS), and `drawterm` (`username`). Terminal hosts
+`tn5250` (port 992 for TLS), and `drawterm` (`username`). Any host
+with an address may have a `wake_mac`: the terminal wakes it with
+Wake-on-LAN first, and waits up to two minutes for it to answer. Terminal hosts
 with `"allow_x": true` let the host's X programs open windows on the
 terminal.
 

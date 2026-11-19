@@ -120,6 +120,7 @@ struct Host {
     std::string domain;   ///< RDP: the Windows domain, or empty
     std::string device;   ///< serial: the port, such as /dev/ttyUSB0
     int speed = 9600;     ///< serial: bits per second
+    std::string wake_mac; ///< woken first with Wake-on-LAN, if set: "00:1a:..."
 
     /// Whether a session lets the host open windows on the terminal
     /// over TCP (direct X).

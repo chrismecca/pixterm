@@ -49,6 +49,8 @@ TEST(fields_follow_the_protocol) {
     CHECK(!enabled_fields(Protocol::telnet, SessionType::xsession).username);
     CHECK(enabled_fields(Protocol::rexec, SessionType::xsession).command);
     CHECK(!enabled_fields(Protocol::vnc, SessionType::xsession).font_server);
+    CHECK(enabled_fields(Protocol::vnc, SessionType::xsession).wake_mac);
+    CHECK(!enabled_fields(Protocol::serial, SessionType::xsession).wake_mac);
     const auto plan9 = enabled_fields(Protocol::drawterm, SessionType::xsession);
     CHECK(plan9.address && plan9.port && plan9.username);
     CHECK(!plan9.key_auth);
@@ -138,6 +140,7 @@ TEST(each_bad_field_is_named) {
               f.command = "";
           }).contains("command"));
     CHECK(problem([](HostForm& f) { f.font_server = "a b"; }).contains("font server"));
+    CHECK(problem([](HostForm& f) { f.wake_mac = "00:11"; }).contains("MAC address"));
     CHECK(problem([](HostForm& f) {
               f.protocol = Protocol::serial;
               f.device = "/etc/passwd";
@@ -248,4 +251,15 @@ TEST(login_asks_for_a_user_name_only_when_needed) {
     h.username.clear();
     h.protocol = Protocol::xdmcp;
     CHECK(!needs_username(h));
+}
+
+TEST(a_wake_mac_is_kept_in_the_settings_form) {
+    HostForm f = form_for(nullptr);
+    f.name = "sleepy";
+    f.address = "sleepy.example.org";
+    f.wake_mac = " 00-1A-2B-3C-4D-5E ";
+    const auto h = read_form(f);
+    REQUIRE(h.has_value());
+    CHECK_EQ(h->wake_mac, "00:1a:2b:3c:4d:5e");
+    CHECK_EQ(form_for(&*h).wake_mac, "00:1a:2b:3c:4d:5e");
 }

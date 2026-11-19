@@ -82,6 +82,7 @@ private:
     Widget speed_ = nullptr;
     Widget command_ = nullptr;
     Widget font_server_ = nullptr;
+    Widget wake_mac_ = nullptr;
     Widget key_auth_ = nullptr;
     Widget allow_x_ = nullptr;
     Widget indirect_ = nullptr;
@@ -252,9 +253,11 @@ void HostsPanel::build_editor() {
                   "XDMCP:", make_toggle(editor_, "indirect", "Use the host's chooser (indirect)"));
     font_server_ = place_row(editor_, indirect_,
                              "Font server:", make_text_field(editor_, "fontServer", 28), true);
+    wake_mac_ = place_row(editor_, font_server_,
+                          "Wake-on-LAN MAC:", make_text_field(editor_, "wakeMac", 18));
 
     Widget note = make_label(editor_, "note", editor_note);
-    XtVaSetValues(note, XmNtopAttachment, XmATTACH_WIDGET, XmNtopWidget, font_server_, XmNtopOffset,
+    XtVaSetValues(note, XmNtopAttachment, XmATTACH_WIDGET, XmNtopWidget, wake_mac_, XmNtopOffset,
                   10, XmNleftAttachment, XmATTACH_FORM, XmNrightAttachment, XmATTACH_FORM, nullptr);
     Widget separator =
         XtVaCreateManagedWidget("separator", xmSeparatorWidgetClass, editor_, XmNtopAttachment,
@@ -287,6 +290,7 @@ void HostsPanel::open_editor(std::optional<std::size_t> index) {
     set_text(speed_, f.speed);
     set_text(command_, f.command);
     set_text(font_server_, f.font_server);
+    set_text(wake_mac_, f.wake_mac);
     set_toggle(key_auth_, f.key_auth);
     set_toggle(allow_x_, f.allow_x);
     set_toggle(indirect_, f.indirect);
@@ -311,6 +315,7 @@ void HostsPanel::sync_editor() {
     sensitive(command_, e.command);
     sensitive(indirect_, e.indirect);
     sensitive(font_server_, e.font_server);
+    sensitive(wake_mac_, e.wake_mac);
     protocol_menu_.show(static_cast<std::size_t>(protocol_));
     session_menu_.show(static_cast<std::size_t>(std::ranges::find(session_types, session_)
                                                 - session_types.begin()));
@@ -332,6 +337,7 @@ void HostsPanel::save_editor() {
                                  .speed = text_of(speed_),
                                  .command = text_of(command_),
                                  .font_server = text_of(font_server_),
+                                 .wake_mac = text_of(wake_mac_),
                                  .protocol = protocol_,
                                  .session = session_,
                                  .key_auth = toggle_state(key_auth_),

@@ -4,10 +4,12 @@
 #include "probes.hpp"
 
 #include <pixterm/fd.hpp>
+#include <pixterm/wake.hpp>
 #include <pixterm/xdmcp.hpp>
 
 #include <fcntl.h>
 #include <netdb.h>
+#include <netinet/in.h>
 #include <poll.h>
 #include <sys/socket.h>
 
@@ -16,12 +18,36 @@
 #include <cstring>
 #include <format>
 #include <memory>
+#include <thread>
 
 namespace pixterm::supervisor {
 
 namespace {
 
 constexpr int connect_ms = 5'000;
+// While a host wakes, how often the packet goes out again and the host
+// is tried again.
+constexpr Duration wake_retry{5'000};
+
+// The Wake-on-LAN packet for mac, to the local network's broadcast
+// address on the discard port, as wake-up tools send it.
+void send_wake(const std::string& text) {
+    const auto mac = parse_mac(text);
+    if (!mac)
+        return;
+    const UniqueFd s(::socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC, 0));
+    const int on = 1;
+    if (!s || ::setsockopt(s.get(), SOL_SOCKET, SO_BROADCAST, &on, sizeof on) != 0)
+        return;
+    constexpr std::uint16_t discard_port = 9;
+    sockaddr_in to{};
+    to.sin_family = AF_INET;
+    to.sin_port = htons(discard_port);
+    to.sin_addr.s_addr = htonl(INADDR_BROADCAST);
+    const auto packet = magic_packet(*mac);
+    (void)::sendto(s.get(), packet.data(), packet.size(), 0, reinterpret_cast<sockaddr*>(&to),
+                   sizeof to);
+}
 
 struct FreeAddrinfo {
     void operator()(addrinfo* a) const noexcept { freeaddrinfo(a); }
@@ -65,11 +91,22 @@ std::string run_probe(const TcpProbe& probe) {
     const auto addresses = resolve(probe.address, probe.port, SOCK_STREAM);
     if (!addresses)
         return "E The address could not be found: " + addresses.error();
+    // A sleeping host gets the packet, then more tries until it wakes.
+    const bool waking = !probe.wake_mac.empty();
+    const auto give_up = Clock::now() + (waking ? wake_time : Duration{0});
     int error = ETIMEDOUT;
-    for (const auto* a = addresses->get(); a != nullptr; a = a->ai_next) {
-        error = try_connect(*a);
-        if (error == 0)
-            return "OK";
+    for (;;) {
+        const auto tried = Clock::now();
+        if (waking)
+            send_wake(probe.wake_mac);
+        for (const auto* a = addresses->get(); a != nullptr; a = a->ai_next) {
+            error = try_connect(*a);
+            if (error == 0)
+                return "OK";
+        }
+        if (Clock::now() + wake_retry > give_up)
+            break;
+        std::this_thread::sleep_until(tried + wake_retry);
     }
     if (error == ETIMEDOUT)
         return "E The host did not answer.";
@@ -86,10 +123,17 @@ std::string run_probe(const XdmcpProbe& probe) {
     const UniqueFd s(::socket(a.ai_family, a.ai_socktype | SOCK_CLOEXEC, a.ai_protocol));
     const auto query =
         xdmcp::encode_query(probe.indirect ? xdmcp::QueryKind::indirect : xdmcp::QueryKind::direct);
-    for (int attempt = 1; s && attempt <= 3; ++attempt) {
+    // A host being woken gets the packet before each query, and queries
+    // go on, five seconds apart, for as long as it takes to wake.
+    const bool waking = !probe.wake_mac.empty();
+    const int attempts = waking ? static_cast<int>(wake_time / wake_retry) : 3;
+    for (int attempt = 1; s && attempt <= attempts; ++attempt) {
+        if (waking)
+            send_wake(probe.wake_mac);
         if (::sendto(s.get(), query.data(), query.size(), 0, a.ai_addr, a.ai_addrlen) < 0)
             break;
-        const auto until = Clock::now() + std::chrono::seconds(attempt);
+        const auto until =
+            Clock::now() + (waking ? wake_retry : Duration{std::chrono::seconds(attempt)});
         for (;;) {
             const auto left = std::chrono::ceil<Duration>(until - Clock::now()).count();
             pollfd p{.fd = s.get(), .events = POLLIN, .revents = 0};
