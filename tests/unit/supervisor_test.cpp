@@ -616,6 +616,16 @@ TEST(forgetting_a_host_key_names_the_host_to_the_helper) {
     CHECK(r.sys.was_sent("APPLY_FAILED"));
 }
 
+TEST(diagnostics_are_saved_through_the_helper) {
+    Rig r;
+    r.boot();
+    r.sup->chooser_line("DIAGNOSTICS");
+    REQUIRE(r.sys.helper_request.has_value());
+    CHECK(r.sys.helper_request->args == std::vector<std::string>{"usb-diagnostics"});
+    r.sys.answer_helper(*r.sup, {.ok = true, .message = {}, .payload = "Saved."});
+    CHECK(r.sys.was_sent("APPLIED Saved."));
+}
+
 TEST(new_network_settings_are_applied_before_saving) {
     Rig r;
     r.boot();

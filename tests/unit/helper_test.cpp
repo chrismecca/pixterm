@@ -4,6 +4,7 @@
 #include "temp_dir.hpp"
 #include "test.hpp"
 
+#include <pixterm/pin.hpp>
 #include <pixterm/settings_store.hpp>
 #include <pixterm/wifi.hpp>
 
@@ -93,7 +94,8 @@ Paths paths_in(const fs::path& dir) {
             .network_dir = dir / "network",
             .usb_dir = dir / "usb",
             .keygen_dir = dir / "keygen",
-            .wifi_dir = dir / "wifi"};
+            .wifi_dir = dir / "wifi",
+            .xorg_log = dir / "Xorg.log"};
 }
 
 struct Rig {
@@ -499,4 +501,24 @@ TEST(forgetting_a_host_key_removes_its_ssh_key_and_rdp_certificate) {
     CHECK(!r.ask({"host-key-forget", "-x", "22"}).ok);
     CHECK(!r.ask({"host-key-forget", "nt", "0"}).ok);
     CHECK(!r.ask({"host-key-forget", "nt"}).ok);
+}
+
+// ---- diagnostics ----
+
+TEST(diagnostics_go_to_the_drive_without_the_pin) {
+    Rig r;
+    r.privileged.usb_source = r.dir.path() / "usb-drive";
+    std::ofstream(r.dir.path() / "Xorg.log") << "(EE) no screens found\n";
+    REQUIRE(r.ask({"config-save"}, R"({"schema_version":1,"device":{"admin_pin":")"
+                                       + make_pin_hash("1234").value_or("") + R"("}})")
+                .ok);
+    const auto reply = r.ask({"usb-diagnostics"});
+    REQUIRE(reply.ok);
+    CHECK(reply.payload.contains("sda1"));
+    const auto dir = r.dir.path() / "usb-drive/pixterm-diagnostics";
+    CHECK(read(dir / "Xorg.log").contains("no screens found"));
+    CHECK(fs::exists(dir / "journal.txt"));
+    CHECK(r.ran({"/usr/bin/journalctl", "-b", "--no-pager"}));
+    CHECK(!read(dir / "settings.json").contains("admin_pin"));
+    CHECK(read(dir / "settings.json").contains("schema_version"));
 }

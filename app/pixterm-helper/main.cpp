@@ -107,6 +107,7 @@ int main(int argc, char** argv) {
         .usb_dir = "/run/pixterm-usb",
         .keygen_dir = "/run/pixterm-keygen",
         .wifi_dir = "/run/pixterm-wifi",
+        .xorg_log = "/run/pixterm/Xorg.log",
     };
     const uid_t service = uid_of(service_user);
     LinuxPrivileged privileged(paths, service);

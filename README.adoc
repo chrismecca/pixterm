@@ -185,7 +185,8 @@ terminal.
 logind session, so `-u pixtermd` shows only the service start.
 * The Xorg log is `/run/pixterm/Xorg.log`.
 * Configure > Diagnostics shows the supervisor's recent log on the
-terminal itself.
+terminal itself, and Save to USB writes the journal, Xorg's log and the
+settings (without the PIN) to a USB drive, for a bug report.
 * Without a network, read `pixterm-debug/` on the SD card's boot
 partition.
 * The root file system is read-only. Run `sudo mount -o remount,rw /`

@@ -41,7 +41,8 @@ body:
     attributes:
       label: Log
       description: >
-        Configure > Diagnostics shows the terminal's recent log. Paste the
-        part around the problem, without passwords or addresses you would
-        rather keep private.
+        Configure > Diagnostics shows the terminal's recent log, and Save to
+        USB writes the full logs to a USB drive. Paste or attach the part
+        around the problem, without addresses you would rather keep
+        private.
       render: text

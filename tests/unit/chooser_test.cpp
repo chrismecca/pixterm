@@ -90,6 +90,7 @@ TEST(requests_are_formatted) {
     CHECK_EQ(request_line(Request::apply), "APPLY");
     CHECK_EQ(request_line(Request::reset), "RESET");
     CHECK_EQ(request_line(Request::export_settings), "EXPORT");
+    CHECK_EQ(request_line(Request::diagnostics), "DIAGNOSTICS");
     CHECK_EQ(request_line(Request::import_settings), "IMPORT");
     CHECK_EQ(request_line(Request::keygen), "KEYGEN");
     CHECK_EQ(request_line(Request::reboot), "REBOOT");

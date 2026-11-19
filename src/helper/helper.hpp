@@ -12,6 +12,8 @@
 ///     known-hosts-save   payload: known_hosts text
 ///     usb-export         reply: a message for the user
 ///     usb-import
+///     usb-diagnostics    the journal, Xorg's log and the settings (without
+///                        the PIN) to a USB drive; reply: a message
 ///     keygen             reply: the terminal's public key
 ///     wifi on COUNTRY SSIDHEX 0|1   payload: the passphrase, or nothing
 ///                        to keep the one stored for that network
@@ -85,6 +87,7 @@ struct Paths {
     std::filesystem::path usb_dir;     ///< where mount_usb mounts the drive
     std::filesystem::path keygen_dir;  ///< private scratch space for ssh-keygen
     std::filesystem::path wifi_dir;    ///< wpa_supplicant's configuration, in /run
+    std::filesystem::path xorg_log;    ///< for diagnostics
 };
 
 /// The systemd-networkd file for a network setting.
@@ -135,6 +138,7 @@ private:
     [[nodiscard]] std::expected<std::string, std::string> keygen();
     [[nodiscard]] std::expected<std::string, std::string> usb_export();
     [[nodiscard]] std::expected<std::string, std::string> usb_import();
+    [[nodiscard]] std::expected<std::string, std::string> usb_diagnostics();
     [[nodiscard]] std::expected<std::string, std::string> reboot();
     [[nodiscard]] std::expected<std::string, std::string> wifi(std::span<const std::string> args,
                                                                std::string_view passphrase);

@@ -12,6 +12,8 @@ section into the release notes.
 
 * IBM mainframes: TN3270E sessions in x3270, with the PC 3270 keys, in
 the largest 3270 font that fits the screen. Port 992 uses TLS.
+* Configure > Diagnostics > Save to USB: the journal, Xorg's log and
+the settings (without the PIN), for a bug report.
 * Issue forms for bug reports and host reports, and a table of the
 host systems known to work.
 * A window manager on the terminal for SSH hosts that send none:

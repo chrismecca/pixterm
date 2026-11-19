@@ -73,7 +73,6 @@ are kept from the first plan so that issues can refer to them.
 
 * IPv6 host addresses, tested from end to end
 * Sun and DEC keyboards, with the DEC LK201 editing keys for OpenVMS
-* Diagnostics saved to a USB drive for bug reports
 * Time zone and NTP server settings (the Pi has no clock battery)
 
 == 1.2

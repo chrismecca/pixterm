@@ -43,6 +43,7 @@ enum class Request {
     apply,           ///< save config.candidate.json from the runtime directory
     reset,           ///< return to the factory settings
     export_settings, ///< write the settings to a USB drive
+    diagnostics,     ///< write the logs to a USB drive, for a bug report
     import_settings, ///< read the settings from a USB drive
     keygen,          ///< make (once) and show the terminal's SSH key
     reboot,

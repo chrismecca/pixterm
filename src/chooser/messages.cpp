@@ -50,6 +50,8 @@ std::string_view request_line(Request r) noexcept {
         return "RESET";
     case Request::export_settings:
         return "EXPORT";
+    case Request::diagnostics:
+        return "DIAGNOSTICS";
     case Request::import_settings:
         return "IMPORT";
     case Request::keygen:

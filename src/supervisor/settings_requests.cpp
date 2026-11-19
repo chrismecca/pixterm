@@ -25,9 +25,10 @@ struct Simple {
     std::string_view command; ///< the helper's
 };
 
-constexpr std::array<Simple, 5> simple{{
+constexpr std::array<Simple, 6> simple{{
     {.verb = "RESET", .command = "config-reset"},
     {.verb = "EXPORT", .command = "usb-export"},
+    {.verb = "DIAGNOSTICS", .command = "usb-diagnostics"},
     {.verb = "IMPORT", .command = "usb-import"},
     {.verb = "KEYGEN", .command = "keygen"},
     {.verb = "REBOOT", .command = "reboot"},
@@ -93,6 +94,11 @@ void SettingsRequests::request(std::string_view verb) {
                 applied("");
             else
                 failed("The terminal key could not be made.\n\n" + reply.message);
+        } else if (verb == "DIAGNOSTICS") {
+            if (reply.ok)
+                applied(reply.payload);
+            else
+                failed("The diagnostics could not be saved.\n\n" + reply.message);
         } else if (verb == "EXPORT") {
             if (reply.ok)
                 applied(reply.payload);

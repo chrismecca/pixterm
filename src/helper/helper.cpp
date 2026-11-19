@@ -270,6 +270,8 @@ Result Helper::dispatch(const Request& request) {
         return usb_export();
     if (command == "usb-import")
         return usb_import();
+    if (command == "usb-diagnostics")
+        return usb_diagnostics();
     if (command == "reboot")
         return reboot();
     return fail("an unknown request");
@@ -437,6 +439,37 @@ Result Helper::usb_import() {
                return {};
            })
         .transform([] { return std::string(); });
+}
+
+// For a bug report: what the terminal logged since it started, Xorg's
+// log, and the settings without the PIN's hash.
+Result Helper::usb_diagnostics() {
+    constexpr std::size_t max_log = std::size_t{16} * 1024 * 1024;
+    const auto journal =
+        privileged_.run_output({"/usr/bin/journalctl", "-b", "--no-pager"}).value_or("");
+    const auto xorg = read_regular_file(paths_.xorg_log, max_log);
+    auto settings = SettingsStore(paths_.state_dir, paths_.factory_settings).load().settings;
+    settings.admin_pin.clear();
+    const auto drive = privileged_.mount_usb();
+    if (!drive)
+        return fail(drive.error());
+    const auto dir = paths_.usb_dir / "pixterm-diagnostics";
+    std::expected<void, std::string> ok;
+    if (::mkdir(dir.c_str(), 0700) != 0 && errno != EEXIST)
+        ok = fail(describe(dir, last_error()));
+    if (ok)
+        ok = replace_file(dir, "journal.txt", journal.substr(0, max_log), 0600);
+    if (ok)
+        ok = replace_file(dir, "Xorg.log", xorg ? *xorg : xorg.error().message, 0600);
+    if (ok)
+        ok = replace_file(dir, "settings.json", to_json(settings), 0600);
+    privileged_.unmount_usb();
+    if (!ok)
+        return fail(ok.error());
+    return std::format(
+        "The diagnostics were saved to the USB drive ({}) in pixterm-diagnostics.\n\n"
+        "They name your hosts; look through them before you send them.",
+        *drive);
 }
 
 Result Helper::reboot() {
