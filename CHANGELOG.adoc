@@ -6,7 +6,10 @@
 Each release has a section here. The release workflow copies the
 section into the release notes.
 
-== Unreleased
+== 0.10.0
+
+The second test release: most of what 1.0 adds. Logins with hardware
+security keys and Kerberos are still to come.
 
 === Fixed
 
